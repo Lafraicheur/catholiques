@@ -6,8 +6,8 @@ import { ReactNode } from "react";
 
 interface StatsCardProps {
   title: string;
-  value: string;
-  description?: string;
+  value: string | ReactNode; // Modifié pour accepter ReactNode
+  description?: string | ReactNode;
   icon?: ReactNode;
   trend?: "up" | "down" | "same";
   trendValue?: string;
@@ -46,25 +46,34 @@ export default function StatsCard({
   };
 
   return (
-    <Card className="p-6 hover:shadow-md transition-shadow">
-      <div className="flex justify-between items-start mb-4">
-        <h3 className="font-medium text-sm text-slate-500">{title}</h3>
-        {icon && <div className="p-2 bg-slate-50 rounded-full">{icon}</div>}
+    <Card className="p-3 hover:shadow-md transition-shadow h-full">
+      <div className="flex justify-between items-start mb-2">
+        <h3 className="font-medium text-xs text-slate-500 truncate max-w-[70%]">
+          {title}
+        </h3>
+        {icon && <div className="p-1.5 bg-slate-50 rounded-full">{icon}</div>}
       </div>
 
-      <div className="mb-2">
-        <p className="text-2xl font-bold">{value}</p>
+      <div className="mb-1">
+        {" "}
+        {typeof value === "string" ? (
+          <p className="text-2xl font-bold">{value}</p>
+        ) : (
+          value
+        )}
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center text-sm">
         {trend && (
-          <div className={`flex items-center ${getTrendColor()}`}>
+          <div className={`flex items-center ${getTrendColor()} mr-2`}>
             {getTrendIcon()}
-            <span className="text-xs font-medium ml-1">{trendValue}</span>
+            <span className="text-sm font-medium ml-1">{trendValue}</span>
           </div>
         )}
         {description && (
-          <span className="text-xs text-slate-500">{description}</span>
+          <div className="text-xs text-slate-500 overflow-hidden">
+            {description}
+          </div>
         )}
       </div>
     </Card>

@@ -1,267 +1,183 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Metadata } from "next";
 import {
-  Plus,
   Search,
   Filter,
   Download,
   Calendar,
   Heart,
-  Clock,
-  MapPin,
   FileText,
   User,
-  Check,
+  Loader2,
+  XCircle,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import NewSacrementForm from "@/components/forms/NewSacrementForm";
 
-export const metadata: Metadata = {
-  title: "Gestion des Sacrements | Dashboard Église Catholique",
-};
-
-// Données fictives pour les sacrements
-const sacrements = {
-  baptemes: [
-    {
-      id: 1,
-      type: "baptême",
-      date: "2025-05-25",
-      heure: "11:30",
-      lieu: "Église principale",
-      personne: "Marie Durand",
-      age: "nouveau-né",
-      statut: "confirmé",
-      preparation: "terminée",
-      ministre: "Père Jean Dupont",
-      parrain: "Pierre Martin",
-      marraine: "Julie Leclerc",
-    },
-    {
-      id: 2,
-      type: "baptême",
-      date: "2025-06-08",
-      heure: "12:00",
-      lieu: "Église principale",
-      personne: "Lucas Bernard",
-      age: "nouveau-né",
-      statut: "en préparation",
-      preparation: "en cours",
-      ministre: "Père Jean Dupont",
-      parrain: "François Dubois",
-      marraine: "Sophie Petit",
-    },
-    {
-      id: 3,
-      type: "baptême",
-      date: "2025-06-15",
-      heure: "11:30",
-      lieu: "Église principale",
-      personne: "Thomas Leroy",
-      age: "adulte (28 ans)",
-      statut: "en préparation",
-      preparation: "en cours",
-      ministre: "Père Michel Bernard",
-      parrain: "Jean Moreau",
-      marraine: "Marie Martin",
-    },
-    {
-      id: 4,
-      type: "baptême",
-      date: "2025-07-06",
-      heure: "12:00",
-      lieu: "Église principale",
-      personne: "Léa Girard",
-      age: "enfant (8 ans)",
-      statut: "demande reçue",
-      preparation: "à commencer",
-      ministre: "Père Jean Dupont",
-      parrain: "Antoine Lefèvre",
-      marraine: "Claire Dupuis",
-    },
-  ],
-  communions: [
-    {
-      id: 5,
-      type: "première communion",
-      date: "2025-05-18",
-      heure: "10:30",
-      lieu: "Église principale",
-      personne: "Groupe catéchisme (12 enfants)",
-      age: "enfants (8-10 ans)",
-      statut: "confirmé",
-      preparation: "terminée",
-      ministre: "Père Jean Dupont",
-      responsable: "Marie Martin (catéchiste)",
-    },
-    {
-      id: 6,
-      type: "première communion",
-      date: "2025-06-29",
-      heure: "10:30",
-      lieu: "Église principale",
-      personne: "Thomas Leroy",
-      age: "adulte (28 ans)",
-      statut: "en préparation",
-      preparation: "en cours",
-      ministre: "Père Michel Bernard",
-      responsable: "Sophie Petit (catéchuménat)",
-    },
-  ],
-  confirmations: [
-    {
-      id: 7,
-      type: "confirmation",
-      date: "2025-05-25",
-      heure: "16:00",
-      lieu: "Cathédrale Notre-Dame",
-      personne: "Groupe aumônerie (8 jeunes)",
-      age: "jeunes (15-18 ans)",
-      statut: "confirmé",
-      preparation: "terminée",
-      ministre: "Mgr l'Évêque",
-      responsable: "Père Jean Dupont",
-    },
-    {
-      id: 8,
-      type: "confirmation",
-      date: "2025-05-25",
-      heure: "16:00",
-      lieu: "Cathédrale Notre-Dame",
-      personne: "Thomas Leroy",
-      age: "adulte (28 ans)",
-      statut: "en préparation",
-      preparation: "en cours",
-      ministre: "Mgr l'Évêque",
-      responsable: "Sophie Petit (catéchuménat)",
-    },
-  ],
-  mariages: [
-    {
-      id: 9,
-      type: "mariage",
-      date: "2025-06-14",
-      heure: "15:00",
-      lieu: "Église principale",
-      personne: "Paul Mercier & Emma Rousseau",
-      age: "adultes",
-      statut: "confirmé",
-      preparation: "terminée",
-      ministre: "Père Jean Dupont",
-      temoins: "Jacques Mercier, Lucie Rousseau",
-    },
-    {
-      id: 10,
-      type: "mariage",
-      date: "2025-07-05",
-      heure: "16:30",
-      lieu: "Église principale",
-      personne: "Antoine Morel & Sarah Leclerc",
-      age: "adultes",
-      statut: "en préparation",
-      preparation: "en cours",
-      ministre: "Père Michel Bernard",
-      temoins: "Pierre Morel, Julie Leclerc",
-    },
-    {
-      id: 11,
-      type: "mariage",
-      date: "2025-09-13",
-      heure: "15:30",
-      lieu: "Église principale",
-      personne: "Maxime Dupuis & Camille Legrand",
-      age: "adultes",
-      statut: "demande reçue",
-      preparation: "à commencer",
-      ministre: "Père Jean Dupont",
-      temoins: "À déterminer",
-    },
-  ],
-  onctions: [
-    {
-      id: 12,
-      type: "onction des malades",
-      date: "2025-05-12",
-      heure: "15:00",
-      lieu: "Hôpital Saint-Louis, chambre 304",
-      personne: "Jacques Moreau",
-      age: "aîné (85 ans)",
-      statut: "terminé",
-      preparation: "terminée",
-      ministre: "Père Jean Dupont",
-    },
-    {
-      id: 13,
-      type: "onction des malades",
-      date: "2025-05-19",
-      heure: "14:30",
-      lieu: "Maison de retraite Les Tilleuls",
-      personne: "Groupe (5 résidents)",
-      age: "aînés",
-      statut: "confirmé",
-      preparation: "terminée",
-      ministre: "Père Michel Bernard",
-    },
-  ],
-};
+// Types pour les sacrements
+interface Sacrement {
+  id: number;
+  created_at: string;
+  type: string;
+  date: string;
+  description: string;
+  celebrant_id: number;
+  paroisse_id: number;
+  chapelle_id: number | null;
+  certificateur_id: number | null;
+  // Nous ajoutons des champs supplémentaires qui pourraient être retournés
+  lieu?: string;
+  heure?: string;
+  personne?: string;
+  statut?: string;
+  preparation?: string;
+}
 
 // Formatage de la date
 const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-};
-
-// Formater type de sacrement pour Badge
-const getSacrementTypeDetails = (type: string) => {
-  switch (type) {
-    case "baptême":
-      return {
-        label: "Baptême",
-        variant: "default" as const,
-        icon: <Heart className="h-4 w-4 mr-1" />,
-      };
-    case "première communion":
-      return {
-        label: "Première communion",
-        variant: "success" as const,
-        icon: <Heart className="h-4 w-4 mr-1" />,
-      };
-    case "confirmation":
-      return {
-        label: "Confirmation",
-        variant: "secondary" as const,
-        icon: <Heart className="h-4 w-4 mr-1" />,
-      };
-    case "mariage":
-      return {
-        label: "Mariage",
-        variant: "destructive" as const,
-        icon: <Heart className="h-4 w-4 mr-1" />,
-      };
-    case "onction des malades":
-      return {
-        label: "Onction des malades",
-        variant: "outline" as const,
-        icon: <Heart className="h-4 w-4 mr-1" />,
-      };
-    default:
-      return {
-        label: type,
-        variant: "default" as const,
-        icon: <Heart className="h-4 w-4 mr-1" />,
-      };
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("fr-FR", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  } catch (error) {
+    return "Date inconnue";
   }
 };
 
-// Formater statut pour Badge
+// Extraire le statut à partir de la description ou de la date
+const extractStatut = (sacrement: Sacrement) => {
+  if (sacrement.statut) return sacrement.statut;
+
+  const dateObj = new Date(sacrement.date);
+  const now = new Date();
+
+  if (dateObj < now) return "terminé";
+  if (dateObj.getTime() - now.getTime() < 7 * 24 * 60 * 60 * 1000)
+    return "confirmé";
+  if (dateObj.getTime() - now.getTime() < 30 * 24 * 60 * 60 * 1000)
+    return "en préparation";
+  return "demande reçue";
+};
+
+// Formater type de sacrement pour Badge
+// Mise à jour de la fonction pour obtenir les détails du type de sacrement
+const getSacrementTypeDetails = (type: string) => {
+  const typeLC = type.toLowerCase();
+
+  // Sacrements individuels
+  if (typeLC.includes("baptême") || typeLC === "bapteme") {
+    return {
+      label: "Baptême",
+      variant: "default" as const,
+      icon: <Heart className="h-4 w-4 mr-1" />,
+      category: "baptemes",
+      isUnion: false,
+    };
+  } else if (typeLC.includes("communion")) {
+    return {
+      label: "Communion",
+      variant: "success" as const,
+      icon: <Heart className="h-4 w-4 mr-1" />,
+      category: "communions",
+      isUnion: false,
+    };
+  } else if (typeLC.includes("confirmation")) {
+    return {
+      label: "Confirmation",
+      variant: "secondary" as const,
+      icon: <Heart className="h-4 w-4 mr-1" />,
+      category: "confirmations",
+      isUnion: false,
+    };
+  }
+  // Sacrements d'union
+  else if (typeLC.includes("mariage")) {
+    return {
+      label: "Mariage",
+      variant: "destructive" as const,
+      icon: <Heart className="h-4 w-4 mr-1" />,
+      category: "mariages",
+      isUnion: true,
+    };
+  } else if (typeLC.includes("onction") || typeLC.includes("malade")) {
+    return {
+      label: "Onction des malades",
+      variant: "outline" as const,
+      icon: <Heart className="h-4 w-4 mr-1" />,
+      category: "onctions",
+      isUnion: false,
+    };
+  } else {
+    return {
+      label: type,
+      variant: "default" as const,
+      icon: <Heart className="h-4 w-4 mr-1" />,
+      category: "autres",
+      isUnion: false,
+    };
+  }
+};
+
+// Fonction pour extraire les noms des personnes concernées
+const extractPersonnes = (sacrement: Sacrement) => {
+  // Pour les sacrements d'union (comme le mariage)
+  if (getSacrementTypeDetails(sacrement.type).isUnion) {
+    // Rechercher un modèle comme "Mariage de X et Y" ou "X & Y" dans la description
+    const unionMatch = sacrement.description.match(
+      /(?:mariage|union)(?:\s+de)?\s+([^&]+)\s+(?:et|&)\s+([^.,;]+)/i
+    );
+    if (unionMatch) {
+      return {
+        primary: unionMatch[1].trim(),
+        secondary: unionMatch[2].trim(),
+        display: `${unionMatch[1].trim()} & ${unionMatch[2].trim()}`,
+      };
+    }
+
+    // Si aucun match, retourner un placeholder
+    return {
+      primary: "Couple",
+      secondary: "",
+      display: "Couple",
+    };
+  }
+  // Pour les sacrements individuels
+  else {
+    // Chercher un nom dans la description
+    const personneMatch = sacrement.description.match(
+      /(?:pour|de|à)\s+([^.,;]+)/i
+    );
+    if (personneMatch) {
+      return {
+        primary: personneMatch[1].trim(),
+        secondary: "",
+        display: personneMatch[1].trim(),
+      };
+    }
+
+    // Si aucun match, retourner un placeholder selon le type
+    const typeInfo = getSacrementTypeDetails(sacrement.type);
+    return {
+      primary: `Participant(e)`,
+      secondary: "",
+      display: `Participant(e)`,
+    };
+  }
+};
+
 const getStatusDetails = (statut: string) => {
   switch (statut) {
     case "confirmé":
@@ -277,134 +193,182 @@ const getStatusDetails = (statut: string) => {
   }
 };
 
-// Formater préparation pour Badge
-const getPreparationDetails = (preparation: string) => {
-  switch (preparation) {
-    case "terminée":
-      return {
-        label: "Terminée",
-        variant: "success" as const,
-        icon: <Check className="h-4 w-4 mr-1" />,
-      };
-    case "en cours":
-      return {
-        label: "En cours",
-        variant: "secondary" as const,
-        icon: <Clock className="h-4 w-4 mr-1" />,
-      };
-    case "à commencer":
-      return {
-        label: "À commencer",
-        variant: "outline" as const,
-        icon: <Calendar className="h-4 w-4 mr-1" />,
-      };
-    default:
-      return {
-        label: preparation,
-        variant: "outline" as const,
-        icon: <Clock className="h-4 w-4 mr-1" />,
-      };
-  }
-};
-
-// Compter les sacrements à venir
-const countFutureSacrements = () => {
-  const now = new Date();
-
-  const baptemes = sacrements.baptemes.filter(
-    (s) => new Date(s.date) >= now
-  ).length;
-  const communions = sacrements.communions.filter(
-    (s) => new Date(s.date) >= now
-  ).length;
-  const confirmations = sacrements.confirmations.filter(
-    (s) => new Date(s.date) >= now
-  ).length;
-  const mariages = sacrements.mariages.filter(
-    (s) => new Date(s.date) >= now
-  ).length;
-  const onctions = sacrements.onctions.filter(
-    (s) => new Date(s.date) >= now
-  ).length;
-
-  return { baptemes, communions, confirmations, mariages, onctions };
-};
-
-// Créer un composant pour rendre un sacrement
-const SacrementItem = ({ sacrement }: { sacrement: any }) => {
+// Composant SacrementItem mis à jour
+const SacrementItem = ({ sacrement }: { sacrement: Sacrement }) => {
   const {
     label: typeLabel,
     variant: typeVariant,
     icon: typeIcon,
+    isUnion,
   } = getSacrementTypeDetails(sacrement.type);
-  const { label: statusLabel, variant: statusVariant } = getStatusDetails(
-    sacrement.statut
-  );
-  const {
-    label: prepLabel,
-    variant: prepVariant,
-    icon: prepIcon,
-  } = getPreparationDetails(sacrement.preparation);
+
+  const statut = extractStatut(sacrement);
+  const { label: statusLabel, variant: statusVariant } =
+    getStatusDetails(statut);
+  const personnes = extractPersonnes(sacrement);
 
   return (
-    <div className="p-4 border border-slate-200 rounded-md hover:bg-slate-50">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="w-12 h-12 flex-shrink-0 bg-slate-100 rounded-md flex items-center justify-center">
-            <Heart className="h-6 w-6 text-slate-700" />
-          </div>
-          <div>
-            <div className="flex items-center flex-wrap gap-2">
-              <h3 className="font-medium text-slate-900">
-                {sacrement.personne}
-              </h3>
-              <Badge variant={typeVariant} className="flex items-center">
-                {typeIcon} {typeLabel}
-              </Badge>
-              <Badge variant={statusVariant}>{statusLabel}</Badge>
-            </div>
-            <div className="flex flex-col sm:flex-row sm:items-center text-sm text-slate-500 mt-1 gap-1 sm:gap-3">
-              <div className="flex items-center">
-                <Calendar className="h-3.5 w-3.5 mr-1" />
-                {formatDate(sacrement.date)}
-              </div>
-              <div className="flex items-center">
-                <Clock className="h-3.5 w-3.5 mr-1" />
-                {sacrement.heure}
-              </div>
-              <div className="flex items-center">
-                <MapPin className="h-3.5 w-3.5 mr-1" />
-                {sacrement.lieu}
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-3 mt-2">
-              <div className="flex items-center text-sm text-slate-700">
-                <User className="h-3.5 w-3.5 mr-1" />
-                Ministre: {sacrement.ministre}
-              </div>
-              <Badge
-                variant={prepVariant}
-                className="flex items-center text-xs"
-              >
-                {prepIcon} Préparation: {prepLabel}
-              </Badge>
-            </div>
-          </div>
-        </div>
-        <div className="flex self-end md:self-center">
-          <a
-            href={`/dashboard/paroisse/sacrements/${sacrement.id}`}
-            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-slate-900 text-slate-50 hover:bg-slate-900/90 h-9 px-4 py-2"
+    <div className="p-3 border border-slate-200 rounded-md hover:bg-slate-50 h-full flex flex-col">
+      {/* En-tête avec badges */}
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex flex-wrap gap-1.5">
+          <Badge
+            variant={typeVariant}
+            className="flex items-center text-xs px-2 py-0.5"
           >
-            Détails
-          </a>
+            {typeIcon} {typeLabel}
+          </Badge>
+          <Badge variant={statusVariant} className="text-xs px-2 py-0.5">
+            {statusLabel}
+          </Badge>
         </div>
+      </div>
+
+      {/* Contenu principal */}
+      <div className="flex-grow">
+        {/* Date */}
+        <div className="flex items-center text-xs text-slate-500 mb-1.5">
+          <Calendar className="h-3 w-3 mr-1.5" />
+          <span className="truncate">{formatDate(sacrement.date)}</span>
+        </div>
+
+        {/* Description courte */}
+        <p className="text-2xs text-slate-600 line-clamp-2 mb-3">
+          {sacrement.description.substring(0, 80)}
+          {sacrement.description.length > 80 ? "..." : ""}
+        </p>
+      </div>
+
+      {/* Pied de carte */}
+      <div className="mt-auto pt-2 border-t border-slate-100 flex justify-between items-center">
+        <div className="text-xs text-slate-500 flex items-center">
+          <User className="h-3 w-3 mr-1" />
+          Célébrant: {sacrement.celebrant_id}
+        </div>
+        <Button
+          variant="default"
+          size="sm"
+          className="h-7 text-xs px-2.5"
+          asChild
+        >
+          <a href={`/dashboard/paroisse/sacrements/${sacrement.id}`}>Détails</a>
+        </Button>
       </div>
     </div>
   );
 };
 
 export default function SacrementsPage() {
+  const router = useRouter();
+  const [sacrements, setSacrements] = useState<Sacrement[]>([]);
+  const [filteredSacrements, setFilteredSacrements] = useState<Sacrement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("tous");
+
+  // Récupérer les sacrements depuis l'API
+  useEffect(() => {
+    const fetchSacrements = async () => {
+      setLoading(true);
+      try {
+        // Récupérer le token depuis localStorage
+        const token = localStorage.getItem("auth_token");
+
+        if (!token) {
+          throw new Error("Token d'authentification non trouvé");
+        }
+
+        // Appel à l'API
+        const response = await fetch(
+          "https://api.cathoconnect.ci/api:HzF8fFua/sacrement",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setSacrements(data);
+        setFilteredSacrements(data);
+      } catch (err) {
+        console.error("Erreur lors du chargement des sacrements:", err);
+        setError(
+          err.message ||
+            "Une erreur est survenue lors du chargement des données."
+        );
+        toast.error("Erreur", {
+          description: "Impossible de charger les sacrements.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSacrements();
+  }, []);
+
+  // Fonction pour filtrer les sacrements selon la recherche et l'onglet actif
+  useEffect(() => {
+    let results = [...sacrements];
+
+    // Filtrer par recherche
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      results = results.filter(
+        (sacrement) =>
+          sacrement.type.toLowerCase().includes(query) ||
+          sacrement.description.toLowerCase().includes(query) ||
+          formatDate(sacrement.date).toLowerCase().includes(query)
+      );
+    }
+
+    // Filtrer par type de sacrement selon l'onglet actif
+    if (activeTab !== "tous") {
+      results = results.filter(
+        (sacrement) =>
+          getSacrementTypeDetails(sacrement.type).category === activeTab
+      );
+    }
+
+    // Trier par date
+    results.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    setFilteredSacrements(results);
+  }, [searchQuery, activeTab, sacrements]);
+
+  // Compter les sacrements à venir par catégorie
+  const countFutureSacrements = () => {
+    const now = new Date();
+
+    const counts = {
+      baptemes: 0,
+      communions: 0,
+      confirmations: 0,
+      mariages: 0,
+      onctions: 0,
+      autres: 0,
+    };
+
+    sacrements.forEach((sacrement) => {
+      if (new Date(sacrement.date) >= now) {
+        const category = getSacrementTypeDetails(sacrement.type).category;
+        counts[category]++;
+      }
+    });
+
+    return counts;
+  };
+
   const counts = countFutureSacrements();
   const totalSacrements = Object.values(counts).reduce(
     (sum, count) => sum + count,
@@ -417,16 +381,9 @@ export default function SacrementsPage() {
         <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
           Gestion des Sacrements
         </h1>
-        <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
-          <Button variant="outline" className="w-full xs:w-auto" size="sm">
-            <Calendar className="mr-2 h-4 w-4" /> Vue Calendrier
-          </Button>
-          <Button className="w-full xs:w-auto" size="sm">
-            <Plus className="mr-2 h-4 w-4" /> Nouvelle demande
-          </Button>
-        </div>
       </div>
 
+      {/* Statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="p-4 flex flex-col items-center justify-center">
           <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mb-2">
@@ -470,10 +427,15 @@ export default function SacrementsPage() {
           <h2 className="text-lg font-semibold">
             Sacrements à venir ({totalSacrements})
           </h2>
-          <div className="flex gap-2">
-            <div className="relative w-64">
+          <div className="flex flex-wrap gap-2">
+            <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-              <Input placeholder="Rechercher..." className="pl-10" />
+              <Input
+                placeholder="Rechercher..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
             <Button variant="outline" size="icon">
               <Filter className="h-4 w-4" />
@@ -485,10 +447,17 @@ export default function SacrementsPage() {
               <Download className="h-4 w-4" />
             </Button>
           </div>
+          <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
+            <NewSacrementForm />
+          </div>
         </div>
 
-        <Tabs defaultValue="tous" className="space-y-4">
-          <TabsList>
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-4"
+        >
+          <TabsList className="flex flex-wrap">
             <TabsTrigger value="tous">Tous</TabsTrigger>
             <TabsTrigger value="baptemes">Baptêmes</TabsTrigger>
             <TabsTrigger value="communions">Communions</TabsTrigger>
@@ -497,107 +466,47 @@ export default function SacrementsPage() {
             <TabsTrigger value="onctions">Onctions</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="tous" className="space-y-4">
-            {[
-              ...sacrements.baptemes,
-              ...sacrements.communions,
-              ...sacrements.confirmations,
-              ...sacrements.mariages,
-              ...sacrements.onctions,
-            ]
-              .sort(
-                (a, b) =>
-                  new Date(a.date).getTime() - new Date(b.date).getTime()
-              )
-              .map((sacrement) => (
-                <SacrementItem key={sacrement.id} sacrement={sacrement} />
-              ))}
-          </TabsContent>
-
-          <TabsContent value="baptemes" className="space-y-4">
-            {sacrements.baptemes.length > 0 ? (
-              sacrements.baptemes
-                .sort(
-                  (a, b) =>
-                    new Date(a.date).getTime() - new Date(b.date).getTime()
-                )
-                .map((bapteme) => (
-                  <SacrementItem key={bapteme.id} sacrement={bapteme} />
-                ))
-            ) : (
-              <div className="text-center py-8 text-slate-500">
-                Aucun baptême prévu.
+          <TabsContent value={activeTab}>
+            {loading ? (
+              <div className="flex justify-center items-center p-12">
+                <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+                <span className="ml-3 text-slate-500">
+                  Chargement des sacrements...
+                </span>
               </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="communions" className="space-y-4">
-            {sacrements.communions.length > 0 ? (
-              sacrements.communions
-                .sort(
-                  (a, b) =>
-                    new Date(a.date).getTime() - new Date(b.date).getTime()
-                )
-                .map((communion) => (
-                  <SacrementItem key={communion.id} sacrement={communion} />
-                ))
-            ) : (
-              <div className="text-center py-8 text-slate-500">
-                Aucune communion prévue.
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center p-12 text-center">
+                <XCircle className="h-12 w-12 text-red-400 mb-4" />
+                <h3 className="text-lg font-medium text-slate-900 mb-2">
+                  Une erreur est survenue
+                </h3>
+                <p className="text-sm text-slate-500 max-w-md mb-4">{error}</p>
+                <Button onClick={() => window.location.reload()}>
+                  Réessayer
+                </Button>
               </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="confirmations" className="space-y-4">
-            {sacrements.confirmations.length > 0 ? (
-              sacrements.confirmations
-                .sort(
-                  (a, b) =>
-                    new Date(a.date).getTime() - new Date(b.date).getTime()
-                )
-                .map((confirmation) => (
-                  <SacrementItem
-                    key={confirmation.id}
-                    sacrement={confirmation}
-                  />
-                ))
-            ) : (
-              <div className="text-center py-8 text-slate-500">
-                Aucune confirmation prévue.
+            ) : filteredSacrements.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-12 text-center bg-slate-50 rounded-lg">
+                <Calendar className="h-12 w-12 text-slate-300 mb-4" />
+                <h3 className="text-lg font-medium text-slate-900 mb-2">
+                  Aucun sacrement trouvé
+                </h3>
+                <p className="text-sm text-slate-500 max-w-md mb-4">
+                  {searchQuery
+                    ? "Aucun sacrement ne correspond à votre recherche."
+                    : "Aucun sacrement n'est prévu pour le moment."}
+                </p>
+                {searchQuery && (
+                  <Button variant="outline" onClick={() => setSearchQuery("")}>
+                    Effacer la recherche
+                  </Button>
+                )}
               </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="mariages" className="space-y-4">
-            {sacrements.mariages.length > 0 ? (
-              sacrements.mariages
-                .sort(
-                  (a, b) =>
-                    new Date(a.date).getTime() - new Date(b.date).getTime()
-                )
-                .map((mariage) => (
-                  <SacrementItem key={mariage.id} sacrement={mariage} />
-                ))
             ) : (
-              <div className="text-center py-8 text-slate-500">
-                Aucun mariage prévu.
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="onctions" className="space-y-4">
-            {sacrements.onctions.length > 0 ? (
-              sacrements.onctions
-                .sort(
-                  (a, b) =>
-                    new Date(a.date).getTime() - new Date(b.date).getTime()
-                )
-                .map((onction) => (
-                  <SacrementItem key={onction.id} sacrement={onction} />
-                ))
-            ) : (
-              <div className="text-center py-8 text-slate-500">
-                Aucune onction prévue.
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {filteredSacrements.map((sacrement) => (
+                  <SacrementItem key={sacrement.id} sacrement={sacrement} />
+                ))}
               </div>
             )}
           </TabsContent>

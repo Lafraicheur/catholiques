@@ -28,23 +28,7 @@ const events = [
     time: "18:30",
     location: "Bureau du curé",
     type: "reunion",
-  },
-  {
-    id: 4,
-    title: "Baptême - Marie Durand",
-    date: "2025-05-19",
-    time: "11:00",
-    location: "Église principale",
-    type: "sacrement",
-  },
-  {
-    id: 5,
-    title: "Groupe de prière",
-    date: "2025-05-15",
-    time: "19:00",
-    location: "Chapelle",
-    type: "priere",
-  },
+  }
 ];
 
 // Formatage de la date en français
@@ -77,7 +61,7 @@ const getEventTypeDetails = (type: string) => {
 
 export default function EventsList() {
   return (
-    <div className="space-y-4">
+    <div className="space-y-1">
       {events.map((event) => {
         const { label, variant } = getEventTypeDetails(event.type);
         return (

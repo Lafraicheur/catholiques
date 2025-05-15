@@ -1,13 +1,14 @@
-// api.js - Ajouter ces fonctions à votre fichier api.js existant
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// api.js - Ajouter cette fonction à votre fichier api.js existant
 
 import { ApiError, AuthenticationError, ForbiddenError, NotFoundError } from "./api";
 
 /**
- * Récupère tous les paroissiens d'une paroisse
+ * Récupère toutes les CEB d'une paroisse
  * @param {number} paroisseId - ID de la paroisse
- * @returns {Promise<Array>} Les paroissiens de la paroisse
+ * @returns {Promise<Array>} Les CEB de la paroisse
  */
-export const fetchParoissiens = async (paroisseId) => {
+export const fetchCebs = async (paroisseId: number): Promise<Array<any>> => {
   try {
     // Récupérer le token depuis localStorage
     const token = localStorage.getItem("auth_token");
@@ -18,7 +19,7 @@ export const fetchParoissiens = async (paroisseId) => {
     
     // Appel à l'API
     const response = await fetch(
-      `https://api.cathoconnect.ci/api:HzF8fFua/paroissien/obtenir-tous?paroisse_id=${paroisseId}`,
+      `https://api.cathoconnect.ci/api:HzF8fFua/ceb/obtenir-tous?paroisse_id=${paroisseId}`,
       {
         method: "GET",
         headers: {
@@ -40,7 +41,7 @@ export const fetchParoissiens = async (paroisseId) => {
       } else {
         const errorData = await response.json().catch(() => ({}));
         throw new ApiError(
-          errorData.message || "Erreur lors de la récupération des paroissiens",
+          errorData.message || "Erreur lors de la récupération des CEB",
           response.status
         );
       }
@@ -50,17 +51,17 @@ export const fetchParoissiens = async (paroisseId) => {
     return data.items || [];
     
   } catch (err) {
-    console.error("Erreur API fetchParoissiens:", err);
+    console.error("Erreur API fetchCebs:", err);
     throw err;
   }
 };
 
 /**
- * Récupère les détails d'un paroissien spécifique
- * @param {number} paroissienId - ID du paroissien
- * @returns {Promise<Object>} Les détails du paroissien
+ * Récupère les détails d'une CEB spécifique
+ * @param {number} cebId - ID de la CEB
+ * @returns {Promise<Object>} Les détails de la CEB
  */
-export const fetchParoissienDetails = async (paroissienId) => {
+export const fetchCebDetails = async (cebId: number): Promise<object> => {
   try {
     // Récupérer le token depuis localStorage
     const token = localStorage.getItem("auth_token");
@@ -71,7 +72,7 @@ export const fetchParoissienDetails = async (paroissienId) => {
     
     // Appel à l'API
     const response = await fetch(
-      `https://api.cathoconnect.ci/api:HzF8fFua/paroissien/obtenir-un?paroissien_id=${paroissienId}`,
+      `https://api.cathoconnect.ci/api:HzF8fFua/ceb/obtenir-un?ceb_id=${cebId}`,
       {
         method: "GET",
         headers: {
@@ -87,13 +88,13 @@ export const fetchParoissienDetails = async (paroissienId) => {
       } else if (response.status === 403) {
         throw new ForbiddenError("Accès refusé");
       } else if (response.status === 404) {
-        throw new NotFoundError("Paroissien non trouvé");
+        throw new NotFoundError("CEB non trouvée");
       } else if (response.status === 429) {
         throw new ApiError("Trop de requêtes, veuillez réessayer plus tard", 429);
       } else {
         const errorData = await response.json().catch(() => ({}));
         throw new ApiError(
-          errorData.message || "Erreur lors de la récupération des détails du paroissien",
+          errorData.message || "Erreur lors de la récupération des détails de la CEB",
           response.status
         );
       }
@@ -103,17 +104,18 @@ export const fetchParoissienDetails = async (paroissienId) => {
     return data.item || null;
     
   } catch (err) {
-    console.error("Erreur API fetchParoissienDetails:", err);
+    console.error("Erreur API fetchCebDetails:", err);
     throw err;
   }
 };
 
 /**
- * Modifie les informations d'un paroissien
- * @param {Object} paroissienData - Les données du paroissien à modifier
- * @returns {Promise<Object>} Le paroissien modifié
+ * Nomme un président pour une CEB
+ * @param {number} cebId - ID de la CEB
+ * @param {number} paroissienId - ID du paroissien à nommer comme président
+ * @returns {Promise<Object>} La CEB mise à jour
  */
-export const updateParoissien = async (paroissienData) => {
+export const nominatePresident = async (cebId, paroissienId) => {
   try {
     // Récupérer le token depuis localStorage
     const token = localStorage.getItem("auth_token");
@@ -124,14 +126,17 @@ export const updateParoissien = async (paroissienData) => {
     
     // Appel à l'API
     const response = await fetch(
-      "https://api.cathoconnect.ci/api:HzF8fFua/paroissien/modifier",
+      "https://api.cathoconnect.ci/api:HzF8fFua/ceb/nominer-president",
       {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(paroissienData),
+        body: JSON.stringify({
+          ceb_id: cebId,
+          paroissien_id: paroissienId
+        }),
       }
     );
     
@@ -141,23 +146,23 @@ export const updateParoissien = async (paroissienData) => {
       } else if (response.status === 403) {
         throw new ForbiddenError("Accès refusé");
       } else if (response.status === 404) {
-        throw new NotFoundError("Paroissien non trouvé");
+        throw new NotFoundError("CEB ou paroissien non trouvé");
       } else if (response.status === 429) {
         throw new ApiError("Trop de requêtes, veuillez réessayer plus tard", 429);
       } else {
         const errorData = await response.json().catch(() => ({}));
         throw new ApiError(
-          errorData.message || "Erreur lors de la modification du paroissien",
+          errorData.message || "Erreur lors de la nomination du président",
           response.status
         );
       }
     }
     
     const data = await response.json();
-    return data || {};
+    return data.item || null;
     
   } catch (err) {
-    console.error("Erreur API updateParoissien:", err);
+    console.error("Erreur API nominatePresident:", err);
     throw err;
   }
 };

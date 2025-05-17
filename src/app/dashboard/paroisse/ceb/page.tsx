@@ -317,7 +317,7 @@ export default function CebsPage() {
               {formatCurrency(ceb.solde)}
             </span>
           </div>
-          <div className="text-sm text-slate-500">
+          {/* <div className="text-sm text-slate-500">
             {ceb.president ? (
               <div className="flex items-center">
                 <User className="h-3.5 w-3.5 mr-1 opacity-70" />
@@ -331,7 +331,7 @@ export default function CebsPage() {
                 <span>Sans président</span>
               </div>
             )}
-          </div>
+          </div> */}
         </CardContent>
         <CardFooter className="pt-0">
           <Button

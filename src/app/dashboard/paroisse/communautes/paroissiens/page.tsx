@@ -240,11 +240,9 @@ export default function ParoissiensPage() {
         label: string;
       }
     > = {
-      Actif: { variant: "success", label: "Actif" },
-      Inactif: { variant: "secondary", label: "Inactif" },
       Baptisé: { variant: "default", label: "Baptisé" },
       Confirmé: { variant: "default", label: "Confirmé" },
-      Marié: { variant: "default", label: "Marié" },
+      Marié: { variant: "default", label: "Marié à l'église" },
       Aucun: { variant: "outline", label: "Aucun" },
     };
 
@@ -469,7 +467,7 @@ export default function ParoissiensPage() {
                       </td>
 
                       <td className="py-3 px-4">
-                        <div className="font-medium text-slate-900">
+                        <div className="font-medium text-xs text-slate-900">
                           {paroissien.nom} {paroissien.prenoms}
                         </div>
                         <div className="text-xs text-slate-500">
@@ -483,7 +481,7 @@ export default function ParoissiensPage() {
                         )}
                       </td>
 
-                      <td className="py-3 px-4 text-slate-700">
+                      <td className="py-3 px-4 text-xs text-slate-700">
                         {formatPhoneNumber(paroissien.num_de_telephone)}
                       </td>
 

@@ -42,6 +42,9 @@ import {
   ForbiddenError,
   NotFoundError,
 } from "@/services/api";
+import AumonierModal from "@/components/modals/AumonierModal";
+import ParrainModal from "@/components/modals/ParrainModal";
+import ResponsableModal from "@/components/modals/ResponsableModal";
 
 // Types
 interface Personne {
@@ -265,8 +268,26 @@ export default function MouvementDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("details");
+  const [aumonierModalOpen, setAumonierModalOpen] = useState(false);
+  const [responsableModalOpen, setResponsableModalOpen] = useState(false);
+  const [parrainModalOpen, setParrainModalOpen] = useState(false);
 
   const mouvementId = Number(params.id);
+
+  const handleRoleAssigned = async () => {
+    try {
+      if (isNaN(mouvementId)) {
+        throw new Error("ID du mouvement invalide");
+      }
+
+      const data = await fetchMouvementDetails(mouvementId);
+      setMouvement(data);
+      toast.success("Les données ont été mises à jour");
+    } catch (err) {
+      console.error("Erreur lors du rechargement des détails:", err);
+      toast.error("Erreur lors du rafraîchissement des données");
+    }
+  };
 
   useEffect(() => {
     const loadMouvementDetails = async () => {
@@ -403,17 +424,6 @@ export default function MouvementDetailsPage() {
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour
             </Button>
-            {/* <div className="flex items-center space-x-3 mt-1">
-              <Badge
-                variant="outline"
-                className={getTypeBadgeColor(mouvement.type)}
-              >
-                {mouvement.type}
-              </Badge>
-              <span className="text-sm text-slate-500">
-                Créé le {formatDate(mouvement.created_at)}
-              </span>
-            </div> */}
           </div>
 
           <div className="flex space-x-3">
@@ -459,37 +469,6 @@ export default function MouvementDetailsPage() {
 
           {/* Contenu de l'onglet "Détails" */}
           <TabsContent value="details" className="space-y-6">
-            {/* Résumé financier */}
-            {/* <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Résumé financier</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <p className="text-sm text-slate-500">Solde actuel</p>
-                  <p className="text-2xl font-bold text-slate-900">
-                    {formatCurrency(mouvement.solde)}
-                  </p>
-                </div>
-
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <p className="text-sm text-slate-500">Cotisations ce mois</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {formatCurrency(0)}
-                  </p>
-                </div>
-
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <p className="text-sm text-slate-500">Dépenses ce mois</p>
-                  <p className="text-2xl font-bold text-red-600">
-                    {formatCurrency(0)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card> */}
-
             {/* Informations générales */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card className="md:col-span-2">
@@ -523,43 +502,6 @@ export default function MouvementDetailsPage() {
                       value={formatCurrency(mouvement.solde)}
                     />
                   </div>
-
-                  {/* <div className="space-y-3">
-                  <h3 className="font-medium text-slate-900">Rattachement</h3>
-
-                  <div className="flex items-start space-x-3">
-                    <Church className="h-4 w-4 text-slate-400 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-slate-500">Paroisse</p>
-                      <p className="font-medium">
-                        {mouvement.paroisse?.nom || "Non renseigné"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {mouvement.chapelle && (
-                    <div className="flex items-start space-x-3">
-                      <Building className="h-4 w-4 text-slate-400 mt-0.5" />
-                      <div>
-                        <p className="text-xs text-slate-500">Chapelle</p>
-                        <p className="font-medium">{mouvement.chapelle.nom}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {mouvement.paroisse && (
-                    <div className="flex items-start space-x-3">
-                      <MapPin className="h-4 w-4 text-slate-400 mt-0.5" />
-                      <div>
-                        <p className="text-xs text-slate-500">Localisation</p>
-                        <p className="font-medium">
-                          {mouvement.paroisse.quartier},{" "}
-                          {mouvement.paroisse.ville}, {mouvement.paroisse.pays}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div> */}
                 </CardContent>
               </Card>
 
@@ -624,9 +566,7 @@ export default function MouvementDetailsPage() {
                       variant="outline"
                       size="sm"
                       className="mt-4 mx-auto"
-                      onClick={() =>
-                        router.push(`/mouvements/${mouvement.id}/aumonier`)
-                      }
+                      onClick={() => setAumonierModalOpen(true)}
                     >
                       <UserPlus className="h-4 w-4 mr-2" />
                       {mouvement.aumonier ? "Changer" : "Assigner"}
@@ -643,9 +583,7 @@ export default function MouvementDetailsPage() {
                         variant="outline"
                         size="sm"
                         className="mt-4"
-                        onClick={() =>
-                          router.push(`/mouvements/${mouvement.id}/responsable`)
-                        }
+                        onClick={() => setResponsableModalOpen(true)}
                       >
                         <UserPlus className="h-4 w-4 mr-2" />
                         {mouvement.responsable ? "Changer" : "Assigner"}
@@ -663,9 +601,7 @@ export default function MouvementDetailsPage() {
                       variant="outline"
                       size="sm"
                       className="mt-4 mx-auto"
-                      onClick={() =>
-                        router.push(`/mouvements/${mouvement.id}/parrain`)
-                      }
+                      onClick={() => setParrainModalOpen(true)}
                     >
                       <UserPlus className="h-4 w-4 mr-2" />
                       {mouvement.parrain ? "Changer" : "Assigner"}
@@ -674,6 +610,28 @@ export default function MouvementDetailsPage() {
                 />
               </div>
             </div>
+
+            {/* Modaux */}
+            <AumonierModal
+              isOpen={aumonierModalOpen}
+              onClose={() => setAumonierModalOpen(false)}
+              mouvementId={mouvementId}
+              onAssigned={handleRoleAssigned}
+            />
+
+            <ResponsableModal
+              isOpen={responsableModalOpen}
+              onClose={() => setResponsableModalOpen(false)}
+              mouvementId={mouvementId}
+              onAssigned={handleRoleAssigned}
+            />
+
+            <ParrainModal
+              isOpen={parrainModalOpen}
+              onClose={() => setParrainModalOpen(false)}
+              mouvementId={mouvementId}
+              onAssigned={handleRoleAssigned}
+            />
           </TabsContent>
 
           {/* Onglet Membres */}

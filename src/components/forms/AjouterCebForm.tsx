@@ -302,6 +302,7 @@ const AjouterCebForm = ({
         >
           Annuler
         </Button>
+        &nbsp;&nbsp;
         <Button
           type="submit"
           disabled={formLoading}

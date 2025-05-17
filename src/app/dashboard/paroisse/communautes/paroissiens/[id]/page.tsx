@@ -64,10 +64,9 @@ import ModifierParoissienForm from "@/components/forms/ModifierParoissienForm";
 export default function ParoissienDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const paroissienId =
-    params?.id
-      ? parseInt(Array.isArray(params.id) ? params.id[0] : params.id, 10)
-      : null;
+  const paroissienId = params?.id
+    ? parseInt(Array.isArray(params.id) ? params.id[0] : params.id, 10)
+    : null;
 
   const [paroissien, setParoissien] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -198,7 +197,7 @@ export default function ParoissienDetailPage() {
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-3/4" />
             </CardContent>
-          </Card>          
+          </Card>
         </div>
       );
     }
@@ -212,11 +211,8 @@ export default function ParoissienDetailPage() {
           <CardContent>
             <p className="text-red-600">{error}</p>
             <div className="mt-4 flex justify-between">
-              <Button
-                variant="outline"
-                onClick={() => router.push("/dashboard/paroisse/paroissiens")}
-              >
-                Retour à la liste
+              <Button variant="outline" onClick={() => router.back()}>
+                Retour
               </Button>
               <Button
                 variant="outline"
@@ -243,11 +239,8 @@ export default function ParoissienDetailPage() {
               Le paroissien demandé n'existe pas ou a été supprimé.
             </p>
             <div className="mt-4">
-              <Button
-                variant="outline"
-                onClick={() => router.push("/dashboard/paroisse/paroissiens")}
-              >
-                Retour à la liste des paroissiens
+              <Button variant="outline" onClick={() => router.back()}>
+                Retour
               </Button>
             </div>
           </CardContent>
@@ -286,32 +279,30 @@ export default function ParoissienDetailPage() {
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-slate-500">
-                    Genre
-                  </p>
+                  <p className="text-sm font-medium text-slate-500">Genre</p>
                   <div className="flex items-center gap-2">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          paroissien.genre === "M" ? "bg-blue-100" : "bg-pink-100"
-                        }`}
-                      >
-                        {paroissien.genre === "M" ? (
-                          <Mars className="h-4 w-4 text-blue-600" />
-                        ) : (
-                          <Venus className="h-4 w-4 text-pink-600" />
-                        )}
-                      </div>
-
-                      <Badge
-                        className={`px-2 py-1 font-normal text-xs ${
-                          paroissien.genre === "M"
-                            ? "bg-blue-50 text-blue-700 hover:bg-blue-50 border border-blue-100"
-                            : "bg-pink-50 text-pink-700 hover:bg-pink-50 border border-pink-100"
-                        }`}
-                      >
-                        {paroissien.genre === "M" ? "Homme" : "Femme"}
-                      </Badge>
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        paroissien.genre === "M" ? "bg-blue-100" : "bg-pink-100"
+                      }`}
+                    >
+                      {paroissien.genre === "M" ? (
+                        <Mars className="h-4 w-4 text-blue-600" />
+                      ) : (
+                        <Venus className="h-4 w-4 text-pink-600" />
+                      )}
                     </div>
+
+                    <Badge
+                      className={`px-2 py-1 font-normal text-xs ${
+                        paroissien.genre === "M"
+                          ? "bg-blue-50 text-blue-700 hover:bg-blue-50 border border-blue-100"
+                          : "bg-pink-50 text-pink-700 hover:bg-pink-50 border border-pink-100"
+                      }`}
+                    >
+                      {paroissien.genre === "M" ? "Homme" : "Femme"}
+                    </Badge>
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-slate-500">Email</p>
@@ -437,7 +428,6 @@ export default function ParoissienDetailPage() {
 
         <div className="space-y-6">
           <Card className="bg-slate-50 border-slate-100">
-            
             <CardHeader className="pb-3">
               <CardTitle className="text-lg font-semibold">
                 Informations d'abonnement
@@ -587,7 +577,16 @@ export default function ParoissienDetailPage() {
     <div className="container mx-auto py-6 max-w-7xl">
       {/* Fil d'Ariane */}
       <div className="flex items-center mb-4 text-sm text-slate-500">
-        <Link href="/dashboard" className="hover:text-slate-700">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => router.back()}
+          className="flex items-center"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Retour
+        </Button>
+        {/* <Link href="/dashboard" className="hover:text-slate-700">
           Dashboard
         </Link>
         <ChevronRight className="h-4 w-4 mx-1" />
@@ -602,17 +601,12 @@ export default function ParoissienDetailPage() {
           Paroissiens
         </Link>
         <ChevronRight className="h-4 w-4 mx-1" />
-        <span className="text-slate-800 font-medium">Détails</span>
+        <span className="text-slate-800 font-medium">Détails</span> */}
       </div>
 
       {/* En-tête avec nom et actions */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2">
-          <Link href="/dashboard/paroisse/paroissiens" passHref>
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
           <h1 className="text-2xl font-bold text-slate-900">
             {paroissien?.prenoms} {paroissien?.nom}
           </h1>

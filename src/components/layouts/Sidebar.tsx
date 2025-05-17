@@ -466,16 +466,11 @@ import {
   Church,
   Landmark,
   Building,
-  CalendarDays,
-  Handshake,
-  HandHelping,
-  Ribbon,
-  AppWindow,
-  CreditCard,
-  Wallet,
   User,
   UserX,
   Leaf,
+  Handshake,
+  FileUser,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -540,7 +535,7 @@ const SidebarItem = ({
     <Link
       href={href}
       className={cn(
-        "flex items-center py-2 px-4 text-sm font-medium rounded-md hover:bg-gray-100 hover:text-bolt-800",
+        "flex items-center py-2 px-4 text-sm font-medium rounded-md hover:bg-gray-100 hover:text-slate-800",
         isActive ? "bg-gray-100 text-slate-800" : "text-slate-300"
       )}
       onClick={onClick}
@@ -675,89 +670,53 @@ export default function Sidebar({ isOpen }: SidebarProps) {
           </Link>
 
           <Link
-            href={`${getBaseUrl()}/paroissiens`}
+            href={`${getBaseUrl()}/communautes/paroissiens`}
             className="p-2 rounded-md text-slate-300 hover:bg-slate-800 cursor-pointer"
           >
             <Users size={20} />
           </Link>
 
           <Link
-            href={`${getBaseUrl()}/sacrements`}
-            className="p-2 rounded-md text-slate-300 hover:bg-slate-800 cursor-pointer"
-          >
-            <Heart size={20} />
-          </Link>
-
-          {/* Menu déroulant pour Événements */}
-          <div className="relative group">
-            <div className="p-2 rounded-md text-slate-300 hover:bg-slate-800 cursor-pointer">
-              <Calendar size={20} />
-            </div>
-
-            {/* Sous-menu qui apparaît au survol */}
-            <div className="absolute left-16 top-0 w-48 bg-slate-800 rounded-md overflow-hidden shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-              <Link
-                href={`${getBaseUrl()}/evenements`}
-                className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
-              >
-                Tous les événements
-              </Link>
-              <Link
-                href={`${getBaseUrl()}/evenements/messes`}
-                className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
-              >
-                Messes
-              </Link>
-              <Link
-                href={`${getBaseUrl()}/evenements/demandes`}
-                className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
-              >
-                Demandes
-              </Link>
-            </div>
-          </div>
-
-          <Link
-            href={`${getBaseUrl()}/communautes`}
+            href={`${getBaseUrl()}/communautes/nonparoissiens`}
             className="p-2 rounded-md text-slate-300 hover:bg-slate-800 cursor-pointer"
           >
             <Users size={20} />
           </Link>
 
-          {/* Menu déroulant pour Finances */}
-          <div className="relative group">
-            <div className="p-2 rounded-md text-slate-300 hover:bg-slate-800 cursor-pointer">
-              <PieChart size={20} />
-            </div>
+          <Link
+            href={`${getBaseUrl()}/sacrements/individuelle`}
+            className="p-2 rounded-md text-slate-300 hover:bg-slate-800 cursor-pointer"
+          >
+            <Leaf size={20} />
+          </Link>
 
-            {/* Sous-menu qui apparaît au survol */}
-            <div className="absolute left-16 top-0 w-48 bg-slate-800 rounded-md overflow-hidden shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-              <Link
-                href={`${getBaseUrl()}/finances`}
-                className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
-              >
-                Vue générale
-              </Link>
-              <Link
-                href={`${getBaseUrl()}/finances/cotisations`}
-                className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
-              >
-                Cotisations
-              </Link>
-              <Link
-                href={`${getBaseUrl()}/finances/quetes`}
-                className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
-              >
-                Quêtes
-              </Link>
-              <Link
-                href={`${getBaseUrl()}/finances/dons`}
-                className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
-              >
-                Dons
-              </Link>
-            </div>
-          </div>
+          <Link
+            href={`${getBaseUrl()}/sacrements/unions`}
+            className="p-2 rounded-md text-slate-300 hover:bg-slate-800 cursor-pointer"
+          >
+            <Handshake size={20} />
+          </Link>
+
+          <Link
+            href={`${getBaseUrl()}/sacrements/soumissions`}
+            className="p-2 rounded-md text-slate-300 hover:bg-slate-800 cursor-pointer"
+          >
+            <FileUser size={20} />
+          </Link>
+
+          <Link
+            href={`${getBaseUrl()}/evenements`}
+            className="p-2 rounded-md text-slate-300 hover:bg-slate-800 cursor-pointer"
+          >
+            <Calendar size={20} />
+          </Link>
+
+          <Link
+            href={`${getBaseUrl()}/finances`}
+            className="p-2 rounded-md text-slate-300 hover:bg-slate-800 cursor-pointer"
+          >
+            <PieChart size={20} />
+          </Link>
 
           <Link
             href={`${getBaseUrl()}/communications`}
@@ -890,7 +849,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
       <div className="fixed inset-y-0 left-0 z-20 w-16 bg-slate-800 overflow-y-auto transition-all">
         <div className="flex flex-col items-center py-4">
           <div className="h-8 w-8 bg-white rounded-full flex items-center justify-center mb-4">
-            <Church size={16} className="bg-slate-800" />
+            <Church size={16} className="bg-white" />
           </div>
 
           {/* Icônes dynamiques pour le mode réduit */}
@@ -898,16 +857,6 @@ export default function Sidebar({ isOpen }: SidebarProps) {
             {menuIcons}
 
             {/* Toujours afficher l'icône de déconnexion */}
-            <Link
-              href="/login"
-              className="p-2 rounded-md text-slate-300 hover:bg-slate-700 cursor-pointer"
-              onClick={() => {
-                localStorage.removeItem("auth_token");
-                localStorage.removeItem("user_profile");
-              }}
-            >
-              <Settings size={20} />
-            </Link>
           </div>
         </div>
       </div>
@@ -976,13 +925,29 @@ export default function Sidebar({ isOpen }: SidebarProps) {
             },
           ]}
         />
-        <SidebarItem
-          href={`${getBaseUrl()}/sacrements`}
+        <NavItemWithSubMenu
           icon={<Leaf size={20} />}
           title="Sacrements"
           isActive={pathname.startsWith(`${getBaseUrl()}/sacrements`)}
+          submenuItems={[
+            {
+              href: `${getBaseUrl()}/sacrements/individuelle`,
+              icon: <User size={20} />,
+              title: "Individuelle",
+            },
+            {
+              href: `${getBaseUrl()}/sacrements/unions`,
+              icon: <Handshake size={20} />,
+              title: "Unions",
+            },
+            {
+              href: `${getBaseUrl()}/sacrements/soumissions`,
+              icon: <FileUser size={20} />,
+              title: "Soumissions",
+            },
+          ]}
         />
-         <SidebarItem
+        <SidebarItem
           href={`${getBaseUrl()}/evenements`}
           icon={<Calendar size={20} />}
           title="Événements"
@@ -1146,7 +1111,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
           <div className="h-8 w-8 bg-white rounded-full flex items-center justify-center">
             <Church size={16} className="text-slate-800" />
           </div>
-          <h1 className="ml-2 text-xl font-semibold text-white">
+          <h1 className="ml-2 text-ls font-semibold text-white">
             Admin
             {userProfile && (
               <div className="text-sm text-white opacity-80">
@@ -1161,7 +1126,6 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         <div className="space-y-1">
           {menuItems}
 
-          {/* Le sélecteur de niveau est maintenant désactivé ou grisé pour les niveaux auxquels l'utilisateur n'a pas accès */}
           {/* <div className="mt-6 pt-6 border-t border-slate-700">
             <h3 className="px-4 py-2 text-xs font-semibold text-slate-400 uppercase">
               Niveaux d'administration
@@ -1215,20 +1179,6 @@ export default function Sidebar({ isOpen }: SidebarProps) {
               }}
             />
           </div> */}
-
-          {/* Déconnexion */}
-          <div className="mt-6">
-            <SidebarItem
-              href="/login"
-              icon={<Settings size={20} />}
-              title="Déconnexion"
-              isActive={false}
-              onClick={() => {
-                localStorage.removeItem("auth_token");
-                localStorage.removeItem("user_profile");
-              }}
-            />
-          </div>
         </div>
       </div>
     </div>

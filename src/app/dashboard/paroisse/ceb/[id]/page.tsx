@@ -252,7 +252,7 @@ export default function CebDetailsPage() {
             </div>
           </CardHeader>
           <CardContent className="grid gap-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center">
                   <Calendar className="h-5 w-5 text-blue-600" />
@@ -280,9 +280,7 @@ export default function CebDetailsPage() {
                   </p>
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-full bg-purple-100 flex items-center justify-center">
                   <Building className="h-5 w-5 text-purple-600" />
@@ -296,30 +294,15 @@ export default function CebDetailsPage() {
                   </p>
                 </div>
               </div>
-
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-orange-100 flex items-center justify-center">
-                  <Church className="h-5 w-5 text-orange-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-500">
-                    ID Chapelle
-                  </p>
-                  <p className="text-sm font-semibold">
-                    {ceb.chapelle_id || "Non attribué"}
-                  </p>
-                </div>
-              </div>
             </div>
           </CardContent>
-        </Card>
 
-        {/* Informations du président */}
-        <Card className="bg-slate-50 border-slate-100">
+          <Separator className="my-4" />
+
           <CardHeader className="pb-3">
             <div className="flex justify-between items-start">
               <CardTitle className="text-lg font-semibold">Président</CardTitle>
-              <Button
+              {/* <Button
                 variant="outline"
                 size="sm"
                 className="text-blue-600 border-blue-200 hover:bg-blue-50"
@@ -327,55 +310,57 @@ export default function CebDetailsPage() {
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Modifier
-              </Button>
+              </Button> */}
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {ceb.president ? (
               <>
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center">
-                    <User className="h-5 w-5 text-indigo-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-500">
-                      Nom complet
-                    </p>
-                    <p className="text-sm font-semibold">
-                      {ceb.president.nom} {ceb.president.prenoms}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-pink-100 flex items-center justify-center">
-                    <Phone className="h-5 w-5 text-pink-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-500">
-                      Téléphone
-                    </p>
-                    <p className="text-sm font-semibold">
-                      {formatPhoneNumber(ceb.president.num_de_telephone)}
-                    </p>
-                  </div>
-                </div>
-
-                {ceb.president.email && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-teal-100 flex items-center justify-center">
-                      <Mail className="h-5 w-5 text-teal-600" />
+                    <div className="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center">
+                      <User className="h-5 w-5 text-indigo-600" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-slate-500">
-                        Email
+                        Nom complet
                       </p>
                       <p className="text-sm font-semibold">
-                        {ceb.president.email}
+                        {ceb.president.nom} {ceb.president.prenoms}
                       </p>
                     </div>
                   </div>
-                )}
+
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-full bg-pink-100 flex items-center justify-center">
+                      <Phone className="h-5 w-5 text-pink-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">
+                        Téléphone
+                      </p>
+                      <p className="text-sm font-semibold">
+                        {formatPhoneNumber(ceb.president.num_de_telephone)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {ceb.president.email && (
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-full bg-teal-100 flex items-center justify-center">
+                        <Mail className="h-5 w-5 text-teal-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-500">
+                          Email
+                        </p>
+                        <p className="text-sm font-semibold">
+                          {ceb.president.email}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 <div className="flex items-center gap-3">
                   <div className="h-9 w-9 rounded-full bg-amber-100 flex items-center justify-center">

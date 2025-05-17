@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react/no-unescaped-entities */
 // NominerPresidentForm.jsx
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { User } from "lucide-react";
+import { Phone } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
@@ -20,60 +19,70 @@ import { nominatePresident } from "@/services/ceb-services";
 
 const NominerPresidentForm = ({ cebId, onClose, onSuccess }) => {
   const router = useRouter();
-  const [paroissienId, setParoissienId] = useState("");
+  const [telephone, setTelephone] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Validation de l'ID du paroissien
-  const validateParoissienId = () => {
-    // Vérifier que l'ID est un nombre positif
-    const id = parseInt(paroissienId, 10);
-    if (isNaN(id) || id <= 0) {
-      setError("Veuillez entrer un ID de paroissien valide");
+  // Nettoyage et formatage du numéro de téléphone
+  const formatPhoneNumber = (phone) => {
+    // Supprimer tous les caractères non numériques
+    return phone.replace(/\D/g, "");
+  };
+
+  // Validation du numéro de téléphone
+  const validateTelephone = () => {
+    const cleanPhone = formatPhoneNumber(telephone);
+
+    // Vérifier que le téléphone contient 10 chiffres après nettoyage
+    if (cleanPhone.length !== 10) {
+      setError("Veuillez entrer un numéro de téléphone valide à 10 chiffres");
       return false;
     }
-    
+
     setError("");
-    return true;
+    return cleanPhone; // Retourner le numéro nettoyé
   };
 
   // Soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Valider l'ID du paroissien
-    if (!validateParoissienId()) {
+
+    // Valider et formater le numéro de téléphone
+    const cleanPhone = validateTelephone();
+    if (!cleanPhone) {
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
-      // Convertir en nombre l'ID du paroissien
-      const paroissienIdNum = parseInt(paroissienId, 10);
-      
-      // Appeler l'API pour nommer le président
-      const updatedCeb = await nominatePresident(cebId, paroissienIdNum);
-      
+      // Appeler l'API pour nommer le président avec le numéro formaté
+      const updatedCeb = await nominatePresident(cebId, cleanPhone);
+
       // Notifier le succès
       toast.success("Président nommé avec succès", {
         description: "Le paroissien a été nommé président de cette CEB.",
       });
-      
+
       // Fermer le formulaire et notifier le composant parent
       onClose();
       onSuccess(updatedCeb);
-      
     } catch (err) {
       console.error("Erreur lors de la nomination du président:", err);
-      
+
       if (err instanceof AuthenticationError) {
         toast.error("Session expirée", {
           description: "Veuillez vous reconnecter pour continuer.",
         });
         router.push("/login");
       } else if (err instanceof NotFoundError) {
-        setError("Paroissien non trouvé. Veuillez vérifier l'ID.");
+        setError(
+          "Paroissien non trouvé. Veuillez vérifier que ce numéro est enregistré dans le système."
+        );
+      } else if (err instanceof ApiError && err.status === 400) {
+        setError(
+          "Format de numéro invalide. Veuillez fournir un numéro à 10 chiffres."
+        );
       } else {
         setError(
           err instanceof ApiError
@@ -81,7 +90,8 @@ const NominerPresidentForm = ({ cebId, onClose, onSuccess }) => {
             : "Une erreur est survenue lors de la nomination du président."
         );
         toast.error("Échec de la nomination", {
-          description: "Vérifiez que l'ID du paroissien est correct.",
+          description:
+            "Vérifiez que le numéro de téléphone est correct et que le paroissien est inscrit.",
         });
       }
     } finally {
@@ -90,59 +100,54 @@ const NominerPresidentForm = ({ cebId, onClose, onSuccess }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 py-2">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <label
-          htmlFor="paroissienId"
-          className="flex items-center text-sm font-medium text-slate-700"
-        >
-          <User className="h-4 w-4 mr-2 text-blue-600" />
-          ID du paroissien <span className="text-red-500 ml-1">*</span>
+        <label htmlFor="telephone" className="block text-sm font-medium">
+          Numéro de téléphone du paroissien *
         </label>
-        <Input
-          id="paroissienId"
-          type="number"
-          value={paroissienId}
-          onChange={(e) => setParoissienId(e.target.value)}
-          placeholder="Entrez l'ID du paroissien"
-          required
-          min="1"
-          className={`${
-            error ? "border-red-500" : "border-blue-200"
-          } focus:border-blue-500 focus:ring-blue-500`}
-        />
-        {error && <p className="text-xs text-red-500">{error}</p>}
-        
-        {/* Instructions explicatives */}
-        <div className="p-3 bg-blue-50 rounded-md border border-blue-100 mt-3">
-          <h4 className="text-sm font-medium text-blue-800 mb-1">
-            Comment trouver l'ID du paroissien ?
-          </h4>
-          <p className="text-xs text-slate-600">
-            L'ID du paroissien est un numéro unique qui identifie chaque membre de la paroisse.
-            Vous pouvez le trouver dans la liste des paroissiens ou sur la page de profil du paroissien.
-          </p>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <Phone className="h-5 w-5 text-gray-400" />
+          </div>
+          <Input
+            id="telephone"
+            type="tel"
+            value={telephone}
+            onChange={(e) => {
+              setTelephone(e.target.value);
+              // Effacer l'erreur lorsque l'utilisateur commence à taper
+              if (error) setError("");
+            }}
+            placeholder="0XXXXXXXXX (10 chiffres)"
+            required
+            className={`pl-10 ${
+              error ? "border-red-500" : "border-blue-200"
+            } focus:border-blue-500 focus:ring-blue-500`}
+          />
         </div>
+        {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
       </div>
-      
-      <DialogFooter className="flex flex-col-reverse sm:flex-row justify-between items-center border-t border-slate-100 pt-4 gap-3 sm:gap-0 mt-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onClose}
-          disabled={loading}
-          className="border-slate-300 hover:bg-slate-100 hover:text-slate-800 transition-colors w-full sm:w-auto"
-        >
+
+      {/* Instructions explicatives */}
+      <div className="bg-blue-50 p-3 rounded-md">
+        <h4 className="text-sm font-medium text-blue-800 mb-1">
+          Comment identifier le paroissien ?
+        </h4>
+        <p className="text-sm text-blue-700">
+          Utilisez le numéro de téléphone exactement comme enregistré dans le
+          système. Format: 10 chiffres commençant par 0 (ex: 0779123456). Le
+          paroissien doit déjà être enregistré dans la paroisse avec ce numéro.
+        </p>
+      </div>
+
+      <DialogFooter className="gap-2 sm:gap-0">
+        <Button type="button" variant="outline" onClick={onClose}>
           Annuler
         </Button>
-        <Button
-          type="submit"
-          disabled={loading}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors w-full sm:w-auto"
-        >
+        <Button type="submit" disabled={loading}>
           {loading ? (
             <>
-              <span className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+              <span className="animate-spin mr-2">&#9696;</span>
               Nomination en cours...
             </>
           ) : (
@@ -153,5 +158,4 @@ const NominerPresidentForm = ({ cebId, onClose, onSuccess }) => {
     </form>
   );
 };
-
 export default NominerPresidentForm;

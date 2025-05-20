@@ -22,6 +22,7 @@ import {
   Edit,
   ChevronLeft,
   ChevronRight,
+  Eye,
 } from "lucide-react";
 import {
   Card,
@@ -500,7 +501,10 @@ export default function MouvementsAssociationsPage() {
                         {mouvement.responsable_id ? (
                           <div className="flex items-center text-sm">
                             <User className="h-3.5 w-3.5 mr-1 opacity-70" />
-                            <span>{mouvement.responsable.nom} {mouvement.responsable.prenoms}</span>
+                            <span>
+                              {mouvement.responsable.nom}{" "}
+                              {mouvement.responsable.prenoms}
+                            </span>
                           </div>
                         ) : (
                           <div className="flex items-center text-amber-600 text-sm">
@@ -510,12 +514,29 @@ export default function MouvementsAssociationsPage() {
                         )}
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <div
-                          className="inline-flex"
-                          onClick={(e) => {
-                            e.stopPropagation(); // Empêcher la navigation vers la page de détails
-                          }}
-                        >
+                        <div className="inline-flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() =>
+                              router.push(
+                                `/dashboard/paroisse/m&a/${mouvement.id}`
+                              )
+                            }
+                          >
+                            <Eye className="h-4 w-4 text-slate-500" />
+                          </Button>
+
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => openDeleteModal(mouvement)}
+                          >
+                            <XCircle className="h-4 w-4 text-slate-500" />
+                          </Button>
+
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
@@ -528,28 +549,12 @@ export default function MouvementsAssociationsPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
-                                onClick={() =>
-                                  router.push(
-                                    `/dashboard/paroisse/m&a/${mouvement.id}`
-                                  )
-                                }
-                              >
-                                <Users className="h-4 w-4 mr-2 text-slate-500" />
-                                Voir les détails
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
                                 onClick={() => openEditModal(mouvement)}
                               >
                                 <Edit className="h-4 w-4 mr-2 text-blue-600" />
                                 Modifier
                               </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-red-600"
-                                onClick={() => openDeleteModal(mouvement)}
-                              >
-                                <XCircle className="h-4 w-4 mr-2" />
-                                Supprimer
-                              </DropdownMenuItem>
+                              
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>

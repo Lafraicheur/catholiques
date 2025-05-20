@@ -471,6 +471,7 @@ import {
   Leaf,
   Handshake,
   FileUser,
+  HandHelping,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -667,6 +668,13 @@ export default function Sidebar({ isOpen }: SidebarProps) {
             className="p-2 rounded-md text-slate-300 hover:bg-slate-800 cursor-pointer"
           >
             <Users size={20} />
+          </Link>
+
+          <Link
+            href={`${getBaseUrl()}/demandemesse`}
+            className="p-2 rounded-md text-slate-300 hover:bg-slate-800 cursor-pointer"
+          >
+            <HandHelping size={20} />
           </Link>
 
           <Link
@@ -907,6 +915,12 @@ export default function Sidebar({ isOpen }: SidebarProps) {
           icon={<Users size={20} />}
           title="M&A"
           isActive={pathname.startsWith(`${getBaseUrl()}/m&a`)}
+        />
+         <SidebarItem
+          href={`${getBaseUrl()}/demandemesse`}
+          icon={<HandHelping size={20} />}
+          title="Demande de Messe"
+          isActive={pathname.startsWith(`${getBaseUrl()}/demandemesse`)}
         />
         <NavItemWithSubMenu
           icon={<Users size={20} />}

@@ -23,17 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -75,18 +64,6 @@ interface APIEvent {
 
 interface APIResponse {
   items: APIEvent[];
-}
-
-// Mise à jour de l'interface pour le nouvel événement pour correspondre à l'API
-interface NewEventWithMultipleDates {
-  type: EventType;
-  dates: number[]; // Tableau de timestamps
-  libelle: string;
-  type_messe?: string; // Pour les messes
-  description: string;
-  paroisse_id: number;
-  heure_de_debut: number;
-  heure_de_fin: number;
 }
 
 // Formatage de la date
@@ -141,19 +118,6 @@ const formatHeure = (timestamp: number | undefined) => {
     console.error("Erreur lors du formatage de l'heure:", error, timestamp);
     return "Heure inconnue";
   }
-};
-
-// Formater minutes en heure:minutes
-const formatMinutesToTime = (minutes: number): string => {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
-};
-
-// Convertir l'heure (HH:MM) en minutes depuis minuit
-const convertTimeToMinutes = (time: string): number => {
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
 };
 
 // Formater type d'événement pour Badge
@@ -361,8 +325,7 @@ const ListeEvenements = ({
                   </div>
 
                   <p className="text-sm text-slate-500 mb-3">
-                    {formatHeure(event.extras?.heure_de_debut)} -{" "}
-                    {formatHeure(event.extras?.heure_de_fin)}
+                    {formatHeure(event.extras?.heure_de_debut)} - {formatHeure(event.extras?.heure_de_fin)}
                   </p>
 
                   <a
@@ -394,152 +357,13 @@ const CalendrierEvenements = ({
   anneeActuelle,
   filtreType,
   loading,
-  paroisseId,
-  onEventsCreated,
 }: {
   apiEvents: APIEvent[];
   moisActuel: number;
   anneeActuelle: number;
   filtreType: string;
   loading: boolean;
-  paroisseId: number;
-  onEventsCreated: () => void;
 }) => {
-  // États pour gérer la sélection de dates et la création d'événements
-  const [selectedDates, setSelectedDates] = useState<number[]>([]);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [creatingEvents, setCreatingEvents] = useState(false);
-  const [newEvent, setNewEvent] = useState<NewEventWithMultipleDates>({
-    type: "MESSE",
-    dates: [],
-    libelle: "",
-    type_messe: "ORDINAIRE",
-    description: "",
-    paroisse_id: paroisseId,
-    heure_de_debut: 540, // 9h00 (en minutes depuis minuit)
-    heure_de_fin: 600, // 10h00 (en minutes depuis minuit)
-  });
-
-  // Réinitialiser l'état de sélection quand le mois ou l'année change
-  useEffect(() => {
-    setSelectedDates([]);
-  }, [moisActuel, anneeActuelle]);
-
-  // Gérer la sélection/désélection d'une date
-  const toggleDateSelection = (date: Date) => {
-    const timestamp = date.getTime();
-    if (selectedDates.includes(timestamp)) {
-      setSelectedDates(selectedDates.filter((d) => d !== timestamp));
-    } else {
-      setSelectedDates([...selectedDates, timestamp]);
-    }
-  };
-
-  // Ouvrir la modal de création avec les dates sélectionnées
-  const openCreateModal = () => {
-    if (selectedDates.length === 0) {
-      toast.error("Veuillez sélectionner au moins une date");
-      return;
-    }
-
-    setNewEvent((prev) => ({
-      ...prev,
-      dates: [...selectedDates],
-      paroisse_id: paroisseId,
-    }));
-
-    setIsCreateModalOpen(true);
-  };
-
-  // Créer les événements pour toutes les dates sélectionnées
-  const createEvents = async () => {
-    if (newEvent.libelle.trim() === "") {
-      toast.error("Le titre de l'événement est obligatoire");
-      return;
-    }
-
-    setCreatingEvents(true);
-    const API_URL = "https://api.cathoconnect.ci/api:HzF8fFua";
-    const token = localStorage.getItem("auth_token");
-
-    try {
-      // Créer une date de référence pour les heures (utiliser aujourd'hui)
-      const today = new Date();
-
-      // Convertir les minutes en timestamps
-      const startTimeStamp = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        Math.floor(newEvent.heure_de_debut / 60),
-        newEvent.heure_de_debut % 60
-      ).getTime();
-
-      const endTimeStamp = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        Math.floor(newEvent.heure_de_fin / 60),
-        newEvent.heure_de_fin % 60
-      ).getTime();
-
-      // Créer l'objet de requête directement sans clé d'enveloppe
-      const requestData = {
-        type: newEvent.type,
-        dates: selectedDates, // Tableau de timestamps des dates sélectionnées
-        libelle: newEvent.libelle,
-        description: newEvent.description || "",
-        paroisse_id: paroisseId,
-        heure_de_debut: startTimeStamp,
-        heure_de_fin: endTimeStamp,
-      };
-
-      // Pour les messes, ajouter le type_messe spécifique
-      if (newEvent.type === "MESSE" && newEvent.type_messe) {
-        requestData.type_messe = newEvent.type_messe;
-      }
-
-      console.log(
-        "Données envoyées à l'API:",
-        JSON.stringify(requestData, null, 2)
-      );
-
-      const response = await axios.post(
-        `${API_URL}/evenements/creer`,
-        requestData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      console.log("Réponse de l'API:", response.data);
-      toast.success(`${selectedDates.length} événement(s) créé(s) avec succès`);
-      setIsCreateModalOpen(false);
-      setSelectedDates([]);
-      onEventsCreated(); // Rafraîchir les événements
-    } catch (error) {
-      console.error("Erreur lors de la création des événements:", error);
-
-      // Afficher les détails de l'erreur si disponibles
-      if (axios.isAxiosError(error) && error.response) {
-        console.error("Détails de l'erreur:", error.response.data);
-        toast.error(
-          `Erreur: ${error.response.data?.message || "Problème avec la requête"}`
-        );
-      } else {
-        toast.error(
-          "Une erreur est survenue lors de la création des événements"
-        );
-      }
-    } finally {
-      setCreatingEvents(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -570,314 +394,113 @@ const CalendrierEvenements = ({
   const joursDelaSemaine = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
   return (
-    <>
-      <div className="space-y-4">
-        {/* Bouton pour créer des événements sur les dates sélectionnées */}
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <span className="text-sm text-slate-500">
-              {selectedDates.length} date(s) sélectionnée(s)
-            </span>
-          </div>
-          <Button
-            onClick={openCreateModal}
-            disabled={selectedDates.length === 0}
+    <div className="space-y-4">
+      <div className="grid grid-cols-7 gap-1">
+        {joursDelaSemaine.map((jour, index) => (
+          <div
+            key={index}
+            className="text-center font-medium py-2 text-slate-600"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Créer des événements
-          </Button>
-        </div>
+            {jour}
+          </div>
+        ))}
 
-        <div className="grid grid-cols-7 gap-1">
-          {joursDelaSemaine.map((jour, index) => (
-            <div
-              key={index}
-              className="text-center font-medium py-2 text-slate-600"
-            >
-              {jour}
-            </div>
-          ))}
-
-          {jours.map((jour, index) => {
-            if (jour === null) {
-              return (
-                <div
-                  key={`empty-${index}`}
-                  className="h-24 bg-slate-50 border border-slate-200"
-                />
-              );
-            }
-
-            // Créer un objet Date pour ce jour
-            const currentDate = new Date(anneeActuelle, moisActuel, jour);
-            const currentTimestamp = currentDate.getTime();
-
-            // Vérifier si cette date est sélectionnée
-            const isSelected = selectedDates.includes(currentTimestamp);
-
-            // Récupérer les événements pour ce jour
-            const eventsForDay = apiEvents.filter((event) => {
-              // Vérifier d'abord le type
-              if (filtreType !== "tous" && event.type !== filtreType) {
-                return false;
-              }
-
-              try {
-                // Ajuster si le timestamp est en secondes
-                const timestamp =
-                  String(event.date_de_debut).length <= 10
-                    ? event.date_de_debut * 1000
-                    : event.date_de_debut;
-
-                const eventDate = new Date(timestamp);
-
-                return (
-                  eventDate.getDate() === jour &&
-                  eventDate.getMonth() === moisActuel &&
-                  eventDate.getFullYear() === anneeActuelle
-                );
-              } catch (error) {
-                console.error(
-                  "Erreur lors de la vérification de la date:",
-                  error,
-                  event
-                );
-                return false;
-              }
-            });
-
-            const isToday =
-              new Date().getDate() === jour &&
-              new Date().getMonth() === moisActuel &&
-              new Date().getFullYear() === anneeActuelle;
-
+        {jours.map((jour, index) => {
+          if (jour === null) {
             return (
               <div
-                key={`day-${jour}`}
-                className={`h-24 p-1 border border-slate-200 overflow-y-auto relative 
-                  ${isToday ? "bg-blue-50" : "bg-white"}
-                  ${isSelected ? "ring-2 ring-blue-500" : ""}
-                  cursor-pointer hover:bg-slate-50`}
-                onClick={() => toggleDateSelection(currentDate)}
-              >
-                <div
-                  className={`text-right p-1 ${
-                    isToday
-                      ? "bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center ml-auto"
-                      : isSelected
-                        ? "bg-blue-400 text-white rounded-full w-6 h-6 flex items-center justify-center ml-auto"
-                        : ""
-                  }`}
-                >
-                  {jour}
-                </div>
-                <div className="mt-1 space-y-1">
-                  {eventsForDay.map((event) => {
-                    const { variant: typeVariant } = getEventTypeDetails(
-                      event.type
-                    );
-                    return (
-                      <a
-                        key={event.id}
-                        href={`/dashboard/paroisse/evenements/${event.id}`}
-                        className={`block text-xs p-1 truncate rounded-sm hover:bg-slate-100 ${
-                          typeVariant === "default"
-                            ? "bg-blue-100 text-blue-800"
-                            : typeVariant === "secondary"
-                              ? "bg-slate-100 text-slate-800"
-                              : typeVariant === "outline"
-                                ? "bg-gray-100 text-gray-800"
-                                : typeVariant === "destructive"
-                                  ? "bg-red-100 text-red-800"
-                                  : typeVariant === "success"
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-blue-100 text-blue-800"
-                        }`}
-                        onClick={(e) => e.stopPropagation()} // Éviter que le clic sur l'événement sélectionne la date
-                      >
-                        {formatHeure(event.extras?.heure_de_debut)} -{" "}
-                        {formatHeure(event.extras?.heure_de_fin)}{" "}
-                        {event.libelle}
-                      </a>
-                    );
-                  })}
-                </div>
-              </div>
+                key={`empty-${index}`}
+                className="h-24 bg-slate-50 border border-slate-200"
+              />
             );
-          })}
-        </div>
-      </div>
+          }
 
-      {/* Modal pour créer des événements */}
-      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Créer des événements multiples</DialogTitle>
-            <DialogDescription>
-              Vous allez créer {selectedDates.length} événement(s) identiques
-              aux dates sélectionnées.
-            </DialogDescription>
-          </DialogHeader>
+          // Récupérer les événements pour ce jour
+          const eventsForDay = apiEvents.filter((event) => {
+            // Vérifier d'abord le type
+            if (filtreType !== "tous" && event.type !== filtreType) {
+              return false;
+            }
 
-          <div className="space-y-4 py-4">
-            <div className="grid grid-cols-4 gap-4">
-              {/* Type d'événement et type de messe (pour les messes) */}
-              <div className="grid grid-cols-2 gap-4 col-span-4">
-                <div>
-                  <Label htmlFor="type">Type d'événement</Label>
-                  <Select
-                    value={newEvent.type}
-                    onValueChange={(value) => {
-                      setNewEvent({
-                        ...newEvent,
-                        type: value as EventType,
-                        // Réinitialiser le sous-type si nécessaire
-                        type_messe:
-                          value === "MESSE"
-                            ? newEvent.type_messe || "ORDINAIRE"
-                            : undefined,
-                      });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Type d'événement" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="MESSE">Messe</SelectItem>
-                      <SelectItem value="ACTIVITE">Activité</SelectItem>
-                      <SelectItem value="COTISATION">Cotisation</SelectItem>
-                      <SelectItem value="INSCRIPTION">Inscription</SelectItem>
-                      <SelectItem value="DON">Don</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+            try {
+              // Ajuster si le timestamp est en secondes
+              const timestamp =
+                String(event.date_de_debut).length <= 10
+                  ? event.date_de_debut * 1000
+                  : event.date_de_debut;
 
-                {newEvent.type === "MESSE" ? (
-                  <div>
-                    <Label htmlFor="type_messe">Type de messe</Label>
-                    <Select
-                      value={newEvent.type_messe}
-                      onValueChange={(value) =>
-                        setNewEvent({
-                          ...newEvent,
-                          type_messe: value,
-                        })
-                      }
+              const eventDate = new Date(timestamp);
+
+              return (
+                eventDate.getDate() === jour &&
+                eventDate.getMonth() === moisActuel &&
+                eventDate.getFullYear() === anneeActuelle
+              );
+            } catch (error) {
+              console.error(
+                "Erreur lors de la vérification de la date:",
+                error,
+                event
+              );
+              return false;
+            }
+          });
+
+          const isToday =
+            new Date().getDate() === jour &&
+            new Date().getMonth() === moisActuel &&
+            new Date().getFullYear() === anneeActuelle;
+
+          return (
+            <div
+              key={`day-${jour}`}
+              className={`h-24 p-1 border border-slate-200 overflow-y-auto relative ${
+                isToday ? "bg-blue-50" : "bg-white"
+              }`}
+            >
+              <div
+                className={`text-right p-1 ${
+                  isToday
+                    ? "bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center ml-auto"
+                    : ""
+                }`}
+              >
+                {jour}
+              </div>
+              <div className="mt-1 space-y-1">
+                {eventsForDay.map((event) => {
+                  const { variant: typeVariant } = getEventTypeDetails(
+                    event.type
+                  );
+                  return (
+                    <a
+                      key={event.id}
+                      href={`/dashboard/paroisse/evenements/${event.id}`}
+                      className={`block text-xs p-1 truncate rounded-sm hover:bg-slate-100 ${
+                        typeVariant === "default"
+                          ? "bg-blue-100 text-blue-800"
+                          : typeVariant === "secondary"
+                            ? "bg-slate-100 text-slate-800"
+                            : typeVariant === "outline"
+                              ? "bg-gray-100 text-gray-800"
+                              : typeVariant === "destructive"
+                                ? "bg-red-100 text-red-800"
+                                : typeVariant === "success"
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-blue-100 text-blue-800"
+                      }`}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Type de messe" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ORDINAIRE">Ordinaire</SelectItem>
-                        <SelectItem value="SPECIALE">Spéciale</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ) : (
-                  <div className="invisible">
-                    <Label>Invisible</Label>
-                    <div className="h-10"></div>
-                  </div>
-                )}
-              </div>
-
-              {/* Titre et autres champs */}
-              <div className="col-span-4">
-                <Label htmlFor="libelle">Titre de l'événement *</Label>
-                <Input
-                  id="libelle"
-                  value={newEvent.libelle}
-                  onChange={(e) =>
-                    setNewEvent({ ...newEvent, libelle: e.target.value })
-                  }
-                  placeholder="Titre de l'événement"
-                  required
-                />
-              </div>
-
-              <div className="col-span-4">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={newEvent.description}
-                  onChange={(e) =>
-                    setNewEvent({ ...newEvent, description: e.target.value })
-                  }
-                  placeholder="Description de l'événement"
-                  rows={3}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 col-span-4">
-                <div>
-                  <Label htmlFor="heure_debut">Heure de début</Label>
-                  <Input
-                    id="heure_debut"
-                    type="time"
-                    value={formatMinutesToTime(newEvent.heure_de_debut)}
-                    onChange={(e) =>
-                      setNewEvent({
-                        ...newEvent,
-                        heure_de_debut: convertTimeToMinutes(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="heure_fin">Heure de fin</Label>
-                  <Input
-                    id="heure_fin"
-                    type="time"
-                    value={formatMinutesToTime(newEvent.heure_de_fin)}
-                    onChange={(e) =>
-                      setNewEvent({
-                        ...newEvent,
-                        heure_de_fin: convertTimeToMinutes(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-              </div>
-
-              {/* Liste des dates sélectionnées */}
-              <div className="col-span-4">
-                <div className="text-sm font-medium mb-2">
-                  Dates sélectionnées ({selectedDates.length}) :
-                </div>
-                <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-1">
-                  {selectedDates.map((timestamp) => (
-                    <div key={timestamp} className="text-sm">
-                      {formatDate(timestamp)}
-                    </div>
-                  ))}
-                </div>
+                      {formatHeure(event.extras?.heure_de_debut)} -{formatHeure(event.extras?.heure_de_fin)}{" "}
+                      {event.libelle}
+                    </a>
+                  );
+                })}
               </div>
             </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsCreateModalOpen(false)}
-              disabled={creatingEvents}
-            >
-              Annuler
-            </Button>
-            <Button onClick={createEvents} disabled={creatingEvents}>
-              {creatingEvents ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Création en cours...
-                </>
-              ) : (
-                <>Créer les événements</>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+          );
+        })}
+      </div>
+    </div>
   );
 };
 
@@ -929,35 +552,6 @@ export default function EvenementsPage() {
   // ID de la paroisse (à remplacer par la valeur réelle)
   const paroisseId = 1; // À adapter selon votre contexte
 
-  // Fonction pour rafraîchir les événements après création
-  const refreshEvents = async () => {
-    setLoading(true);
-    try {
-      const API_URL = "https://api.cathoconnect.ci/api:HzF8fFua";
-      const token = localStorage.getItem("auth_token");
-
-      const response = await axios.get(`${API_URL}/evenements/obtenir-tous`, {
-        params: { paroisse_id: paroisseId },
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-      });
-
-      if (
-        response.data &&
-        response.data.items &&
-        Array.isArray(response.data.items)
-      ) {
-        setApiEvents(response.data.items);
-      }
-    } catch (err) {
-      console.error("Erreur lors du rechargement des événements:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Charger les événements depuis l'API
   useEffect(() => {
     const fetchEvenements = async () => {
@@ -979,8 +573,6 @@ export default function EvenementsPage() {
             Accept: "application/json",
           },
         });
-
-        console.log("Événements rechargés:", response.data);
 
         // Vérifier que response.data.items existe et est un tableau
         if (
@@ -1151,8 +743,6 @@ export default function EvenementsPage() {
               anneeActuelle={anneeActuelle}
               filtreType={filtreType}
               loading={loading}
-              paroisseId={paroisseId}
-              onEventsCreated={refreshEvents}
             />
           </TabsContent>
         </Tabs>

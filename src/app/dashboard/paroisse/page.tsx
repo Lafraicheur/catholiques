@@ -20,6 +20,7 @@ import {
   Building,
   HandHelping,
   Flower2,
+  PiggyBank,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -148,7 +149,7 @@ export default function ParoisseDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start gap-6 p-6">
         <div className="flex items-center">
           <Church className="h-12 w-12 text-slate-700 mr-4" />
           <div>
@@ -188,60 +189,88 @@ export default function ParoisseDashboardPage() {
       {/* Les cartes de statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-2 px-6 lg:grid-cols-4 gap-6">
         <StatsCard
-          title="Mouvements et Associations"
-          value="1234"
+          title="Paroissiens"
+          value="0"
           icon={<User className="h-5 w-5 text-blue-600" />}
         />
         <StatsCard
-          title="Communauté Ecclesiastique de Base"
-          value="28"
+          title="Paroissiens Abonnés"
+          value="0"
           icon={<Users className="h-5 w-5 text-blue-600" />}
         />
         <StatsCard
-          title="Demandes de Messes"
-          value="18"
+          title="M&A"
+          value="0"
+          icon={<HandHelping className="h-5 w-5 text-blue-600" />}
+        />
+        <StatsCard
+          title="CEB"
+          value="0"
+          icon={<Flower2 className="h-5 w-5 text-blue-600" />}
+        />
+        <StatsCard
+          title="Demande de Messes"
+          value="0"
           icon={<HandHelping className="h-5 w-5 text-green-600" />}
         />
         <StatsCard
-          title="Denier de culte"
-          value="4"
-          icon={<Flower2 className="h-5 w-5 text-green-600" />}
+          title="Solde"
+          value="0"
+          icon={<PiggyBank className="h-5 w-5 text-green-600" />}
         />
         <StatsCard
+          title="Chapelles"
+          value="0"
+          icon={<Church className="h-5 w-5 text-green-600" />}
+        />
+        <StatsCard
+          title="Evenements"
+          value="0"
+          icon={<Calendar className="h-5 w-5 text-green-600" />}
+        />
+        {/* <StatsCard
           title="Paroissiens"
-          // value={
-          //   <div className="flex flex-col">
-          //     <span className="text-2xl font-bold">1,234</span>
-          //     <div className="flex items-center text-xs mt-1 space-x-3">
-          //       <span className="inline-flex items-center">
-          //         <span className="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
-          //         <span className="text-base">789 Abonnés</span>
-          //       </span>
-          //       <span className="inline-flex items-center">
-          //         <span className="h-2 w-2 rounded-full bg-red-500 mr-1"></span>
-          //         <span className="text-base">445 Non-abonnés</span>
-          //       </span>
-          //     </div>
-          //   </div>
-          // }
+          value={
+            <div className="flex flex-col">
+              <span className="text-2xl font-bold">1,234</span>
+              <div className="flex items-center text-xs mt-1 space-x-3">
+                <span className="inline-flex items-center">
+                  <span className="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
+                  <span className="text-base">789 Abonnés</span>
+                </span>
+                <span className="inline-flex items-center">
+                  <span className="h-2 w-2 rounded-full bg-red-500 mr-1"></span>
+                  <span className="text-base">445 Non-abonnés</span>
+                </span>
+              </div>
+            </div>
+          }
           value="5000"
           icon={<User className="h-5 w-5 text-blue-600" />}
-        />
-
-        <StatsCard
-          title="Sacrements"
-          value="28"
-          icon={<Heart className="h-5 w-5 text-red-600" />}
-        />
+        /> */}
       </div>
-      <div className="flex flex-col lg:flex-row gap-6 px-4 lg:px-6">
-        <div className="w-full lg:w-1/2">
+      {/* <div className="flex flex-col lg:flex-row gap-6 px-4 lg:px-6">
+        <div className="w-full lg:w-3/4">
           <ChartAreaInteractive />
         </div>
 
         <div className="w-full lg:w-1/2">
           <Card className="p-6">
             <h2 className="text-xl font-bold mb-4">Événements à venir</h2>
+            <EventsList />
+          </Card>
+        </div>
+      </div> */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-6">
+        {/* Graphique plus grand (9/12 colonnes) */}
+        <div className="lg:col-span-8">
+          <ChartAreaInteractive />
+        </div>
+
+        {/* Événements à venir plus petit (3/12 colonnes) */}
+        <div className="lg:col-span-4">
+          <Card className="p-6 h-full">
+            <h2 className="text-x font-bold mb-4">Événements à venir</h2>
             <EventsList />
           </Card>
         </div>

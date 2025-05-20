@@ -241,7 +241,7 @@ const AjouterCebForm = ({
             onChange={handleChange}
             placeholder="Nom de la communauté"
             required
-            className={`${formErrors.nom ? "border-red-500" : "border-green-200"} focus:border-green-500 focus:ring-green-500`}
+            className={`${formErrors.nom ? "border-red-500" : "border-green-500"} focus:border-green-500 focus:ring-green-500`}
           />
           {formErrors.nom && (
             <p className="text-xs text-red-500">{formErrors.nom}</p>

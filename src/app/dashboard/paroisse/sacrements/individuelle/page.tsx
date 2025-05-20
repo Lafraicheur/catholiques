@@ -15,6 +15,10 @@ import {
   User,
   Loader2,
   XCircle,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Trash2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -308,6 +312,17 @@ export default function SacrementsIndividuelsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("tous");
 
+  // États pour la pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+
+  // État pour le dialogue de suppression
+  const [sacrementToDelete, setSacrementToDelete] = useState<number | null>(
+    null
+  );
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
   // Récupérer les sacrements individuels depuis l'API
   const fetchSacrements = async () => {
     setLoading(true);
@@ -395,10 +410,40 @@ export default function SacrementsIndividuelsPage() {
     );
 
     setFilteredSacrements(results);
-  }, [searchQuery, activeTab, sacrements]);
+
+    setCurrentPage(1);
+    setTotalPages(Math.ceil(results.length / itemsPerPage));
+  }, [searchQuery, activeTab, sacrements, itemsPerPage]);
+
+  const getCurrentPageItems = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredSacrements.slice(startIndex, endIndex);
+  };
+
+  // Navigation de pagination
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  // Fonction de suppression (légèrement modifiée)
+  const openDeleteDialog = (id: number) => {
+    setSacrementToDelete(id);
+    setShowDeleteDialog(true);
+  };
 
   // Supprimer un sacrement
-  const handleDeleteSacrement = async (id: number) => {
+  const handleDeleteSacrement = async () => {
+    if (!sacrementToDelete) return;
+
     try {
       const token = localStorage.getItem("auth_token");
 
@@ -414,7 +459,7 @@ export default function SacrementsIndividuelsPage() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ sacrement_id: id }),
+          body: JSON.stringify({ sacrement_id: sacrementToDelete }),
         }
       );
 
@@ -434,8 +479,49 @@ export default function SacrementsIndividuelsPage() {
       toast.error("Erreur", {
         description: "Impossible de supprimer le sacrement.",
       });
+    } finally {
+      setShowDeleteDialog(false);
+      setSacrementToDelete(null);
     }
   };
+  // const handleDeleteSacrement = async (id: number) => {
+  //   try {
+  //     const token = localStorage.getItem("auth_token");
+
+  //     if (!token) {
+  //       throw new Error("Token d'authentification non trouvé");
+  //     }
+
+  //     const response = await fetch(
+  //       "https://api.cathoconnect.ci/api:HzF8fFua/sacrement-individuel/supprimer",
+  //       {
+  //         method: "DELETE",
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify({ sacrement_id: id }),
+  //       }
+  //     );
+
+  //     if (!response.ok) {
+  //       throw new Error(`Erreur HTTP: ${response.status}`);
+  //     }
+
+  //     await response.json();
+  //     toast.success("Succès", {
+  //       description: "Le sacrement a été supprimé avec succès.",
+  //     });
+
+  //     // Mettre à jour la liste des sacrements
+  //     fetchSacrements();
+  //   } catch (err: any) {
+  //     console.error("Erreur lors de la suppression du sacrement:", err);
+  //     toast.error("Erreur", {
+  //       description: "Impossible de supprimer le sacrement.",
+  //     });
+  //   }
+  // };
 
   // Compter les sacrements par catégorie
   const countSacrements = () => {
@@ -618,14 +704,135 @@ export default function SacrementsIndividuelsPage() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredSacrements.map((sacrement) => (
-                  <SacrementIndividuelItem
-                    key={sacrement.id}
-                    sacrement={sacrement}
-                    onDelete={handleDeleteSacrement}
-                  />
-                ))}
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200">
+                      <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                        Type
+                      </th>
+                      <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                        Date
+                      </th>
+                      <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                        Description
+                      </th>
+                      <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                        Statut
+                      </th>
+                      <th className="py-3 px-4 text-right text-sm font-medium text-slate-500">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getCurrentPageItems().map((sacrement) => {
+                      const {
+                        label: typeLabel,
+                        variant: typeVariant,
+                        icon: typeIcon,
+                      } = getSacrementSoustypeDetails(sacrement.soustype);
+                      const statut = extractStatut(sacrement);
+                      const { label: statusLabel, variant: statusVariant } =
+                        getStatusDetails(statut);
+
+                      return (
+                        <tr
+                          key={sacrement.id}
+                          className="border-b border-slate-100 hover:bg-slate-50"
+                        >
+                          <td className="py-3 px-4">
+                            <Badge
+                              variant={typeVariant}
+                              className="flex items-center text-xs px-2 py-0.5"
+                            >
+                              {typeIcon} {typeLabel}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center text-sm text-slate-700">
+                              <Calendar className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
+                              {formatDate(sacrement.date)}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="text-sm text-slate-700 max-w-xs truncate">
+                              {sacrement.description}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <Badge
+                              variant={statusVariant}
+                              className="text-xs px-2 py-0.5"
+                            >
+                              {statusLabel}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8"
+                                title="Voir les détails"
+                                asChild
+                              >
+                                <a
+                                  href={`/dashboard/paroisse/sacrements/individuelle/${sacrement.id}`}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </a>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                title="Supprimer"
+                                onClick={() => openDeleteDialog(sacrement.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+                {/* Pagination */}
+                {filteredSacrements.length > itemsPerPage && (
+                  <div className="mt-6 flex items-center justify-between">
+                    <div className="text-sm text-slate-500">
+                      Affichage de {(currentPage - 1) * itemsPerPage + 1} à{" "}
+                      {Math.min(
+                        currentPage * itemsPerPage,
+                        filteredSacrements.length
+                      )}{" "}
+                      sur {filteredSacrements.length} sacrements
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={goToPreviousPage}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4 mr-1" />
+                        Précédent
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={goToNextPage}
+                        disabled={currentPage === totalPages}
+                      >
+                        Suivant
+                        <ChevronRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </TabsContent>

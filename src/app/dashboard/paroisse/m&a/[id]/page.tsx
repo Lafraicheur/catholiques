@@ -46,6 +46,7 @@ import AumonierModal from "@/components/modals/AumonierModal";
 import ParrainModal from "@/components/modals/ParrainModal";
 import ResponsableModal from "@/components/modals/ResponsableModal";
 
+
 // Types
 interface Personne {
   id: number;
@@ -447,7 +448,7 @@ export default function MouvementDetailsPage() {
           className="mb-6 space-y-4"
         >
           <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-            <TabsList className="flex w-max sm:w-auto">
+            <TabsList className="grid grid-cols-4 w-full">
               <TabsTrigger value="details" className="whitespace-nowrap">
                 <Info className="h-4 w-4 mr-2" />
                 Détails

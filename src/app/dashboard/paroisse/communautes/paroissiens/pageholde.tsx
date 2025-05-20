@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
@@ -21,9 +20,6 @@ import {
   ChevronRight,
   ChevronLeft,
   MoreHorizontal,
-  UserPlus,
-  CheckCircle,
-  Users,
 } from "lucide-react";
 import {
   Card,
@@ -58,20 +54,12 @@ import {
   NotFoundError,
 } from "@/services/api";
 import { fetchParoissiens } from "@/services/parishioner-service";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 // Importer le formulaire de modification des paroissiens
 import ModifierParoissienForm from "@/components/forms/ModifierParoissienForm";
 
 // Types
 interface Paroissien {
-  [x: string]: any;
   id: number;
   created_at: string;
   identifiant: string;
@@ -108,8 +96,6 @@ export default function ParoissiensPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [statutFilter, setStatutFilter] = useState("TOUS");
-
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -119,11 +105,6 @@ export default function ParoissiensPage() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedParoissien, setSelectedParoissien] =
     useState<Paroissien | null>(null);
-
-  const getUniqueStatuts = () => {
-    const statuts = paroissiens.map((p) => p.statut || "Aucun");
-    return ["TOUS", ...Array.from(new Set(statuts))];
-  };
 
   // Récupérer l'ID de la paroisse à partir du localStorage
   const getUserParoisseId = (): number => {
@@ -138,32 +119,6 @@ export default function ParoissiensPage() {
     }
     return 0;
   };
-
-  // Filtrer les paroissiens selon la recherche et le statut
-  useEffect(() => {
-    let results = paroissiens;
-
-    // Filtrer par statut
-    if (statutFilter !== "TOUS") {
-      results = results.filter((p) => p.statut === statutFilter);
-    }
-
-    // Filtrer par recherche textuelle
-    if (searchQuery.trim() !== "") {
-      const query = searchQuery.toLowerCase().trim();
-      results = results.filter(
-        (p) =>
-          p.nom.toLowerCase().includes(query) ||
-          p.prenoms.toLowerCase().includes(query) ||
-          p.email?.toLowerCase().includes(query) ||
-          p.num_de_telephone?.includes(query)
-      );
-    }
-
-    setFilteredParoissiens(results);
-    setCurrentPage(1);
-    setTotalPages(Math.ceil(results.length / itemsPerPage));
-  }, [searchQuery, statutFilter, paroissiens, itemsPerPage]);
 
   // Charger les paroissiens au montage du composant
   useEffect(() => {
@@ -223,18 +178,6 @@ export default function ParoissiensPage() {
     setCurrentPage(1);
     setTotalPages(Math.ceil(filteredParoissiens.length / itemsPerPage));
   }, [searchQuery, paroissiens]);
-
-  const getTotalParoissiens = () => paroissiens.length;
-
-  const getParoissiensAbonnes = () =>
-    paroissiens.filter((p) => p.est_abonne).length;
-
-  const getParoissiensNonAbonnes = () =>
-    paroissiens.filter((p) => !p.est_abonne).length;
-
-  const getParoissiensStatut = (statut) => {
-    return paroissiens.filter((p) => p.statut === statut).length;
-  };
 
   // Calculer les paroissiens à afficher pour la pagination
   const getCurrentPageItems = () => {
@@ -434,58 +377,11 @@ export default function ParoissiensPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">Total</p>
-                <h3 className="text-2xl font-bold">{getTotalParoissiens()}</h3>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <Users className="h-5 w-5 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">Abonnés</p>
-                <h3 className="text-2xl font-bold">
-                  {getParoissiensAbonnes()}
-                </h3>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                <UserCheck className="h-5 w-5 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">
-                  Non Abonnés
-                </p>
-                <h3 className="text-2xl font-bold">
-                  {getParoissiensNonAbonnes()}
-                </h3>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
-                <UserX className="h-5 w-5 text-red-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
-        {/* <div className="relative w-full sm:w-96">
+      <Card className="bg-slate-50 border-slate-100">
+        <CardContent className="p-6">
+          {/* Barre de recherche et filtres */}
+          <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
+            <div className="relative w-full sm:w-96">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
               <Input
                 placeholder="Rechercher par nom, prénom, email, téléphone..."
@@ -493,43 +389,17 @@ export default function ParoissiensPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-            </div> */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-          <Input
-            placeholder="Rechercher par nom, prénom, email, téléphone..."
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        {/* Filtre par statut */}
-        <div className="w-full sm:w-64">
-          <Select value={statutFilter} onValueChange={setStatutFilter}>
-            <SelectTrigger>
-              <div className="flex items-center">
-                <Filter className="h-4 w-4 mr-2 text-slate-400" />
-                <SelectValue placeholder="Filtrer par statut" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              {getUniqueStatuts().map((statut) => (
-                <SelectItem key={statut} value={statut}>
-                  {statut === "TOUS" ? "Tous les statuts" : statut}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="icon" title="Exporter">
-            <Download className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="icon" title="Filtrer">
+                <Filter className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" title="Exporter">
+                <Download className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
 
-      <Card className="bg-slate-50 border-slate-100">
-        <CardContent className="p-6">
           {/* Liste des paroissiens */}
           {filteredParoissiens.length === 0 ? (
             <div className="text-center py-12">
@@ -551,7 +421,8 @@ export default function ParoissiensPage() {
                   onClick={() =>
                     router.push("/dashboard/paroisse/paroissiens/ajouter")
                   }
-                ></Button>
+                >
+                </Button>
               )}
             </div>
           ) : (
@@ -564,6 +435,9 @@ export default function ParoissiensPage() {
                     </th>
                     <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
                       Nom
+                    </th>
+                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                      Email
                     </th>
                     <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
                       Téléphone
@@ -599,6 +473,12 @@ export default function ParoissiensPage() {
                         <div className="text-xs text-slate-500">
                           Né(e) le {formatDate(paroissien.date_de_naissance)}
                         </div>
+                      </td>
+
+                      <td className="py-3 px-4 text-slate-700">
+                        {paroissien.email || (
+                          <span className="text-slate-400">Non renseigné</span>
+                        )}
                       </td>
 
                       <td className="py-3 px-4 text-xs text-slate-700">

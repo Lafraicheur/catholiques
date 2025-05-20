@@ -899,13 +899,13 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         <SidebarItem
           href={`${getBaseUrl()}/ceb`}
           icon={<Users size={20} />}
-          title="Communauté Ecclesiastique de Base"
+          title="CEB"
           isActive={pathname.startsWith(`${getBaseUrl()}/ceb`)}
         />
         <SidebarItem
           href={`${getBaseUrl()}/m&a`}
           icon={<Users size={20} />}
-          title="Mouvements et Associations"
+          title="M&A"
           isActive={pathname.startsWith(`${getBaseUrl()}/m&a`)}
         />
         <NavItemWithSubMenu

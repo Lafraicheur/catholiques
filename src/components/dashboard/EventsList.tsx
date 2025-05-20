@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { Calendar, Clock, MapPin } from "lucide-react";
@@ -28,7 +29,7 @@ const events = [
     time: "18:30",
     location: "Bureau du curé",
     type: "reunion",
-  }
+  },
 ];
 
 // Formatage de la date en français
@@ -67,16 +68,16 @@ export default function EventsList() {
         return (
           <div
             key={event.id}
-            className="flex items-start p-4 rounded-md border border-slate-200 hover:bg-slate-50 transition-colors"
+            className="flex items-start p-3 rounded-md border border-slate-200 hover:bg-slate-50 transition-colors"
           >
             <div className="w-12 h-12 flex-shrink-0 bg-slate-100 rounded-md flex items-center justify-center mr-4">
               <Calendar className="h-6 w-6 text-slate-700" />
             </div>
             <div className="flex-grow min-w-0">
               <div className="flex items-center justify-between mb-1">
-                <h3 className="font-medium text-slate-900 truncate">
+                <h5 className="font-medium text-xs text-slate-900 truncate">
                   {event.title}
-                </h3>
+                </h5>
                 <Badge variant={variant}>{label}</Badge>
               </div>
               <div className="flex flex-col sm:flex-row sm:items-center text-sm text-slate-500 space-y-1 sm:space-y-0 sm:space-x-4">
@@ -87,10 +88,6 @@ export default function EventsList() {
                 <div className="flex items-center">
                   <Clock className="h-3.5 w-3.5 mr-1" />
                   {event.time}
-                </div>
-                <div className="flex items-center">
-                  <MapPin className="h-3.5 w-3.5 mr-1" />
-                  {event.location}
                 </div>
               </div>
             </div>

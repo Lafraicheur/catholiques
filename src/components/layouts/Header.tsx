@@ -3,7 +3,7 @@
 "use client";
 
 import React, { useState, useCallback, useMemo, useEffect } from "react";
-import { Bell, Menu, MessageSquare, User, X } from "lucide-react";
+import { Bell, Menu, MessageSquare, User, X, Settings, LogOut, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import {
@@ -15,6 +15,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import axios from "axios";
 
 // URL de l'API
@@ -58,6 +60,7 @@ export default function Header({
   const [isLoading, setIsLoading] = useState(false);
   const [userData, setUserData] = useState<any>(null);
   const { toast } = useToast();
+  const [hasNotifications, setHasNotifications] = useState(true); // Simuler des notifications
 
   // Charger le profil utilisateur depuis le localStorage au chargement du composant
   useEffect(() => {
@@ -125,19 +128,22 @@ export default function Header({
       {
         icon: Bell,
         label: "Notifications",
+        hasIndicator: hasNotifications,
         onClick: () => {
           /* Logique des notifications */
+          setHasNotifications(false);
         },
       },
       {
         icon: MessageSquare,
         label: "Messages",
+        hasIndicator: false,
         onClick: () => {
           /* Logique des messages */
         },
       },
     ],
-    []
+    [hasNotifications]
   );
   
   // Déterminer le nom d'affichage de l'utilisateur
@@ -148,99 +154,192 @@ export default function Header({
     return "Administrateur";
   }, [user, userData]);
 
+  // Obtenir les initiales pour l'avatar fallback
+  const getInitials = (name) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  const userInitials = useMemo(() => getInitials(displayName), [displayName]);
+  
+  // Obtenir une couleur basée sur le nom d'utilisateur (pour l'avatar)
+  const getAvatarColor = (name) => {
+    const colors = [
+      "bg-blue-500", "bg-green-500", "bg-purple-500", 
+      "bg-amber-500", "bg-pink-500", "bg-indigo-500"
+    ];
+    
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    return colors[Math.abs(hash) % colors.length];
+  };
+  
+  const avatarColor = useMemo(() => getAvatarColor(displayName), [displayName]);
+
   return (
-    <header
-      className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200"
+    <header 
+      className="sticky top-0 z-40 flex items-center justify-between px-4 py-2 bg-white border-b border-slate-200 shadow-sm"
       role="banner"
     >
       <div className="flex items-center w-full">
         {/* Bouton Sidebar avec amélioration d'accessibilité */}
         <button
           onClick={toggleSidebar}
-          className="p-2 mr-4 text-slate-600 rounded-md hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300"
+          className="p-2 mr-3 text-slate-600 rounded-full hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300 transition-colors"
           aria-label={isSidebarOpen ? "Fermer le menu" : "Ouvrir le menu"}
           aria-expanded={isSidebarOpen}
         >
           {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
 
-        {/* Titre */}
-        <h1 className="text-lg md:text-xl font-semibold text-slate-800 truncate">
-          Dashboard Église Catholique
-        </h1>
+        {/* Logo et Titre */}
+        <div className="flex items-center">
+          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-3 text-white font-bold">
+            C
+          </div>
+          <h1 className="text-lg font-semibold text-slate-800 hidden sm:block">
+            CathoConnect
+          </h1>
+        </div>
 
         {/* Navigation Desktop */}
-        <div className="hidden md:flex items-center ml-auto space-x-4">
-          {navigationButtons.map(({ icon: Icon, label, onClick }) => (
-            <button
-              key={label}
-              onClick={onClick}
-              className="p-2 text-slate-600 rounded-md hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300"
-              aria-label={label}
-            >
-              <Icon size={20} />
-            </button>
+        <div className="hidden md:flex items-center ml-auto space-x-1">
+          {navigationButtons.map(({ icon: Icon, label, onClick, hasIndicator }) => (
+            <div key={label} className="relative">
+              <button
+                onClick={onClick}
+                className="p-2 text-slate-600 rounded-full hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300 transition-colors"
+                aria-label={label}
+              >
+                <Icon size={18} />
+              </button>
+              {hasIndicator && (
+                <span className="absolute top-0 right-0 block w-2 h-2 bg-red-500 rounded-full"></span>
+              )}
+            </div>
           ))}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="flex items-center p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-slate-300"
+                className="flex items-center ml-2 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-slate-300 transition-colors"
                 aria-label="Menu utilisateur"
               >
-                {user?.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt="Avatar utilisateur"
-                    className="w-8 h-8 rounded-full"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center">
-                    <User size={16} className="text-slate-600" />
-                  </div>
-                )}
+                <Avatar className="h-8 w-8 border border-slate-200">
+                  <AvatarImage src={user?.avatar} alt={displayName} />
+                  <AvatarFallback className={avatarColor}>
+                    {userInitials}
+                  </AvatarFallback>
+                </Avatar>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56">
-              <DropdownMenuLabel>
-                {`Bonjour, ${displayName}`}
-              </DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-64 p-2">
+              <div className="flex items-center gap-3 p-2">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={user?.avatar} alt={displayName} />
+                  <AvatarFallback className={avatarColor}>
+                    {userInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <div className="font-medium">{displayName}</div>
+                  {userData?.email && (
+                    <div className="text-xs text-slate-500 truncate max-w-[180px]">
+                      {userData.email}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push('/profile')}>Profil</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push('/settings')}>Paramètres</DropdownMenuItem>
+              
+              <DropdownMenuItem 
+                className="flex items-center cursor-pointer gap-2 py-2"
+                onClick={() => router.push('/dashboard/paroisse/profile')}
+              >
+                <User size={16} className="text-slate-500" />
+                <span>Profil</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem 
+                className="flex items-center cursor-pointer gap-2 py-2"
+                onClick={() => router.push('/settings')}
+              >
+                <Settings size={16} className="text-slate-500" />
+                <span>Paramètres</span>
+              </DropdownMenuItem>
+              
               {userData?.statut && (
-                <DropdownMenuItem>
-                  Statut: {userData.statut}
-                </DropdownMenuItem>
+                <div className="px-2 py-2 flex items-center">
+                  <span className="text-sm text-slate-500 mr-2">Statut:</span>
+                  <Badge variant="outline" className="text-xs">
+                    {userData.statut}
+                  </Badge>
+                </div>
               )}
+              
               {userData?.role && (
-                <DropdownMenuItem>
-                  Rôle: {userData.role}
-                </DropdownMenuItem>
+                <div className="px-2 py-2 flex items-center">
+                  <span className="text-sm text-slate-500 mr-2">Rôle:</span>
+                  <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
+                    {userData.role}
+                  </Badge>
+                </div>
               )}
+              
               <DropdownMenuSeparator />
+              
               <DropdownMenuItem
-                className="text-red-500 focus:bg-red-50"
+                className="flex items-center cursor-pointer gap-2 py-2 text-red-500 hover:text-red-600 hover:bg-red-50"
                 onSelect={handleLogout}
                 disabled={isLoading}
               >
-                {isLoading ? "Déconnexion en cours..." : "Déconnexion"}
+                <LogOut size={16} />
+                <span>{isLoading ? "Déconnexion en cours..." : "Déconnexion"}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
 
         {/* Navigation Mobile */}
-        <div className="md:hidden ml-auto">
+        <div className="md:hidden ml-auto flex items-center">
+          {/* Notifications */}
+          <div className="relative mr-2">
+            <button
+              onClick={() => {
+                setHasNotifications(false);
+                /* Logique des notifications */
+              }}
+              className="p-2 text-slate-600 rounded-full hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300 transition-colors"
+              aria-label="Notifications"
+            >
+              <Bell size={18} />
+            </button>
+            {hasNotifications && (
+              <span className="absolute top-0 right-0 block w-2 h-2 bg-red-500 rounded-full"></span>
+            )}
+          </div>
+          
+          {/* Menu utilisateur */}
           <button
             onClick={toggleMobileMenu}
-            className="p-2 text-slate-600 rounded-md hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300"
-            aria-label={
-              isMenuOpen ? "Fermer le menu" : "Ouvrir le menu utilisateur"
-            }
+            className="flex items-center p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-slate-300 transition-colors"
+            aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu utilisateur"}
             aria-expanded={isMenuOpen}
           >
-            {isMenuOpen ? <X size={20} /> : <User size={20} />}
+            <Avatar className="h-8 w-8 border border-slate-200">
+              <AvatarImage src={user?.avatar} alt={displayName} />
+              <AvatarFallback className={avatarColor}>
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
           </button>
         </div>
       </div>
@@ -248,47 +347,97 @@ export default function Header({
       {/* Menu Mobile */}
       {isMenuOpen && (
         <div
-          className="md:hidden absolute top-full left-0 w-full bg-white shadow-lg"
+          className="md:hidden absolute top-full right-0 w-full max-w-xs bg-white shadow-lg rounded-b-lg border border-t-0 border-slate-200 transition-all"
           role="menu"
         >
-          <div className="flex flex-col p-4 space-y-2">
-            <div className="px-2 py-1 font-medium">
-              {`Bonjour, ${displayName}`}
+          <div className="flex flex-col p-3 space-y-1">
+            <div className="flex items-center gap-3 p-2 mb-2">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={user?.avatar} alt={displayName} />
+                <AvatarFallback className={avatarColor}>
+                  {userInitials}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <div className="font-medium">{displayName}</div>
+                {userData?.email && (
+                  <div className="text-xs text-slate-500 truncate max-w-[180px]">
+                    {userData.email}
+                  </div>
+                )}
+              </div>
             </div>
-            {navigationButtons.map(({ icon: Icon, label, onClick }) => (
-              <button
-                key={label}
-                onClick={onClick}
-                className="flex items-center p-2 hover:bg-slate-100"
-                role="menuitem"
-              >
-                <Icon size={20} className="mr-2" />
-                {label}
-              </button>
-            ))}
+            
+            <div className="h-px bg-slate-200 my-1"></div>
+            
             <button 
-              className="flex items-center p-2 hover:bg-slate-100"
-              onClick={() => router.push('/dashboard/profile')}
+              className="flex items-center p-3 hover:bg-slate-50 rounded-md transition-colors"
+              onClick={() => router.push('/dashboard')}
+              role="menuitem"
             >
-              <User size={20} className="mr-2" />
+              <Home size={16} className="mr-3 text-slate-500" />
+              Dashboard
+            </button>
+            
+            <button 
+              className="flex items-center p-3 hover:bg-slate-50 rounded-md transition-colors"
+              onClick={() => router.push('/dashboard/profile')}
+              role="menuitem"
+            >
+              <User size={16} className="mr-3 text-slate-500" />
               Profil
             </button>
+            
+            <button 
+              className="flex items-center p-3 hover:bg-slate-50 rounded-md transition-colors"
+              onClick={() => router.push('/settings')}
+              role="menuitem"
+            >
+              <Settings size={16} className="mr-3 text-slate-500" />
+              Paramètres
+            </button>
+            
+            <button 
+              className="flex items-center p-3 hover:bg-slate-50 rounded-md transition-colors"
+              onClick={() => {
+                /* Logique des messages */
+                toggleMobileMenu();
+              }}
+              role="menuitem"
+            >
+              <MessageSquare size={16} className="mr-3 text-slate-500" />
+              Messages
+            </button>
+            
+            <div className="h-px bg-slate-200 my-1"></div>
+            
             {userData?.statut && (
-              <div className="px-2 py-1 text-sm text-slate-500">
-                Statut: {userData.statut}
+              <div className="px-3 py-2 text-sm text-slate-500 flex items-center">
+                <span className="mr-2">Statut:</span>
+                <Badge variant="outline" className="text-xs">
+                  {userData.statut}
+                </Badge>
               </div>
             )}
+            
             {userData?.role && (
-              <div className="px-2 py-1 text-sm text-slate-500">
-                Rôle: {userData.role}
+              <div className="px-3 py-2 text-sm text-slate-500 flex items-center">
+                <span className="mr-2">Rôle:</span>
+                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
+                  {userData.role}
+                </Badge>
               </div>
             )}
+            
+            <div className="h-px bg-slate-200 my-1"></div>
+            
             <Button
               variant="destructive"
-              className="w-full mt-2"
+              className="w-full mt-2 flex items-center justify-center gap-2"
               onClick={handleLogout}
               disabled={isLoading}
             >
+              <LogOut size={16} />
               {isLoading ? "Déconnexion en cours..." : "Déconnexion"}
             </Button>
           </div>

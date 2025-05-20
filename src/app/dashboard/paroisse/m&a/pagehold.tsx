@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
@@ -20,8 +19,6 @@ import {
   Shield,
   Cross,
   Edit,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import {
   Card,
@@ -72,7 +69,6 @@ import DeleteConfirmationDialog from "@/components/forms/DeleteConfirmationDialo
 import { TYPES_MOUVEMENT } from "@/lib/constants";
 // Types
 interface Mouvement {
-  [x: string]: any;
   id: number;
   created_at: string;
   identifiant: string;
@@ -97,19 +93,12 @@ export default function MouvementsAssociationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("TOUS");
-
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
-
+  
   // États pour les dialogues
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [selectedMouvement, setSelectedMouvement] = useState<Mouvement | null>(
-    null
-  );
+  const [selectedMouvement, setSelectedMouvement] = useState<Mouvement | null>(null);
 
   // Récupérer l'ID de la paroisse à partir du localStorage
   const getUserParoisseId = (): number => {
@@ -140,7 +129,6 @@ export default function MouvementsAssociationsPage() {
         const data = await fetchMouvements(paroisseId);
         setMouvements(data);
         setFilteredMouvements(data);
-        setTotalPages(Math.ceil(data.length / itemsPerPage));
       } catch (err) {
         console.error("Erreur lors du chargement des mouvements:", err);
         if (err instanceof AuthenticationError) {
@@ -165,7 +153,7 @@ export default function MouvementsAssociationsPage() {
     };
 
     loadMouvements();
-  }, [router, itemsPerPage]);
+  }, [router]);
 
   // Filtrer les mouvements selon la recherche et le type
   useEffect(() => {
@@ -185,29 +173,7 @@ export default function MouvementsAssociationsPage() {
     }
 
     setFilteredMouvements(results);
-    setCurrentPage(1);
-    setTotalPages(Math.ceil(results.length / itemsPerPage));
-  }, [searchQuery, typeFilter, mouvements, itemsPerPage]);
-
-  // Calculer les mouvements à afficher pour la pagination
-  const getCurrentPageItems = () => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredMouvements.slice(startIndex, endIndex);
-  };
-
-  // Navigation de pagination
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
+  }, [searchQuery, typeFilter, mouvements]);
 
   // Formater la monnaie en FCFA
   const formatCurrency = (amount: number): string => {
@@ -218,23 +184,13 @@ export default function MouvementsAssociationsPage() {
     }).format(amount);
   };
 
-  // Formater les dates: 2023-05-15 -> 15/05/2023
-  const formatDate = (dateString: string | null | undefined): string => {
-    if (!dateString) return "Non renseignée";
-
-    try {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat("fr-FR").format(date);
-    } catch (err) {
-      console.error("Erreur lors du formatage de la date:", err);
-      return dateString;
-    }
-  };
-
   // Gérer le succès de la création
   const handleCreateSuccess = (newMouvement) => {
     // Ajouter le nouveau mouvement à la liste
-    setMouvements((prevMouvements) => [newMouvement, ...prevMouvements]);
+    setMouvements((prevMouvements) => [
+      newMouvement,
+      ...prevMouvements,
+    ]);
   };
 
   // Gérer le succès de la mise à jour
@@ -254,7 +210,7 @@ export default function MouvementsAssociationsPage() {
     // Filtrer le mouvement supprimé de la liste
     const updatedList = mouvements.filter((m) => m.id !== deletedId);
     setMouvements(updatedList);
-
+    
     // Réinitialiser l'état
     setSelectedMouvement(null);
   };
@@ -274,6 +230,145 @@ export default function MouvementsAssociationsPage() {
   // Ouvrir le modal en mode création
   const openAddModal = () => {
     setShowAddDialog(true);
+  };
+
+  // Rendu des mouvements
+  const renderMouvements = () => {
+    if (loading) {
+      return Array(6)
+        .fill(0)
+        .map((_, index) => (
+          <Card
+            key={index}
+            className="shadow-sm hover:shadow transition-shadow"
+          >
+            <CardHeader className="pb-2">
+              <Skeleton className="h-4 w-3/4 mb-2" />
+              <Skeleton className="h-3 w-1/2" />
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between mb-3">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-5 w-16" />
+              </div>
+              <Skeleton className="h-3 w-full mb-2" />
+              <Skeleton className="h-3 w-3/4" />
+            </CardContent>
+          </Card>
+        ));
+    }
+
+    if (error) {
+      return (
+        <div className="col-span-full flex flex-col items-center justify-center p-8 text-center bg-slate-50 rounded-lg border border-slate-200">
+          <XCircle className="h-12 w-12 text-slate-300 mb-3" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">
+            Impossible de charger les données
+          </h3>
+          <p className="text-sm text-slate-500 max-w-md mb-4">{error}</p>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Réessayer
+          </Button>
+        </div>
+      );
+    }
+
+    if (filteredMouvements.length === 0) {
+      return (
+        <div className="col-span-full flex flex-col items-center justify-center p-8 text-center bg-slate-50 rounded-lg border border-slate-200">
+          <Users className="h-12 w-12 text-slate-300 mb-3" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">
+            Aucun mouvement trouvé
+          </h3>
+          <p className="text-sm text-slate-500 max-w-md mb-4">
+            {searchQuery || typeFilter !== "TOUS"
+              ? "Aucun mouvement ou association ne correspond à vos critères de recherche."
+              : "Aucun mouvement ou association n'est enregistré pour cette paroisse."}
+          </p>
+          {searchQuery || typeFilter !== "TOUS" ? (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchQuery("");
+                setTypeFilter("TOUS");
+              }}
+            >
+              Réinitialiser les filtres
+            </Button>
+          ) : (
+            <Button onClick={openAddModal}>
+              <Plus className="h-4 w-4 mr-2" />
+              Créer un mouvement
+            </Button>
+          )}
+        </div>
+      );
+    }
+
+    return filteredMouvements.map((mouvement) => (
+      <Card
+        key={mouvement.id}
+        className="shadow-sm hover:shadow transition-shadow h-full"
+      >
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-start">
+            <CardTitle className="text-lg">{mouvement.nom}</CardTitle>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => openEditModal(mouvement)}>
+                  <Edit className="h-4 w-4 mr-2 text-blue-600" />
+                  Modifier
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-red-600"
+                  onClick={() => openDeleteModal(mouvement)}
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Supprimer
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between mb-3">
+            <span className="font-medium text-sm">
+              {formatCurrency(mouvement.solde)}
+            </span>
+          </div>
+          {/* <div className="text-sm text-slate-500">
+            {mouvement.responsable_id ? (
+              <div className="flex items-center">
+                <User className="h-3.5 w-3.5 mr-1 opacity-70" />
+                <span>{mouvement.responsable_id} Responsable assigné</span>
+              </div>
+            ) : (
+              <div className="flex items-center text-amber-600">
+                <User className="h-3.5 w-3.5 mr-1 opacity-70" />
+                <span>Sans responsable</span>
+              </div>
+            )}
+          </div> */}
+        </CardContent>
+        <CardFooter className="pt-0">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-auto"
+            onClick={() =>
+              router.push(`/dashboard/paroisse/m&a/${mouvement.id}`)
+            }
+          >
+            Voir les détails
+          </Button>
+        </CardFooter>
+      </Card>
+    ));
   };
 
   return (
@@ -353,7 +448,7 @@ export default function MouvementsAssociationsPage() {
             className="pl-9"
           />
         </div>
-        <div className="w-full md:w-120">
+        <div className="w-full md:w-64">
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger>
               <div className="flex items-center">
@@ -364,7 +459,7 @@ export default function MouvementsAssociationsPage() {
             <SelectContent className="max-h-72 overflow-y-auto">
               {TYPES_MOUVEMENT_FILTER.map((type) => (
                 <SelectItem key={type} value={type}>
-                  {type === "TOUS" ? "TOUS LES TYPES" : type}
+                  {type === "TOUS" ? "Tous les types" : type}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -376,226 +471,10 @@ export default function MouvementsAssociationsPage() {
         </Button>
       </div>
 
-      {/* Liste des mouvements en tableau */}
-      <Card className="bg-slate-50 border-slate-100">
-        <CardContent className="p-6">
-          {loading ? (
-            <div className="space-y-4">
-              {Array(6)
-                .fill(0)
-                .map((_, index) => (
-                  <div key={index} className="border-b pb-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div>
-                        <Skeleton className="h-6 w-48 mb-2" />
-                        <Skeleton className="h-4 w-32" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Skeleton className="h-8 w-20" />
-                        <Skeleton className="h-8 w-10" />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          ) : error ? (
-            <div className="text-center py-12">
-              <XCircle className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-              <h3 className="text-lg font-medium text-slate-900 mb-2">
-                Impossible de charger les données
-              </h3>
-              <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
-                {error}
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => window.location.reload()}
-              >
-                Réessayer
-              </Button>
-            </div>
-          ) : filteredMouvements.length === 0 ? (
-            <div className="text-center py-12">
-              <Users className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-              <h3 className="text-lg font-medium text-slate-900 mb-2">
-                Aucun mouvement trouvé
-              </h3>
-              <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
-                {searchQuery || typeFilter !== "TOUS"
-                  ? "Aucun mouvement ou association ne correspond à vos critères de recherche."
-                  : "Aucun mouvement ou association n'est enregistré pour cette paroisse."}
-              </p>
-              {searchQuery || typeFilter !== "TOUS" ? (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setTypeFilter("TOUS");
-                  }}
-                >
-                  Réinitialiser les filtres
-                </Button>
-              ) : (
-                <Button onClick={openAddModal}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Créer un mouvement
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200">
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Date d'ajout
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Nom
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Type
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Solde
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Responsable
-                    </th>
-                    <th className="py-3 px-4 text-right text-sm font-medium text-slate-500">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {getCurrentPageItems().map((mouvement) => (
-                    <tr
-                      key={mouvement.id}
-                      className="border-b border-slate-100 hover:bg-slate-100 cursor-pointer"
-                      onClick={() =>
-                        router.push(`/dashboard/paroisse/m&a/${mouvement.id}`)
-                      }
-                    >
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-slate-700">
-                          {formatDate(mouvement.created_at)}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="font-medium text-slate-900">
-                          {mouvement.nom}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <Badge variant="outline" className="font-normal">
-                          {mouvement.type}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="font-medium text-sm">
-                          {formatCurrency(mouvement.solde)}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        {mouvement.responsable_id ? (
-                          <div className="flex items-center text-sm">
-                            <User className="h-3.5 w-3.5 mr-1 opacity-70" />
-                            <span>{mouvement.responsable.nom} {mouvement.responsable.prenoms}</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center text-amber-600 text-sm">
-                            <User className="h-3.5 w-3.5 mr-1 opacity-70" />
-                            <span>Non assigné</span>
-                          </div>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <div
-                          className="inline-flex"
-                          onClick={(e) => {
-                            e.stopPropagation(); // Empêcher la navigation vers la page de détails
-                          }}
-                        >
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  router.push(
-                                    `/dashboard/paroisse/m&a/${mouvement.id}`
-                                  )
-                                }
-                              >
-                                <Users className="h-4 w-4 mr-2 text-slate-500" />
-                                Voir les détails
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => openEditModal(mouvement)}
-                              >
-                                <Edit className="h-4 w-4 mr-2 text-blue-600" />
-                                Modifier
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-red-600"
-                                onClick={() => openDeleteModal(mouvement)}
-                              >
-                                <XCircle className="h-4 w-4 mr-2" />
-                                Supprimer
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              {/* Pagination */}
-              {filteredMouvements.length > 0 && (
-                <div className="mt-6 flex items-center justify-between">
-                  <div className="text-sm text-slate-500">
-                    Affichage de {(currentPage - 1) * itemsPerPage + 1} à{" "}
-                    {Math.min(
-                      currentPage * itemsPerPage,
-                      filteredMouvements.length
-                    )}{" "}
-                    sur {filteredMouvements.length} mouvements
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={goToPreviousPage}
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4 mr-1" />
-                      Précédent
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={goToNextPage}
-                      disabled={currentPage === totalPages}
-                    >
-                      Suivant
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Liste des mouvements */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {renderMouvements()}
+      </div>
 
       {/* Dialog de confirmation de suppression */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
@@ -611,14 +490,17 @@ export default function MouvementsAssociationsPage() {
       </Dialog>
 
       {/* Dialog d'ajout de mouvement */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+      <Dialog 
+        open={showAddDialog} 
+        onOpenChange={setShowAddDialog}
+      >
         <DialogContent className="sm:max-w-[600px] w-[92vw] max-h-[90vh] overflow-y-auto p-3 sm:p-6">
           <DialogHeader className="pb-2">
             <DialogTitle className="text-lg text-green-800 font-semibold flex items-center">
               Nouveau Mouvement ou Association
             </DialogTitle>
           </DialogHeader>
-
+          
           <AjouterMouvementForm
             onClose={() => setShowAddDialog(false)}
             onSuccess={handleCreateSuccess}
@@ -627,8 +509,8 @@ export default function MouvementsAssociationsPage() {
       </Dialog>
 
       {/* Dialog de modification de mouvement */}
-      <Dialog
-        open={showEditDialog}
+      <Dialog 
+        open={showEditDialog} 
         onOpenChange={(open) => {
           setShowEditDialog(open);
           if (!open) {
@@ -642,7 +524,7 @@ export default function MouvementsAssociationsPage() {
               Modifier le mouvement
             </DialogTitle>
           </DialogHeader>
-
+          
           {selectedMouvement && (
             <ModifierMouvementForm
               onClose={() => setShowEditDialog(false)}

@@ -23,6 +23,8 @@ import {
   ChevronRight,
   Building,
   UserPlus,
+  Plus,
+  Calendar1,
 } from "lucide-react";
 import {
   Card,
@@ -50,6 +52,7 @@ import {
   NotFoundError,
 } from "@/services/api";
 import { fetchCebDetails } from "@/services/ceb-services";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Importer les composants de formulaire
 import ModifierCebForm from "@/components/forms/ModifierCebForm";
@@ -252,10 +255,36 @@ export default function CebDetailsPage() {
             </div>
           </CardHeader>
           <CardContent className="grid gap-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-purple-100 flex items-center justify-center">
+                  <Calendar className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500">
+                    Total Evenements
+                  </p>
+                  <p className="text-sm font-semibold">
+                    {ceb.evenements?.length}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-purple-100 flex items-center justify-center">
+                  <Users className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500">
+                    Total Membres
+                  </p>
+                  <p className="text-sm font-semibold">
+                    {ceb.membres?.length}
+                  </p>
+                </div>
+              </div>
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Calendar className="h-5 w-5 text-blue-600" />
+                  <Calendar1 className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-500">
@@ -281,7 +310,7 @@ export default function CebDetailsPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              {/* <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-full bg-purple-100 flex items-center justify-center">
                   <Building className="h-5 w-5 text-purple-600" />
                 </div>
@@ -293,114 +322,285 @@ export default function CebDetailsPage() {
                     {ceb.paroisse_id || "Non attribué"}
                   </p>
                 </div>
-              </div>
+              </div> */}
             </div>
           </CardContent>
+        </Card>
 
-          <Separator className="my-4" />
+        {/* Système d'onglets pour Président, Membres, Événements */}
+        <Card className="bg-slate-50 border-slate-100">
+          <CardContent className="p-6">
+            <Tabs defaultValue="president" className="space-y-4">
+              <TabsList className="grid grid-cols-3 w-full">
+                <TabsTrigger
+                  value="president"
+                  className="flex items-center justify-center"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Président
+                </TabsTrigger>
+                <TabsTrigger
+                  value="membres"
+                  className="flex items-center justify-center"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Membres ({ceb.membres?.length || 0})
+                </TabsTrigger>
+                <TabsTrigger
+                  value="evenements"
+                  className="flex items-center justify-center"
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Événements ({ceb.evenements?.length || 0})
+                </TabsTrigger>
+              </TabsList>
 
-          <CardHeader className="pb-3">
-            <div className="flex justify-between items-start">
-              <CardTitle className="text-lg font-semibold">Président</CardTitle>
-              {/* <Button
-                variant="outline"
-                size="sm"
-                className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                onClick={() => setShowEditDialog(true)}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Modifier
-              </Button> */}
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {ceb.president ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center">
-                      <User className="h-5 w-5 text-indigo-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-500">
-                        Nom complet
-                      </p>
-                      <p className="text-sm font-semibold">
-                        {ceb.president.nom} {ceb.president.prenoms}
-                      </p>
-                    </div>
-                  </div>
+              {/* Contenu de l'onglet Président */}
+              <TabsContent value="president" className="pt-4">
+                {ceb.president ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center">
+                          <User className="h-5 w-5 text-indigo-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-500">
+                            Nom complet
+                          </p>
+                          <p className="text-sm font-semibold">
+                            {ceb.president.nom} {ceb.president.prenoms}
+                          </p>
+                        </div>
+                      </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-pink-100 flex items-center justify-center">
-                      <Phone className="h-5 w-5 text-pink-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-500">
-                        Téléphone
-                      </p>
-                      <p className="text-sm font-semibold">
-                        {formatPhoneNumber(ceb.president.num_de_telephone)}
-                      </p>
-                    </div>
-                  </div>
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-full bg-pink-100 flex items-center justify-center">
+                          <Phone className="h-5 w-5 text-pink-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-500">
+                            Téléphone
+                          </p>
+                          <p className="text-sm font-semibold">
+                            {formatPhoneNumber(ceb.president.num_de_telephone)}
+                          </p>
+                        </div>
+                      </div>
 
-                  {ceb.president.email && (
+                      {ceb.president.email && (
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-full bg-teal-100 flex items-center justify-center">
+                            <Mail className="h-5 w-5 text-teal-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-slate-500">
+                              Email
+                            </p>
+                            <p className="text-sm font-semibold">
+                              {ceb.president.email}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
                     <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-full bg-teal-100 flex items-center justify-center">
-                        <Mail className="h-5 w-5 text-teal-600" />
+                      <div className="h-9 w-9 rounded-full bg-amber-100 flex items-center justify-center">
+                        <Map className="h-5 w-5 text-amber-600" />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-slate-500">
-                          Email
+                          Adresse
                         </p>
                         <p className="text-sm font-semibold">
-                          {ceb.president.email}
+                          {[
+                            ceb.president.quartier,
+                            ceb.president.commune,
+                            ceb.president.ville,
+                            ceb.president.pays,
+                          ]
+                            .filter(Boolean)
+                            .join(", ") || "Non renseignée"}
                         </p>
                       </div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-amber-50 rounded-md border border-amber-100">
+                    <p className="text-sm text-center text-amber-600">
+                      Aucun président n'est assigné à cette CEB.
+                    </p>
+                    <div className="flex justify-center mt-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-amber-600 border-amber-300 hover:bg-amber-100"
+                        onClick={() => setShowNominerPresidentDialog(true)}
+                      >
+                        <UserPlus className="h-3.5 w-3.5 mr-2" />
+                        Nommer un président
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
 
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-amber-100 flex items-center justify-center">
-                    <Map className="h-5 w-5 text-amber-600" />
+              {/* Contenu de l'onglet Membres */}
+              <TabsContent value="membres" className="pt-4">
+                {ceb.membres && ceb.membres.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-200">
+                            <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                              Nom Complet
+                            </th>
+                            <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                              Téléphone
+                            </th>
+                            <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                              Email
+                            </th>
+                            <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                              Statut
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {ceb.membres.map((membre) => (
+                            <tr
+                              key={membre.id}
+                              className="border-b border-slate-100 hover:bg-slate-50"
+                            >
+                              <td className="py-3 px-4">
+                                <div className="font-medium text-sm">
+                                  {membre.prenoms} {membre.nom}
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 text-sm text-slate-600">
+                                {formatPhoneNumber(membre.num_de_telephone)}
+                              </td>
+                              <td className="py-3 px-4 text-sm text-slate-600">
+                                {membre.email || "Non renseigné"}
+                              </td>
+                              <td className="py-3 px-4">
+                                <Badge variant="outline">
+                                  {membre.statut || "Non défini"}
+                                </Badge>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button variant="outline" size="sm">
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Ajouter un membre
+                      </Button>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-500">
-                      Adresse
+                ) : (
+                  <div className="p-8 text-center">
+                    <Users className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                    <h3 className="text-lg font-medium text-slate-900 mb-2">
+                      Aucun membre
+                    </h3>
+                    <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
+                      Cette CEB n'a pas encore de membres enregistrés.
                     </p>
-                    <p className="text-sm font-semibold">
-                      {[
-                        ceb.president.quartier,
-                        ceb.president.commune,
-                        ceb.president.ville,
-                        ceb.president.pays,
-                      ]
-                        .filter(Boolean)
-                        .join(", ") || "Non renseignée"}
-                    </p>
+                    <Button>
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Ajouter des membres
+                    </Button>
                   </div>
-                </div>
-              </>
-            ) : (
-              <div className="p-4 bg-amber-50 rounded-md border border-amber-100">
-                <p className="text-sm text-center text-amber-600">
-                  Aucun président n'est assigné à cette CEB.
-                </p>
-                <div className="flex justify-center mt-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-amber-600 border-amber-300 hover:bg-amber-100"
-                    onClick={() => setShowNominerPresidentDialog(true)}
-                  >
-                    <UserPlus className="h-3.5 w-3.5 mr-2" />
-                    Nommer un président
-                  </Button>
-                </div>
-              </div>
-            )}
+                )}
+              </TabsContent>
+
+              {/* Contenu de l'onglet Événements */}
+              <TabsContent value="evenements" className="pt-4">
+                {ceb.evenements && ceb.evenements.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-200">
+                            <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                              Titre
+                            </th>
+                            <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                              Date
+                            </th>
+                            <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                              Description
+                            </th>
+                            <th className="py-3 px-4 text-right text-sm font-medium text-slate-500">
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {ceb.evenements.map((evenement) => (
+                            <tr
+                              key={evenement.id}
+                              className="border-b border-slate-100 hover:bg-slate-50"
+                            >
+                              <td className="py-3 px-4">
+                                <div className="font-medium text-sm">
+                                  {evenement.titre}
+                                </div>
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="flex items-center text-sm text-slate-600">
+                                  <Calendar className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
+                                  {formatDate(evenement.date)}
+                                </div>
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="text-sm text-slate-600 max-w-xs truncate">
+                                  {evenement.description}
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 text-right">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8"
+                                >
+                                  <Edit className="h-4 w-4 text-slate-500" />
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button variant="outline" size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Ajouter un événement
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center">
+                    <Calendar className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                    <h3 className="text-lg font-medium text-slate-900 mb-2">
+                      Aucun événement
+                    </h3>
+                    <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
+                      Cette CEB n'a pas encore d'événements planifiés.
+                    </p>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Créer un événement
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
@@ -24,6 +23,7 @@ import {
   UserPlus,
   CheckCircle,
   Users,
+  Columns,
 } from "lucide-react";
 import {
   Card,
@@ -65,13 +65,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Importer le formulaire de modification des paroissiens
 import ModifierParoissienForm from "@/components/forms/ModifierParoissienForm";
 
 // Types
 interface Paroissien {
-  [x: string]: any;
   id: number;
   created_at: string;
   identifiant: string;
@@ -120,6 +125,34 @@ export default function ParoissiensPage() {
   const [selectedParoissien, setSelectedParoissien] =
     useState<Paroissien | null>(null);
 
+  const [visibleColumns, setVisibleColumns] = useState({
+    dateAjout: true,
+    nom: true,
+    telephone: true,
+    email: false,
+    statut: true,
+    abonnement: true,
+    actions: true,
+  });
+
+  // Définir les colonnes disponibles pour le tableau
+  const availableColumns = [
+    { id: "dateAjout", label: "Date d'ajout" },
+    { id: "nom", label: "Nom" },
+    { id: "telephone", label: "Téléphone" },
+    { id: "email", label: "Email" },
+    { id: "statut", label: "Statut" },
+    { id: "abonnement", label: "Abonnement" },
+    { id: "actions", label: "Actions" },
+  ];
+
+  const toggleColumnVisibility = (columnId) => {
+    setVisibleColumns((prev) => ({
+      ...prev,
+      [columnId]: !prev[columnId],
+    }));
+  };
+
   const getUniqueStatuts = () => {
     const statuts = paroissiens.map((p) => p.statut || "Aucun");
     return ["TOUS", ...Array.from(new Set(statuts))];
@@ -164,6 +197,35 @@ export default function ParoissiensPage() {
     setCurrentPage(1);
     setTotalPages(Math.ceil(results.length / itemsPerPage));
   }, [searchQuery, statutFilter, paroissiens, itemsPerPage]);
+
+  useEffect(() => {
+    try {
+      const savedColumns = localStorage.getItem("paroissiens-visible-columns");
+      if (savedColumns) {
+        setVisibleColumns(JSON.parse(savedColumns));
+      }
+    } catch (error) {
+      console.error(
+        "Erreur lors du chargement des préférences de colonnes:",
+        error
+      );
+    }
+  }, []);
+
+  // Sauvegarder les préférences des colonnes dans localStorage lorsqu'elles changent (optionnel)
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "paroissiens-visible-columns",
+        JSON.stringify(visibleColumns)
+      );
+    } catch (error) {
+      console.error(
+        "Erreur lors de la sauvegarde des préférences de colonnes:",
+        error
+      );
+    }
+  }, [visibleColumns]);
 
   // Charger les paroissiens au montage du composant
   useEffect(() => {
@@ -484,8 +546,11 @@ export default function ParoissiensPage() {
         </Card>
       </div>
 
-      <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
-        {/* <div className="relative w-full sm:w-96">
+      <Card className="bg-slate-50 border-slate-100">
+        <CardContent className="p-6">
+          {/* Barre de recherche et filtres */}
+          <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
+            {/* <div className="relative w-full sm:w-96">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
               <Input
                 placeholder="Rechercher par nom, prénom, email, téléphone..."
@@ -494,42 +559,86 @@ export default function ParoissiensPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div> */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-          <Input
-            placeholder="Rechercher par nom, prénom, email, téléphone..."
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        {/* Filtre par statut */}
-        <div className="w-full sm:w-64">
-          <Select value={statutFilter} onValueChange={setStatutFilter}>
-            <SelectTrigger>
-              <div className="flex items-center">
-                <Filter className="h-4 w-4 mr-2 text-slate-400" />
-                <SelectValue placeholder="Filtrer par statut" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              {getUniqueStatuts().map((statut) => (
-                <SelectItem key={statut} value={statut}>
-                  {statut === "TOUS" ? "Tous les statuts" : statut}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="icon" title="Exporter">
-            <Download className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+              <Input
+                placeholder="Rechercher par nom, prénom, email, téléphone..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            {/* Filtre par statut */}
+            <div className="w-full sm:w-64">
+              <Select value={statutFilter} onValueChange={setStatutFilter}>
+                <SelectTrigger>
+                  <div className="flex items-center">
+                    <Filter className="h-4 w-4 mr-2 text-slate-400" />
+                    <SelectValue placeholder="Filtrer par statut" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  {getUniqueStatuts().map((statut) => (
+                    <SelectItem key={statut} value={statut}>
+                      {statut === "TOUS" ? "Tous les statuts" : statut}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {/* <div className="flex gap-2">
+              <Button variant="outline" size="icon" title="Filtrer">
+                <Filter className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" title="Exporter">
+                <Download className="h-4 w-4" />
+              </Button>
+            </div> */}
+            <div className="flex gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    title="Gérer les colonnes"
+                  >
+                    <Columns className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-3" align="end">
+                  <div className="space-y-1">
+                    <h4 className="font-medium text-sm mb-2">
+                      Colonnes à afficher
+                    </h4>
+                    {availableColumns.map((column) => (
+                      <div
+                        key={column.id}
+                        className="flex items-center space-x-2"
+                      >
+                        <Checkbox
+                          id={`column-${column.id}`}
+                          checked={visibleColumns[column.id]}
+                          onCheckedChange={() =>
+                            toggleColumnVisibility(column.id)
+                          }
+                        />
+                        <label
+                          htmlFor={`column-${column.id}`}
+                          className="text-sm cursor-pointer"
+                        >
+                          {column.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              <Button variant="outline" size="icon" title="Exporter">
+                <Download className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
 
-      <Card className="bg-slate-50 border-slate-100">
-        <CardContent className="p-6">
           {/* Liste des paroissiens */}
           {filteredParoissiens.length === 0 ? (
             <div className="text-center py-12">
@@ -559,24 +668,47 @@ export default function ParoissiensPage() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Date d'ajout
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Nom
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Téléphone
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Statut
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Abonnement
-                    </th>
-                    <th className="py-3 px-4 text-right text-sm font-medium text-slate-500">
-                      Actions
-                    </th>
+                    {visibleColumns.dateAjout && (
+                      <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                        Date d'ajout
+                      </th>
+                    )}
+
+                    {visibleColumns.nom && (
+                      <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                        Nom
+                      </th>
+                    )}
+
+                    {visibleColumns.telephone && (
+                      <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                        Téléphone
+                      </th>
+                    )}
+
+                    {visibleColumns.email && (
+                      <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                        Email
+                      </th>
+                    )}
+
+                    {visibleColumns.statut && (
+                      <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                        Statut
+                      </th>
+                    )}
+
+                    {visibleColumns.abonnement && (
+                      <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                        Abonnement
+                      </th>
+                    )}
+
+                    {visibleColumns.actions && (
+                      <th className="py-3 px-4 text-right text-sm font-medium text-slate-500">
+                        Actions
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -586,75 +718,99 @@ export default function ParoissiensPage() {
                       className="border-b border-slate-100 hover:bg-slate-100 cursor-pointer"
                       onClick={() => navigateToDetails(paroissien.id)}
                     >
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-slate-700">
-                          {formatDate(paroissien.created_at)}
-                        </div>
-                      </td>
+                      {visibleColumns.dateAjout && (
+                        <td className="py-3 px-4">
+                          <div className="text-sm text-slate-700">
+                            {formatDate(paroissien.created_at)}
+                          </div>
+                        </td>
+                      )}
 
-                      <td className="py-3 px-4">
-                        <div className="font-medium text-xs text-slate-900">
-                          {paroissien.nom} {paroissien.prenoms}
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          Né(e) le {formatDate(paroissien.date_de_naissance)}
-                        </div>
-                      </td>
+                      {visibleColumns.nom && (
+                        <td className="py-3 px-4">
+                          <div className="font-medium text-xs text-slate-900">
+                            {paroissien.nom} {paroissien.prenoms}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            Né(e) le {formatDate(paroissien.date_de_naissance)}
+                          </div>
+                        </td>
+                      )}
 
-                      <td className="py-3 px-4 text-xs text-slate-700">
-                        {formatPhoneNumber(paroissien.num_de_telephone)}
-                      </td>
+                      {visibleColumns.telephone && (
+                        <td className="py-3 px-4 text-xs text-slate-700">
+                          {formatPhoneNumber(paroissien.num_de_telephone)}
+                        </td>
+                      )}
 
-                      <td className="py-3 px-4">
-                        {getStatusBadge(paroissien.statut)}
-                      </td>
+                      {visibleColumns.email && (
+                        <td className="py-3 px-4 text-xs text-slate-700">
+                          {paroissien.email || (
+                            <span className="text-slate-400 italic">
+                              Non renseigné
+                            </span>
+                          )}
+                        </td>
+                      )}
 
-                      <td className="py-3 px-4">
-                        {paroissien.est_abonne ? (
-                          <Badge variant="success" className="bg-green-800">
-                            {paroissien.abonnement?.intitule || "Abonné"}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-slate-500">
-                            Aucun
-                          </Badge>
-                        )}
-                      </td>
+                      {visibleColumns.statut && (
+                        <td className="py-3 px-4">
+                          {getStatusBadge(paroissien.statut)}
+                        </td>
+                      )}
 
-                      <td className="py-3 px-4 text-right">
-                        <div
-                          className="inline-flex"
-                          onClick={(e) => {
-                            e.stopPropagation(); // Empêcher la navigation vers la page de détails
-                          }}
-                        >
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => navigateToDetails(paroissien.id)}
-                              >
-                                <User className="h-4 w-4 mr-2 text-slate-500" />
-                                Voir les détails
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => openEditModal(paroissien)}
-                              >
-                                <Edit className="h-4 w-4 mr-2 text-blue-600" />
-                                Modifier
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </td>
+                      {visibleColumns.abonnement && (
+                        <td className="py-3 px-4">
+                          {paroissien.est_abonne ? (
+                            <Badge variant="success" className="bg-green-800">
+                              {paroissien.abonnement?.intitule || "Abonné"}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-slate-500">
+                              Aucun
+                            </Badge>
+                          )}
+                        </td>
+                      )}
+
+                      {visibleColumns.actions && (
+                        <td className="py-3 px-4 text-right">
+                          <div
+                            className="inline-flex"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                          >
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    navigateToDetails(paroissien.id)
+                                  }
+                                >
+                                  <User className="h-4 w-4 mr-2 text-slate-500" />
+                                  Voir les détails
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => openEditModal(paroissien)}
+                                >
+                                  <Edit className="h-4 w-4 mr-2 text-blue-600" />
+                                  Modifier
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

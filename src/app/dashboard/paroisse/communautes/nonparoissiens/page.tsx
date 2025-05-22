@@ -1,4 +1,7 @@
 // NonParoissiensPage.jsx - Version mise à jour
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -8,7 +11,6 @@ import {
   Search,
   Plus,
   Filter,
-  MoreHorizontal,
   XCircle,
   Edit,
   Phone,
@@ -16,6 +18,7 @@ import {
   Venus,
   Mars,
   UserPlus,
+  Trash2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,12 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -58,7 +55,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-// Importer les formulaires séparés
 import AjouterNonParoissienForm from "@/components/forms/AjouterNonParoissienForm";
 import ModifierNonParoissienForm from "@/components/forms/ModifierNonParoissienForm";
 import SupprimerNonParoissienConfirmation from "@/components/forms/SupprimerNonParoissienConfirmation";
@@ -254,7 +250,7 @@ export default function NonParoissiensPage() {
   };
 
   return (
-    <div className="container mx-auto py-6 max-w-7xl">
+    <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 mb-1">
@@ -339,7 +335,7 @@ export default function NonParoissiensPage() {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={() => setShowAddDialog(true)}>
+        <Button onClick={() => setShowAddDialog(true)} className="cursor-pointer">
           <Plus className="h-4 w-4 mr-2" />
           Nouveau
         </Button>
@@ -398,19 +394,19 @@ export default function NonParoissiensPage() {
           <Table className="w-full">
             <TableHeader className="bg-slate-50">
               <TableRow className="hover:bg-slate-100 border-slate-200">
-                <TableHead className="font-semibold text-slate-600 py-3 px-4 w-[180px]">
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
                   Date de Création
                 </TableHead>
                 <TableHead className="font-semibold text-slate-600 py-3 px-4">
                   Nom & Prénom
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600 py-3 px-4 w-[100px]">
+                <TableHead className="font-semibold text-slate-600 py-3 px-4 ">
                   Genre
                 </TableHead>
                 <TableHead className="font-semibold text-slate-600 py-3 px-4">
                   Téléphone
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600 py-3 px-4 w-[100px] text-right">
+                <TableHead className="font-semibold text-slate-600 py-3 px-4 text-right">
                   Actions
                 </TableHead>
               </TableRow>
@@ -478,47 +474,43 @@ export default function NonParoissiensPage() {
                   </TableCell>
 
                   <TableCell className="text-right py-2 px-4">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 rounded-full bg-slate-100"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelectedNonParoissien(np);
-                            setShowEditDialog(true);
-                          }}
-                        >
-                          <Edit className="h-4 w-4 mr-2 text-blue-600" />
-                          Modifier
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelectedNonParoissien(np);
-                            setShowConvertDialog(true);
-                          }}
-                        >
-                          <UserPlus className="h-4 w-4 mr-2 text-green-600" />
-                          Convertir en paroissien
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => {
-                            setSelectedNonParoissien(np);
-                            setShowDeleteDialog(true);
-                          }}
-                        >
-                          <XCircle className="h-4 w-4 mr-2" />
-                          Supprimer
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center text-blue-600 hover:bg-blue-50 cursor-pointer"
+                        onClick={() => {
+                          setSelectedNonParoissien(np);
+                          setShowEditDialog(true);
+                        }}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center text-green-600 hover:bg-green-50 cursor-pointer"
+                        onClick={() => {
+                          setSelectedNonParoissien(np);
+                          setShowConvertDialog(true);
+                        }}
+                      >
+                        <UserPlus className="h-4 w-4 mr-1" />
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center text-red-600 hover:bg-red-50 cursor-pointer"
+                        onClick={() => {
+                          setSelectedNonParoissien(np);
+                          setShowDeleteDialog(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

@@ -726,12 +726,12 @@ export default function Sidebar({ isOpen }: SidebarProps) {
             <PieChart size={20} />
           </Link>
 
-          <Link
+          {/* <Link
             href={`${getBaseUrl()}/communications`}
             className="p-2 rounded-md text-slate-300 hover:bg-slate-800 cursor-pointer"
           >
             <MessageSquare size={20} />
-          </Link>
+          </Link> */}
         </>
       );
     } else if (isInDoyenne) {
@@ -973,12 +973,12 @@ export default function Sidebar({ isOpen }: SidebarProps) {
           title="Finances"
           isActive={pathname.startsWith(`${getBaseUrl()}/finances`)}
         />
-        <SidebarItem
+        {/* <SidebarItem
           href={`${getBaseUrl()}/communications`}
           icon={<MessageSquare size={20} />}
           title="Communications"
           isActive={pathname.startsWith(`${getBaseUrl()}/communications`)}
-        />
+        /> */}
       </>
     );
   } else if (isInDoyenne) {

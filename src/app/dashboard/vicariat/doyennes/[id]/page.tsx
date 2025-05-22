@@ -308,9 +308,9 @@ export default function DoyenneDetailPage({ params }: DoyenneDetailPageProps) {
                 )}
 
                 <div className="mt-4 text-right">
-                  <a href="/dashboard/doyenne/evenements" className="text-sm text-blue-600 hover:text-blue-800">
+                  <Link href="/dashboard/doyenne/evenements" className="text-sm text-blue-600 hover:text-blue-800">
                     Voir tous les événements →
-                  </a>
+                  </Link>
                 </div>
               </div>
             </CardContent>
@@ -442,9 +442,9 @@ export default function DoyenneDetailPage({ params }: DoyenneDetailPageProps) {
               </div>
 
               <div className="mt-4 text-right">
-                <a href="/dashboard/vicariat/communications" className="text-sm text-blue-600 hover:text-blue-800">
+                <Link href="/dashboard/vicariat/communications" className="text-sm text-blue-600 hover:text-blue-800">
                   Voir toutes les communications →
-                </a>
+                </Link>
               </div>
             </CardContent>
           </Card>

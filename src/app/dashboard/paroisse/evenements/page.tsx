@@ -1,274 +1,187 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// Fichier: EvenementsPage.tsx
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  Plus,
-  Filter,
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  LayoutList,
-  CalendarDays,
-  Loader2,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Plus, LayoutList, CalendarDays } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import axios from "axios";
 import { toast } from "sonner";
+import axios from "axios";
 
-// Types pour les événements
-type EventType = "ACTIVITE" | "COTISATION" | "MESSE" | "INSCRIPTION" | "DON";
+// Import des composants modulaires
+import EventCard, {
+  APIEvent,
+  EventType,
+} from "@/components/dashboard/EventCard";
+import EventFilters, {
+  useEventFilters,
+} from "@/components/dashboard/EventFilters";
+import DatePicker, {
+  useDateSelection,
+} from "@/components/dashboard/DatePicker";
+import CreateEventModal, {
+  useCreateEventModal,
+} from "@/components/dashboard/CreateEventModal";
 
-type EventStatus = "programmé" | "confirmé" | "terminé" | "annulé";
+// Custom hook pour gérer les événements
+function useEvents() {
+  const [events, setEvents] = useState<APIEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [paroisseId, setParoisseId] = useState<number>(0);
 
-// Structure correcte de l'API basée sur votre JSON
-interface APIEventExtras {
-  type_messe?: string;
-  heure_de_fin?: number;
-  heure_de_debut?: number;
-  prix_demande_de_messe?: number;
-  [key: string]: any;
+  // Récupérer l'ID de la paroisse depuis le profil utilisateur
+  const getUserParoisseId = (): number => {
+    try {
+      const userProfileStr = localStorage.getItem("user_profile");
+      if (userProfileStr) {
+        const userProfile = JSON.parse(userProfileStr);
+        return userProfile.paroisse_id || 0;
+      }
+    } catch (err) {
+      console.error("Erreur lors de la récupération du profil:", err);
+    }
+    return 0;
+  };
+
+  // Fonction pour charger les événements
+  const fetchEvents = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const API_URL_STATISTIQUE =
+        process.env.NEXT_PUBLIC_API_URL_STATISTIQUE ||
+        "https://api.cathoconnect.ci/api:HzF8fFua";
+      const token = localStorage.getItem("auth_token");
+
+      if (!token) {
+        throw new Error("Token d'authentification non trouvé");
+      }
+
+      const currentParoisseId = getUserParoisseId();
+      setParoisseId(currentParoisseId);
+
+      const response = await axios.get(
+        `${API_URL_STATISTIQUE}/evenements/obtenir-tous`,
+        {
+          params: { paroisse_id: currentParoisseId },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+        }
+      );
+
+      console.log("Événements chargés:", response.data);
+
+      if (response.data?.items && Array.isArray(response.data.items)) {
+        setEvents(response.data.items);
+      } else {
+        console.error("Format de réponse inattendu:", response.data);
+        setEvents([]);
+      }
+    } catch (err: any) {
+      console.error("Erreur lors du chargement des événements:", err);
+      setError("Une erreur est survenue lors du chargement des événements.");
+      toast.error("Impossible de charger les événements");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Charger les événements au montage
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  return {
+    events,
+    loading,
+    error,
+    paroisseId,
+    refreshEvents: fetchEvents,
+  };
 }
 
-interface APIEvent {
-  id: number;
-  created_at: number;
-  libelle: string;
-  type: EventType;
-  solde: number;
-  solde_cible: number | null;
-  description: string | null;
-  date_de_debut: number;
-  date_de_fin: number | null;
-  solde_est_visibe: boolean | null;
-  type_visibilite_solde: string | null;
-  est_limite_par_echeance: boolean | null;
-  est_actif: boolean | null;
-  extras: APIEventExtras;
-  diocese_id: number | null;
-  paroisse_id: number;
-  mouvementassociation_id: number | null;
-  ceb_id: number | null;
-  image: string | null;
-}
-
-interface APIResponse {
-  items: APIEvent[];
-}
-
-// Mise à jour de l'interface pour le nouvel événement pour correspondre à l'API
-interface NewEventWithMultipleDates {
-  type: EventType;
-  dates: number[]; // Tableau de timestamps
-  libelle: string;
-  type_messe?: string; // Pour les messes
-  description: string;
-  paroisse_id: number;
-  heure_de_debut: number;
-  heure_de_fin: number;
-}
-
-// Formatage de la date
-const formatDate = (timestamp: number) => {
-  try {
-    // Ajuster si le timestamp est en secondes (10 chiffres ou moins)
-    const adjustedTimestamp =
-      String(timestamp).length <= 10
-        ? timestamp * 1000 // En secondes, convertir en ms
-        : timestamp; // Déjà en ms
-
-    const date = new Date(adjustedTimestamp);
-
-    // Vérifier si la date est valide
-    if (isNaN(date.getTime())) {
-      console.warn("Date invalide:", timestamp);
-      return "Date invalide";
-    }
-
-    return date.toLocaleDateString("fr-FR", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  } catch (error) {
-    console.error("Erreur lors du formatage de la date:", error, timestamp);
-    return "Date inconnue";
-  }
-};
-
-// Format heure
-const formatHeure = (timestamp: number | undefined) => {
-  if (timestamp === undefined) return "Heure non spécifiée";
-
-  try {
-    // Ajuster si le timestamp est en secondes
-    const adjustedTimestamp =
-      String(timestamp).length <= 10
-        ? timestamp * 1000 // En secondes, convertir en ms
-        : timestamp; // Déjà en ms
-
-    const date = new Date(adjustedTimestamp);
-
-    // Vérifier si la date est valide
-    if (isNaN(date.getTime())) {
-      return "Heure non spécifiée";
-    }
-
-    return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
-  } catch (error) {
-    console.error("Erreur lors du formatage de l'heure:", error, timestamp);
-    return "Heure inconnue";
-  }
-};
-
-// Formater minutes en heure:minutes
-const formatMinutesToTime = (minutes: number): string => {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
-};
-
-// Convertir l'heure (HH:MM) en minutes depuis minuit
-const convertTimeToMinutes = (time: string): number => {
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
-};
-
-// Formater type d'événement pour Badge
-const getEventTypeDetails = (type: EventType) => {
-  switch (type) {
-    case "MESSE":
-      return { label: "Messe", variant: "default" as const };
-    case "ACTIVITE":
-      return { label: "Activité", variant: "secondary" as const };
-    case "COTISATION":
-      return { label: "Cotisation", variant: "outline" as const };
-    case "INSCRIPTION":
-      return { label: "Inscription", variant: "destructive" as const };
-    case "DON":
-      return { label: "Don", variant: "success" as const };
-    default:
-      return { label: type, variant: "default" as const };
-  }
-};
-
-// Obtenir la date sous format ISO à partir d'un timestamp
-const getISODateFromTimestamp = (timestamp: number): string => {
-  try {
-    // Ajuster si le timestamp est en secondes
-    const adjustedTimestamp =
-      String(timestamp).length <= 10
-        ? timestamp * 1000 // En secondes, convertir en ms
-        : timestamp; // Déjà en ms
-
-    const date = new Date(adjustedTimestamp);
-
-    // Vérifier si la date est valide
-    if (isNaN(date.getTime())) {
-      console.warn("Date invalide pour ISO:", timestamp);
-      return "";
-    }
-
-    return date.toISOString().split("T")[0];
-  } catch (error) {
-    console.error(
-      "Erreur lors de la conversion ISO de la date:",
-      error,
-      timestamp
-    );
-    return "";
-  }
-};
-
-// Déterminer le statut d'un événement
-const getEventStatus = (dateDebut: number): EventStatus => {
-  try {
-    // Ajuster si le timestamp est en secondes
-    const timestamp =
-      String(dateDebut).length <= 10
-        ? dateDebut * 1000 // En secondes, convertir en ms
-        : dateDebut; // Déjà en ms
-
-    const now = Date.now();
-
-    if (timestamp < now) {
-      return "terminé";
-    } else if (timestamp - now < 7 * 24 * 60 * 60 * 1000) {
-      // 7 jours
-      return "confirmé";
-    } else {
-      return "programmé";
-    }
-  } catch (error) {
-    console.error("Erreur lors de la détermination du statut:", error);
-    return "programmé"; // Valeur par défaut
-  }
-};
-
-// Formater statut d'événement pour Badge
-const getEventStatusDetails = (statut: EventStatus) => {
-  switch (statut) {
-    case "programmé":
-      return { label: "Programmé", variant: "outline" as const };
-    case "confirmé":
-      return { label: "Confirmé", variant: "success" as const };
-    case "terminé":
-      return { label: "Terminé", variant: "secondary" as const };
-    case "annulé":
-      return { label: "Annulé", variant: "destructive" as const };
-    default:
-      return { label: statut, variant: "outline" as const };
-  }
-};
-
-// Composant 1: Liste des événements
-const ListeEvenements = ({
-  apiEvents,
-  moisActuel,
-  anneeActuelle,
-  filtreType,
-  loading,
-}: {
-  apiEvents: APIEvent[];
+// Composant pour la vue Liste
+interface EventsListViewProps {
+  events: APIEvent[];
   moisActuel: number;
   anneeActuelle: number;
   filtreType: string;
   loading: boolean;
+}
+
+const EventsListView: React.FC<EventsListViewProps> = ({
+  events,
+  moisActuel,
+  anneeActuelle,
+  filtreType,
+  loading,
 }) => {
+  // Normaliser le timestamp
+  const normalizeTimestamp = (timestamp: number): number => {
+    return String(timestamp).length <= 10 ? timestamp * 1000 : timestamp;
+  };
+
+  // Formatage de la date
+  const formatDate = (timestamp: number) => {
+    try {
+      const adjustedTimestamp = normalizeTimestamp(timestamp);
+      const date = new Date(adjustedTimestamp);
+
+      if (isNaN(date.getTime())) {
+        return "Date invalide";
+      }
+
+      return date.toLocaleDateString("fr-FR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+    } catch (error) {
+      console.error("Erreur lors du formatage de la date:", error);
+      return "Date inconnue";
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-        <span className="ml-2 text-slate-500">
-          Chargement des événements...
-        </span>
+      <div className="space-y-6">
+        {/* Skeletons pour la vue liste */}
+        {Array.from({ length: 3 }).map((_, dateIndex) => (
+          <div key={dateIndex}>
+            <div className="h-6 bg-gray-200 rounded w-48 mb-4 animate-pulse" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, eventIndex) => (
+                <div
+                  key={eventIndex}
+                  className="border border-slate-200 rounded-md p-4 animate-pulse"
+                >
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="w-10 h-10 bg-gray-200 rounded-md" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-3/4" />
+                      <div className="h-3 bg-gray-200 rounded w-1/2" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mb-2">
+                    <div className="h-5 bg-gray-200 rounded w-16" />
+                  </div>
+                  <div className="h-4 bg-gray-200 rounded w-24 mb-3" />
+                  <div className="h-8 bg-gray-200 rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
 
-  if (!apiEvents || apiEvents.length === 0) {
+  if (!events || events.length === 0) {
     return (
       <div className="text-center py-8 text-slate-500">
         Aucun événement trouvé.
@@ -279,19 +192,14 @@ const ListeEvenements = ({
   // Filtrer et grouper les événements par date
   const groupedEvents: Record<string, APIEvent[]> = {};
 
-  apiEvents.forEach((event) => {
+  events.forEach((event) => {
     // Filtrer par type
     if (filtreType !== "tous" && event.type !== filtreType) {
       return;
     }
 
     try {
-      // Ajuster si le timestamp est en secondes
-      const timestamp =
-        String(event.date_de_debut).length <= 10
-          ? event.date_de_debut * 1000
-          : event.date_de_debut;
-
+      const timestamp = normalizeTimestamp(event.date_de_debut);
       const date = new Date(timestamp);
 
       // Filtrer par mois et année
@@ -324,56 +232,17 @@ const ListeEvenements = ({
           <h3 className="font-medium text-slate-900 sticky top-0 bg-white py-2 mb-4">
             {formatDate(new Date(dateKey).getTime())}
           </h3>
-          <div
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-            style={{ display: "grid" }}
-          >
-            {groupedEvents[dateKey].map((event) => {
-              const { label: typeLabel, variant: typeVariant } =
-                getEventTypeDetails(event.type);
-              const statut = getEventStatus(event.date_de_debut);
-              const { label: statusLabel, variant: statusVariant } =
-                getEventStatusDetails(statut);
-
-              return (
-                <div
-                  key={event.id}
-                  className="border border-slate-200 rounded-md hover:bg-slate-50 p-4"
-                  style={{ breakInside: "avoid", pageBreakInside: "avoid" }}
-                >
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="w-10 h-10 flex-shrink-0 bg-slate-100 rounded-md flex items-center justify-center">
-                      <Calendar className="h-5 w-5 text-slate-700" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-slate-900 line-clamp-2">
-                        {event.libelle}
-                      </h4>
-                      <h4 className="font-medium text-xs text-slate-400 line-clamp-2">
-                        {event.extras?.type_messe}
-                      </h4>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    <Badge variant={typeVariant}>{typeLabel}</Badge>
-                    {/* <Badge variant={statusVariant}>{statusLabel}</Badge> */}
-                  </div>
-
-                  <p className="text-sm text-slate-500 mb-3">
-                    {formatHeure(event.extras?.heure_de_debut)} -{" "}
-                    {formatHeure(event.extras?.heure_de_fin)}
-                  </p>
-
-                  <a
-                    href={`/dashboard/paroisse/evenements/${event.id}`}
-                    className="block w-full text-center rounded-md text-sm font-medium bg-slate-900 text-slate-50 hover:bg-slate-900/90 px-4 py-2"
-                  >
-                    Détails
-                  </a>
-                </div>
-              );
-            })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {groupedEvents[dateKey].map((event) => (
+              <EventCard
+                key={event.id}
+                event={event}
+                view="list"
+                onClick={(event) => {
+                  window.location.href = `/dashboard/paroisse/evenements/${event.id}`;
+                }}
+              />
+            ))}
           </div>
         </div>
       ))}
@@ -387,743 +256,81 @@ const ListeEvenements = ({
   );
 };
 
-// Composant 2: Calendrier des événements
-const CalendrierEvenements = ({
-  apiEvents,
-  moisActuel,
-  anneeActuelle,
-  filtreType,
-  loading,
-  paroisseId,
-  onEventsCreated,
-}: {
-  apiEvents: APIEvent[];
-  moisActuel: number;
-  anneeActuelle: number;
-  filtreType: string;
-  loading: boolean;
-  paroisseId: number;
-  onEventsCreated: () => void;
-}) => {
-  // États pour gérer la sélection de dates et la création d'événements
-  const [selectedDates, setSelectedDates] = useState<number[]>([]);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [creatingEvents, setCreatingEvents] = useState(false);
-  const [newEvent, setNewEvent] = useState<NewEventWithMultipleDates>({
-    type: "MESSE",
-    dates: [],
-    libelle: "",
-    type_messe: "ORDINAIRE",
-    description: "",
-    paroisse_id: paroisseId,
-    heure_de_debut: 540, // 9h00 (en minutes depuis minuit)
-    heure_de_fin: 600, // 10h00 (en minutes depuis minuit)
-  });
-
-  // Réinitialiser l'état de sélection quand le mois ou l'année change
-  useEffect(() => {
-    setSelectedDates([]);
-  }, [moisActuel, anneeActuelle]);
-
-  // Gérer la sélection/désélection d'une date
-  const toggleDateSelection = (date: Date) => {
-    const timestamp = date.getTime();
-    if (selectedDates.includes(timestamp)) {
-      setSelectedDates(selectedDates.filter((d) => d !== timestamp));
-    } else {
-      setSelectedDates([...selectedDates, timestamp]);
-    }
-  };
-
-  // Ouvrir la modal de création avec les dates sélectionnées
-  const openCreateModal = () => {
-    if (selectedDates.length === 0) {
-      toast.error("Veuillez sélectionner au moins une date");
-      return;
-    }
-
-    setNewEvent((prev) => ({
-      ...prev,
-      dates: [...selectedDates],
-      paroisse_id: paroisseId,
-    }));
-
-    setIsCreateModalOpen(true);
-  };
-
-  // Créer les événements pour toutes les dates sélectionnées
-  const createEvents = async () => {
-    if (newEvent.libelle.trim() === "") {
-      toast.error("Le titre de l'événement est obligatoire");
-      return;
-    }
-
-    setCreatingEvents(true);
-    const API_URL = "https://api.cathoconnect.ci/api:HzF8fFua";
-    const token = localStorage.getItem("auth_token");
-
-    try {
-      // Créer une date de référence pour les heures (utiliser aujourd'hui)
-      const today = new Date();
-
-      // Convertir les minutes en timestamps
-      const startTimeStamp = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        Math.floor(newEvent.heure_de_debut / 60),
-        newEvent.heure_de_debut % 60
-      ).getTime();
-
-      const endTimeStamp = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        Math.floor(newEvent.heure_de_fin / 60),
-        newEvent.heure_de_fin % 60
-      ).getTime();
-
-      // Créer l'objet de requête directement sans clé d'enveloppe
-      const requestData = {
-        type: newEvent.type,
-        dates: selectedDates, // Tableau de timestamps des dates sélectionnées
-        libelle: newEvent.libelle,
-        description: newEvent.description || "",
-        paroisse_id: paroisseId,
-        heure_de_debut: startTimeStamp,
-        heure_de_fin: endTimeStamp,
-      };
-
-      // Pour les messes, ajouter le type_messe spécifique
-      if (newEvent.type === "MESSE" && newEvent.type_messe) {
-        requestData.type_messe = newEvent.type_messe;
-      }
-
-      console.log(
-        "Données envoyées à l'API:",
-        JSON.stringify(requestData, null, 2)
-      );
-
-      const response = await axios.post(
-        `${API_URL}/evenements/creer`,
-        requestData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      console.log("Réponse de l'API:", response.data);
-      toast.success(`${selectedDates.length} événement(s) créé(s) avec succès`);
-      setIsCreateModalOpen(false);
-      setSelectedDates([]);
-      onEventsCreated(); // Rafraîchir les événements
-    } catch (error) {
-      console.error("Erreur lors de la création des événements:", error);
-
-      // Afficher les détails de l'erreur si disponibles
-      if (axios.isAxiosError(error) && error.response) {
-        console.error("Détails de l'erreur:", error.response.data);
-        toast.error(
-          `Erreur: ${error.response.data?.message || "Problème avec la requête"}`
-        );
-      } else {
-        toast.error(
-          "Une erreur est survenue lors de la création des événements"
-        );
-      }
-    } finally {
-      setCreatingEvents(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-        <span className="ml-2 text-slate-500">Chargement du calendrier...</span>
-      </div>
-    );
-  }
-
-  // Obtenir le nombre de jours dans le mois
-  const nbJoursDansMois = new Date(anneeActuelle, moisActuel + 1, 0).getDate();
-
-  // Obtenir le jour de la semaine du premier jour du mois (0 = dimanche, 1 = lundi, ...)
-  const premierJourDuMois = new Date(anneeActuelle, moisActuel, 1).getDay();
-  // Ajuster pour que la semaine commence le lundi (0 = lundi, 6 = dimanche)
-  const premierJourAjuste = premierJourDuMois === 0 ? 6 : premierJourDuMois - 1;
-
-  // Créer un tableau pour tous les jours du mois
-  const jours = [];
-  for (let i = 0; i < premierJourAjuste; i++) {
-    jours.push(null); // Jours vides avant le début du mois
-  }
-  for (let i = 1; i <= nbJoursDansMois; i++) {
-    jours.push(i);
-  }
-
-  // Obtenir les noms des jours de la semaine
-  const joursDelaSemaine = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
-
-  return (
-    <>
-      <div className="space-y-4">
-        {/* Bouton pour créer des événements sur les dates sélectionnées */}
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <span className="text-sm text-slate-500">
-              {selectedDates.length} date(s) sélectionnée(s)
-            </span>
-          </div>
-          <Button
-            onClick={openCreateModal}
-            disabled={selectedDates.length === 0}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Créer des événements
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-7 gap-1">
-          {joursDelaSemaine.map((jour, index) => (
-            <div
-              key={index}
-              className="text-center font-medium py-2 text-slate-600"
-            >
-              {jour}
-            </div>
-          ))}
-
-          {jours.map((jour, index) => {
-            if (jour === null) {
-              return (
-                <div
-                  key={`empty-${index}`}
-                  className="h-24 bg-slate-50 border border-slate-200"
-                />
-              );
-            }
-
-            // Créer un objet Date pour ce jour
-            const currentDate = new Date(anneeActuelle, moisActuel, jour);
-            const currentTimestamp = currentDate.getTime();
-
-            // Vérifier si cette date est sélectionnée
-            const isSelected = selectedDates.includes(currentTimestamp);
-
-            // Récupérer les événements pour ce jour
-            const eventsForDay = apiEvents.filter((event) => {
-              // Vérifier d'abord le type
-              if (filtreType !== "tous" && event.type !== filtreType) {
-                return false;
-              }
-
-              try {
-                // Ajuster si le timestamp est en secondes
-                const timestamp =
-                  String(event.date_de_debut).length <= 10
-                    ? event.date_de_debut * 1000
-                    : event.date_de_debut;
-
-                const eventDate = new Date(timestamp);
-
-                return (
-                  eventDate.getDate() === jour &&
-                  eventDate.getMonth() === moisActuel &&
-                  eventDate.getFullYear() === anneeActuelle
-                );
-              } catch (error) {
-                console.error(
-                  "Erreur lors de la vérification de la date:",
-                  error,
-                  event
-                );
-                return false;
-              }
-            });
-
-            const isToday =
-              new Date().getDate() === jour &&
-              new Date().getMonth() === moisActuel &&
-              new Date().getFullYear() === anneeActuelle;
-
-            return (
-              <div
-                key={`day-${jour}`}
-                className={`h-24 p-1 border border-slate-200 overflow-y-auto relative 
-                  ${isToday ? "bg-blue-50" : "bg-white"}
-                  ${isSelected ? "ring-2 ring-blue-500" : ""}
-                  cursor-pointer hover:bg-slate-50`}
-                onClick={() => toggleDateSelection(currentDate)}
-              >
-                <div
-                  className={`text-right p-1 ${
-                    isToday
-                      ? "bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center ml-auto"
-                      : isSelected
-                        ? "bg-blue-400 text-white rounded-full w-6 h-6 flex items-center justify-center ml-auto"
-                        : ""
-                  }`}
-                >
-                  {jour}
-                </div>
-                <div className="mt-1 space-y-1">
-                  {eventsForDay.map((event) => {
-                    const { variant: typeVariant } = getEventTypeDetails(
-                      event.type
-                    );
-                    return (
-                      <a
-                        key={event.id}
-                        href={`/dashboard/paroisse/evenements/${event.id}`}
-                        className={`block text-xs p-1 truncate rounded-sm hover:bg-slate-100 ${
-                          typeVariant === "default"
-                            ? "bg-blue-100 text-blue-800"
-                            : typeVariant === "secondary"
-                              ? "bg-slate-100 text-slate-800"
-                              : typeVariant === "outline"
-                                ? "bg-gray-100 text-gray-800"
-                                : typeVariant === "destructive"
-                                  ? "bg-red-100 text-red-800"
-                                  : typeVariant === "success"
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-blue-100 text-blue-800"
-                        }`}
-                        onClick={(e) => e.stopPropagation()} // Éviter que le clic sur l'événement sélectionne la date
-                      >
-                        {formatHeure(event.extras?.heure_de_debut)} -{" "}
-                        {formatHeure(event.extras?.heure_de_fin)}{" "}
-                        {event.libelle}
-                      </a>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Modal pour créer des événements */}
-      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Créer des événements multiples</DialogTitle>
-            <DialogDescription>
-              Vous allez créer {selectedDates.length} événement(s) identiques
-              aux dates sélectionnées.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div className="grid grid-cols-4 gap-4">
-              {/* Type d'événement et type de messe (pour les messes) */}
-              <div className="grid grid-cols-2 gap-4 col-span-4">
-                <div>
-                  <Label htmlFor="type">Type d'événement</Label>
-                  <Select
-                    value={newEvent.type}
-                    onValueChange={(value) => {
-                      setNewEvent({
-                        ...newEvent,
-                        type: value as EventType,
-                        // Réinitialiser le sous-type si nécessaire
-                        type_messe:
-                          value === "MESSE"
-                            ? newEvent.type_messe || "ORDINAIRE"
-                            : undefined,
-                      });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Type d'événement" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="MESSE">Messe</SelectItem>
-                      <SelectItem value="ACTIVITE">Activité</SelectItem>
-                      <SelectItem value="COTISATION">Cotisation</SelectItem>
-                      <SelectItem value="INSCRIPTION">Inscription</SelectItem>
-                      <SelectItem value="DON">Don</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {newEvent.type === "MESSE" ? (
-                  <div>
-                    <Label htmlFor="type_messe">Type de messe</Label>
-                    <Select
-                      value={newEvent.type_messe}
-                      onValueChange={(value) =>
-                        setNewEvent({
-                          ...newEvent,
-                          type_messe: value,
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Type de messe" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ORDINAIRE">Ordinaire</SelectItem>
-                        <SelectItem value="SPECIALE">Spéciale</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ) : (
-                  <div className="invisible">
-                    <Label>Invisible</Label>
-                    <div className="h-10"></div>
-                  </div>
-                )}
-              </div>
-
-              {/* Titre et autres champs */}
-              <div className="col-span-4">
-                <Label htmlFor="libelle">Titre de l'événement *</Label>
-                <Input
-                  id="libelle"
-                  value={newEvent.libelle}
-                  onChange={(e) =>
-                    setNewEvent({ ...newEvent, libelle: e.target.value })
-                  }
-                  placeholder="Titre de l'événement"
-                  required
-                />
-              </div>
-
-              <div className="col-span-4">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={newEvent.description}
-                  onChange={(e) =>
-                    setNewEvent({ ...newEvent, description: e.target.value })
-                  }
-                  placeholder="Description de l'événement"
-                  rows={3}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 col-span-4">
-                <div>
-                  <Label htmlFor="heure_debut">Heure de début</Label>
-                  <Input
-                    id="heure_debut"
-                    type="time"
-                    value={formatMinutesToTime(newEvent.heure_de_debut)}
-                    onChange={(e) =>
-                      setNewEvent({
-                        ...newEvent,
-                        heure_de_debut: convertTimeToMinutes(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="heure_fin">Heure de fin</Label>
-                  <Input
-                    id="heure_fin"
-                    type="time"
-                    value={formatMinutesToTime(newEvent.heure_de_fin)}
-                    onChange={(e) =>
-                      setNewEvent({
-                        ...newEvent,
-                        heure_de_fin: convertTimeToMinutes(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-              </div>
-
-              {/* Liste des dates sélectionnées */}
-              <div className="col-span-4">
-                <div className="text-sm font-medium mb-2">
-                  Dates sélectionnées ({selectedDates.length}) :
-                </div>
-                <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-1">
-                  {selectedDates.map((timestamp) => (
-                    <div key={timestamp} className="text-sm">
-                      {formatDate(timestamp)}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsCreateModalOpen(false)}
-              disabled={creatingEvents}
-            >
-              Annuler
-            </Button>
-            <Button onClick={createEvents} disabled={creatingEvents}>
-              {creatingEvents ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Création en cours...
-                </>
-              ) : (
-                <>Créer les événements</>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-};
-
-// Obtenir les types d'événements pour les filtres
-const getTypesEvenements = () => {
-  return [
-    { value: "tous", label: "Tous les types" },
-    { value: "MESSE", label: "Messe" },
-    { value: "ACTIVITE", label: "Activité" },
-    { value: "COTISATION", label: "Cotisation" },
-    { value: "INSCRIPTION", label: "Inscription" },
-    { value: "DON", label: "Don" },
-  ];
-};
-
-// Obtenir les mois pour les filtres
-const getMois = () => {
-  return [
-    { value: "0", label: "Janvier" },
-    { value: "1", label: "Février" },
-    { value: "2", label: "Mars" },
-    { value: "3", label: "Avril" },
-    { value: "4", label: "Mai" },
-    { value: "5", label: "Juin" },
-    { value: "6", label: "Juillet" },
-    { value: "7", label: "Août" },
-    { value: "8", label: "Septembre" },
-    { value: "9", label: "Octobre" },
-    { value: "10", label: "Novembre" },
-    { value: "11", label: "Décembre" },
-  ];
-};
-
-// Composant principal qui intègre les deux vues
+// Composant principal
 export default function EvenementsPage() {
-  // État pour le mois actuel (0-11) et l'année
-  const dateCourante = new Date();
-  const [moisActuel, setMoisActuel] = useState<number>(dateCourante.getMonth());
-  const [anneeActuelle, setAnneeActuelle] = useState<number>(
-    dateCourante.getFullYear()
-  );
-  const [filtreType, setFiltreType] = useState<string>("tous");
+  // Hooks personnalisés
+  const eventsData = useEvents();
+  const filters = useEventFilters();
+  const dateSelection = useDateSelection();
+  const createModal = useCreateEventModal();
 
-  // États pour les données de l'API
-  const [apiEvents, setApiEvents] = useState<APIEvent[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const { events, loading, error, paroisseId, refreshEvents } = eventsData;
 
-  // ID de la paroisse (à remplacer par la valeur réelle)
-  const paroisseId = 1; // À adapter selon votre contexte
-
-  // Fonction pour rafraîchir les événements après création
-  const refreshEvents = async () => {
-    setLoading(true);
-    try {
-      const API_URL = "https://api.cathoconnect.ci/api:HzF8fFua";
-      const token = localStorage.getItem("auth_token");
-
-      const response = await axios.get(`${API_URL}/evenements/obtenir-tous`, {
-        params: { paroisse_id: paroisseId },
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-      });
-
-      if (
-        response.data &&
-        response.data.items &&
-        Array.isArray(response.data.items)
-      ) {
-        setApiEvents(response.data.items);
-      }
-    } catch (err) {
-      console.error("Erreur lors du rechargement des événements:", err);
-    } finally {
-      setLoading(false);
-    }
+  // Gestionnaire pour la création d'événements
+  const handleEventsCreated = () => {
+    dateSelection.clearSelection();
+    refreshEvents();
   };
 
-  // Charger les événements depuis l'API
-  useEffect(() => {
-    const fetchEvenements = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const API_URL = "https://api.cathoconnect.ci/api:HzF8fFua";
-        const token = localStorage.getItem("auth_token");
-
-        if (!token) {
-          throw new Error("Token d'authentification non trouvé");
-        }
-
-        const response = await axios.get(`${API_URL}/evenements/obtenir-tous`, {
-          params: { paroisse_id: paroisseId },
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
-        });
-
-        console.log("Événements rechargés:", response.data);
-
-        // Vérifier que response.data.items existe et est un tableau
-        if (
-          response.data &&
-          response.data.items &&
-          Array.isArray(response.data.items)
-        ) {
-          setApiEvents(response.data.items);
-        } else {
-          console.error("Format de réponse inattendu:", response.data);
-          setApiEvents([]);
-        }
-      } catch (err) {
-        console.error("Erreur lors du chargement des événements:", err);
-        setError("Une erreur est survenue lors du chargement des événements.");
-        toast.error("Impossible de charger les événements");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEvenements();
-  }, [paroisseId]);
-
-  // Années disponibles pour le filtre (5 ans avant et après l'année actuelle)
-  const annees = Array.from(
-    { length: 11 },
-    (_, i) => dateCourante.getFullYear() - 5 + i
-  );
-
-  // Changer de mois
-  const moisPrecedent = () => {
-    if (moisActuel === 0) {
-      setMoisActuel(11);
-      setAnneeActuelle(anneeActuelle - 1);
-    } else {
-      setMoisActuel(moisActuel - 1);
+  // Ouvrir la modal de création
+  const handleOpenCreateModal = () => {
+    if (dateSelection.selectionCount === 0) {
+      toast.error("Veuillez sélectionner au moins une date dans le calendrier");
+      return;
     }
+    createModal.openModal();
   };
-
-  const moisSuivant = () => {
-    if (moisActuel === 11) {
-      setMoisActuel(0);
-      setAnneeActuelle(anneeActuelle + 1);
-    } else {
-      setMoisActuel(moisActuel + 1);
-    }
-  };
-
-  // Obtenir le nom du mois actuel
-  const nomMoisActuel = new Date(
-    anneeActuelle,
-    moisActuel,
-    1
-  ).toLocaleDateString("fr-FR", { month: "long" });
 
   return (
     <div className="space-y-6">
+      {/* En-tête de la page */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
         <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
           Événements
         </h1>
         <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
-          <Button className="w-full xs:w-auto" size="sm">
-            <Plus className="mr-2 h-4 w-4" /> Ajouter un événement
+          <Button
+            className="w-full xs:w-auto"
+            size="sm"
+            // onClick={handleOpenCreateModal}
+            disabled={loading}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Créer événement
           </Button>
         </div>
       </div>
 
+      {/* Affichage des erreurs */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
           {error}
           <Button
             variant="link"
             className="ml-2 text-red-700 p-0 h-auto"
-            onClick={() => window.location.reload()}
+            onClick={refreshEvents}
           >
             Réessayer
           </Button>
         </div>
       )}
 
+      {/* Contenu principal */}
       <Card className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={moisPrecedent}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <h2 className="text-lg font-semibold">
-              {nomMoisActuel} {anneeActuelle}
-            </h2>
-            <Button variant="outline" size="icon" onClick={moisSuivant}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Select
-              value={String(anneeActuelle)}
-              onValueChange={(value) => setAnneeActuelle(Number(value))}
-            >
-              <SelectTrigger className="w-[100px] sm:w-[120px]">
-                <SelectValue placeholder="Année" />
-              </SelectTrigger>
-              <SelectContent>
-                {annees.map((annee) => (
-                  <SelectItem key={annee} value={String(annee)}>
-                    {annee}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {/* Filtres */}
+        <EventFilters
+          moisActuel={filters.moisActuel}
+          anneeActuelle={filters.anneeActuelle}
+          filtreType={filters.filtreType}
+          onMoisChange={filters.setMoisActuel}
+          onAnneeChange={filters.setAnneeActuelle}
+          onTypeChange={filters.setFiltreType}
+          onMoisPrecedent={filters.moisPrecedent}
+          onMoisSuivant={filters.moisSuivant}
+          className="mb-6"
+        />
 
-            <Select
-              value={String(moisActuel)}
-              onValueChange={(value) => setMoisActuel(Number(value))}
-            >
-              <SelectTrigger className="w-[140px] sm:w-[160px]">
-                <SelectValue placeholder="Mois" />
-              </SelectTrigger>
-              <SelectContent>
-                {getMois().map((mois) => (
-                  <SelectItem key={mois.value} value={mois.value}>
-                    {mois.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={filtreType} onValueChange={setFiltreType}>
-              <SelectTrigger className="w-[150px] sm:w-[180px]">
-                <SelectValue placeholder="Type d'événement" />
-              </SelectTrigger>
-              <SelectContent>
-                {getTypesEvenements().map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
+        {/* Onglets Liste/Calendrier */}
         <Tabs defaultValue="liste" className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="liste" className="flex items-center">
@@ -1134,29 +341,83 @@ export default function EvenementsPage() {
             </TabsTrigger>
           </TabsList>
 
+          {/* Vue Liste */}
           <TabsContent value="liste">
-            <ListeEvenements
-              apiEvents={apiEvents}
-              moisActuel={moisActuel}
-              anneeActuelle={anneeActuelle}
-              filtreType={filtreType}
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-slate-500"></span>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleOpenCreateModal}
+                  disabled={!dateSelection.hasSelection}
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Créer événements
+                </Button>
+              </div>
+            </div>
+            <EventsListView
+              events={events}
+              moisActuel={filters.moisActuel}
+              anneeActuelle={filters.anneeActuelle}
+              filtreType={filters.filtreType}
               loading={loading}
             />
           </TabsContent>
 
+          {/* Vue Calendrier */}
           <TabsContent value="calendrier">
-            <CalendrierEvenements
-              apiEvents={apiEvents}
-              moisActuel={moisActuel}
-              anneeActuelle={anneeActuelle}
-              filtreType={filtreType}
-              loading={loading}
-              paroisseId={paroisseId}
-              onEventsCreated={refreshEvents}
-            />
+            <div className="space-y-4">
+              {/* Informations sur la sélection */}
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-500"></span>
+                <div className="flex gap-2">
+                  {dateSelection.hasSelection && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={dateSelection.clearSelection}
+                    >
+                      Désélectionner tout
+                    </Button>
+                  )}
+                  <Button
+                    onClick={handleOpenCreateModal}
+                    disabled={!dateSelection.hasSelection}
+                    size="sm"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Créer événements ({dateSelection.selectionCount})
+                  </Button>
+                </div>
+              </div>
+
+              {/* Calendrier */}
+              <DatePicker
+                events={events}
+                moisActuel={filters.moisActuel}
+                anneeActuelle={filters.anneeActuelle}
+                filtreType={filters.filtreType}
+                selectedDates={dateSelection.selectedDates}
+                onDatesChange={dateSelection.setSelectedDates}
+                loading={loading}
+                onEventClick={(event) => {
+                  window.location.href = `/dashboard/paroisse/evenements/${event.id}`;
+                }}
+              />
+            </div>
           </TabsContent>
         </Tabs>
       </Card>
+
+      {/* Modal de création d'événements */}
+      <CreateEventModal
+        isOpen={createModal.isOpen}
+        onOpenChange={createModal.setIsOpen}
+        selectedDates={dateSelection.selectedDates}
+        paroisseId={paroisseId}
+        onEventsCreated={handleEventsCreated}
+      />
     </div>
   );
 }

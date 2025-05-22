@@ -1,5 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -257,32 +258,6 @@ export default function CebDetailsPage() {
           <CardContent className="grid gap-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-purple-100 flex items-center justify-center">
-                  <Calendar className="h-5 w-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-500">
-                    Total Evenements
-                  </p>
-                  <p className="text-sm font-semibold">
-                    {ceb.evenements?.length}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-purple-100 flex items-center justify-center">
-                  <Users className="h-5 w-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-500">
-                    Total Membres
-                  </p>
-                  <p className="text-sm font-semibold">
-                    {ceb.membres?.length}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center">
                   <Calendar1 className="h-5 w-5 text-blue-600" />
                 </div>
@@ -297,32 +272,30 @@ export default function CebDetailsPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-green-100 flex items-center justify-center">
-                  <Wallet className="h-5 w-5 text-green-600" />
+                <div className="h-9 w-9 rounded-full bg-purple-100 flex items-center justify-center">
+                  <Users className="h-5 w-5 text-purple-600" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-500">
-                    Solde actuel
+                    Total Membres
                   </p>
-                  <p className="text-sm font-semibold">
-                    {formatCurrency(ceb.solde)}
-                  </p>
+                  <p className="text-sm font-semibold">{ceb.membres?.length}</p>
                 </div>
               </div>
 
-              {/* <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-full bg-purple-100 flex items-center justify-center">
-                  <Building className="h-5 w-5 text-purple-600" />
+                  <Calendar className="h-5 w-5 text-purple-600" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-500">
-                    ID Paroisse
+                    Total Evenements
                   </p>
                   <p className="text-sm font-semibold">
-                    {ceb.paroisse_id || "Non attribué"}
+                    {ceb.evenements?.length}
                   </p>
                 </div>
-              </div> */}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -336,30 +309,30 @@ export default function CebDetailsPage() {
                   value="president"
                   className="flex items-center justify-center"
                 >
-                  <User className="h-4 w-4 mr-2" />
-                  Président
+                  <User className="h-4 w-4 mr-1" />
+                  Bureau
                 </TabsTrigger>
                 <TabsTrigger
                   value="membres"
                   className="flex items-center justify-center"
                 >
-                  <Users className="h-4 w-4 mr-2" />
-                  Membres ({ceb.membres?.length || 0})
+                  <Users className="h-4 w-4 mr-1" />
+                  Membres
                 </TabsTrigger>
                 <TabsTrigger
                   value="evenements"
                   className="flex items-center justify-center"
                 >
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Événements ({ceb.evenements?.length || 0})
+                  <Calendar className="h-4 w-4 mr-1" />
+                  Événements
                 </TabsTrigger>
               </TabsList>
 
               {/* Contenu de l'onglet Président */}
               <TabsContent value="president" className="pt-4">
                 {ceb.president ? (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div className="flex items-center gap-3">
                         <div className="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center">
                           <User className="h-5 w-5 text-indigo-600" />
@@ -608,7 +581,7 @@ export default function CebDetailsPage() {
   };
 
   return (
-    <div className="container mx-auto py-6 max-w-5xl">
+    <div className="space-y-6 ">
       {/* Fil d'Ariane */}
 
       <div className="flex items-center mb-4 text-sm text-slate-500">
@@ -621,19 +594,6 @@ export default function CebDetailsPage() {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Retour
         </Button>
-        {/* <Link href="/dashboard" className="hover:text-slate-700">
-          Dashboard
-        </Link>
-        <ChevronRight className="h-4 w-4 mx-1" />
-        <Link href="/dashboard/paroisse" className="hover:text-slate-700">
-          Paroisse
-        </Link>
-        <ChevronRight className="h-4 w-4 mx-1" />
-        <Link href="/dashboard/paroisse/ceb" className="hover:text-slate-700">
-          CEB
-        </Link>
-        <ChevronRight className="h-4 w-4 mx-1" />
-        <span className="text-slate-800 font-medium">Détails</span> */}
       </div>
 
       {/* Titre et description */}
@@ -653,7 +613,7 @@ export default function CebDetailsPage() {
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="sm:max-w-[600px] w-[92vw] max-h-[90vh] overflow-y-auto p-3 sm:p-6">
           <DialogHeader className="pb-2">
-            <DialogTitle className="text-lg text-blue-800 font-semibold flex items-center">
+            <DialogTitle className="text-lg font-semibold flex items-center">
               Modifier la CEB
             </DialogTitle>
           </DialogHeader>
@@ -675,7 +635,7 @@ export default function CebDetailsPage() {
       >
         <DialogContent className="sm:max-w-[600px] w-[92vw] max-h-[90vh] overflow-y-auto p-3 sm:p-6">
           <DialogHeader className="pb-2">
-            <DialogTitle className="text-lg text-amber-800 font-semibold flex items-center">
+            <DialogTitle className="text-lg font-semibold flex items-center">
               <UserPlus className="h-5 w-5 mr-2 text-amber-600" />
               Nommer un président
             </DialogTitle>

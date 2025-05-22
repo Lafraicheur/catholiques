@@ -74,7 +74,6 @@ export const ListeEvenements = ({
                 >
                   <div className="flex items-start gap-3 mb-3">
                     <div className="w-10 h-10 flex-shrink-0 bg-slate-100 rounded-md flex items-center justify-center">
-                      <Calendar className="h-5 w-5 text-slate-700" />
                     </div>
                     <div className="flex-1">
                       <h4 className="font-medium text-slate-900 line-clamp-2">
@@ -83,14 +82,24 @@ export const ListeEvenements = ({
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    <Badge variant={typeVariant}>{typeLabel}</Badge>
-                    <Badge variant={statusVariant}>{statusLabel}</Badge>
-                  </div>
+                  {(typeLabel || statusLabel) && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {typeLabel && (
+                        <Badge variant={typeVariant}>{typeLabel}</Badge>
+                      )}
+                      {statusLabel && (
+                        <Badge variant={statusVariant}>{statusLabel}</Badge>
+                      )}
+                    </div>
+                  )}
 
-                  <p className="text-sm text-slate-500 mb-3">
-                    {event.heure} - {event.lieu}
-                  </p>
+                  {(event?.heure || event?.lieu) && (
+                    <p className="text-sm text-slate-500 mb-3">
+                      {event?.heure && event?.lieu
+                        ? `${event.heure} - ${event.lieu}`
+                        : event?.heure || event?.lieu}
+                    </p>
+                  )}
 
                   <a
                     href={`/dashboard/paroisse/evenements/${event.id}`}

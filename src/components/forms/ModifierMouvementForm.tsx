@@ -271,6 +271,7 @@ const ModifierMouvementForm = ({ onClose, mouvementData, onSuccess }) => {
         >
           Annuler
         </Button>
+        &nbsp;&nbsp;
         <Button
           type="submit"
           disabled={formLoading}

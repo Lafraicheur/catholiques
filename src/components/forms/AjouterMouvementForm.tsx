@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // AjouterMouvementForm.jsx
 "use client";
 
@@ -452,10 +454,11 @@ const AjouterMouvementForm = ({
         >
           Annuler
         </Button>
+        &nbsp;&nbsp;
         <Button
           type="submit"
           disabled={formLoading}
-          className="bg-green-600 hover:bg-green-700 text-white font-medium transition-colors w-full sm:w-auto"
+          className=" text-white font-medium transition-colors w-full sm:w-auto"
         >
           {formLoading ? (
             <>

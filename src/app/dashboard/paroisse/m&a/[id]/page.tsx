@@ -1,9 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
 import {
   ArrowLeft,
   Users,
@@ -27,25 +29,45 @@ import {
   UserPlus,
   CalendarDays,
   PlusCircle,
+  Plus,
   Settings,
+  Edit,
+  ChevronRight,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import axios from "axios";
 import {
+  ApiError,
   AuthenticationError,
   ForbiddenError,
   NotFoundError,
 } from "@/services/api";
+
 import AumonierModal from "@/components/modals/AumonierModal";
 import ParrainModal from "@/components/modals/ParrainModal";
 import ResponsableModal from "@/components/modals/ResponsableModal";
-
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import ModifierMouvementForm from "@/components/forms/ModifierMouvementForm";
 
 // Types
 interface Personne {
@@ -120,6 +142,8 @@ interface Mouvement {
   parrain?: Personne;
   paroisse?: Paroisse;
   chapelle?: Chapelle;
+  membres?: Personne[];
+  evenements?: any[];
 }
 
 // Fonction pour récupérer les détails d'un mouvement
@@ -168,113 +192,110 @@ const fetchMouvementDetails = async (id: number): Promise<Mouvement> => {
   }
 };
 
-// Composants auxiliaires
-const InfoItem = ({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string | number | null | undefined;
-}) => {
-  if (value === null || value === undefined) {
-    value = "Non renseigné";
-  }
-
-  return (
-    <div className="flex items-start space-x-3 py-2">
-      <div className="text-slate-400 mt-0.5">{icon}</div>
-      <div>
-        <p className="text-xs text-slate-500">{label}</p>
-        <p className="font-medium">{value}</p>
-      </div>
-    </div>
-  );
-};
-
-const PersonneCard = ({
-  personne,
-  role,
-  emptyMessage,
-  actionButton,
-}: {
-  personne?: Personne | null;
-  role: string;
-  emptyMessage: string;
-  actionButton?: React.ReactNode;
-}) => {
-  if (!personne) {
-    return (
-      <Card className="bg-slate-50">
-        <CardContent className="pt-6 flex flex-col items-center text-center">
-          <CircleUser className="h-16 w-16 text-slate-300 mb-3" />
-          <h3 className="font-medium text-slate-900 mb-1">{emptyMessage}</h3>
-          <p className="text-sm text-slate-500 mb-4">
-            Aucune personne n'est assignée à ce rôle actuellement.
-          </p>
-          {actionButton}
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex flex-col">
-          <div className="flex items-start space-x-4">
-            <Avatar className="h-14 w-14">
-              <AvatarFallback className="bg-blue-100 text-blue-600">
-                {personne.prenoms?.[0]}
-                {personne.nom?.[0]}
-              </AvatarFallback>
-              <AvatarImage src="" />
-            </Avatar>
-            <div className="flex-1">
-              <h3 className="font-medium text-slate-900">
-                {personne.prenoms} {personne.nom}
-              </h3>
-              <p className="text-sm text-slate-500 mb-3">{role}</p>
-
-              {personne.email && (
-                <div className="flex items-center space-x-2 text-sm mb-1">
-                  <Mail className="h-3.5 w-3.5 text-slate-400" />
-                  <span>{personne.email}</span>
-                </div>
-              )}
-
-              {personne.num_de_telephone && (
-                <div className="flex items-center space-x-2 text-sm">
-                  <Phone className="h-3.5 w-3.5 text-slate-400" />
-                  <span>{personne.num_de_telephone}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {actionButton && (
-            <div className="mt-15 self-center">{actionButton}</div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
 export default function MouvementDetailsPage() {
   const router = useRouter();
   const params = useParams();
-  const [mouvement, setMouvement] = useState<Mouvement | null>(null);
+  const mouvementId = params?.id ? parseInt(params.id, 10) : null;
+
+  const [mouvement, setMouvement] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("details");
+  const [error, setError] = useState(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [aumonierModalOpen, setAumonierModalOpen] = useState(false);
   const [responsableModalOpen, setResponsableModalOpen] = useState(false);
   const [parrainModalOpen, setParrainModalOpen] = useState(false);
 
-  const mouvementId = Number(params.id);
+  // Charger les détails du mouvement
+  useEffect(() => {
+    const loadMouvementDetails = async () => {
+      if (!mouvementId) {
+        setError("ID du mouvement non valide");
+        setLoading(false);
+        return;
+      }
 
+      try {
+        setLoading(true);
+        setError(null);
+
+        const data = await fetchMouvementDetails(mouvementId);
+        setMouvement(data);
+      } catch (err) {
+        console.error(
+          "Erreur lors du chargement des détails du mouvement:",
+          err
+        );
+
+        if (err instanceof AuthenticationError) {
+          toast.error("Session expirée", {
+            description: "Veuillez vous reconnecter pour continuer.",
+          });
+          router.push("/login");
+        } else if (err instanceof ForbiddenError) {
+          setError(
+            "Vous n'avez pas les droits nécessaires pour accéder à cette ressource."
+          );
+        } else if (err instanceof NotFoundError) {
+          setError("Mouvement non trouvé.");
+        } else {
+          setError("Une erreur est survenue lors du chargement des données.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMouvementDetails();
+  }, [mouvementId, router]);
+
+  // Formatage d'un numéro de téléphone: 0101020304 -> 01 01 02 03 04
+  const formatPhoneNumber = (phone) => {
+    if (!phone) return "Non renseigné";
+
+    const cleaned = phone.replace(/\D/g, "");
+    const groups = [];
+
+    for (let i = 0; i < cleaned.length; i += 2) {
+      groups.push(cleaned.slice(i, i + 2));
+    }
+
+    return groups.join(" ");
+  };
+
+  // Formatage de la date: 2023-05-15 -> 15/05/2023
+  const formatDate = (dateString) => {
+    if (!dateString) return "Non renseignée";
+
+    try {
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat("fr-FR").format(date);
+    } catch (err) {
+      console.error("Erreur lors du formatage de la date:", err);
+      return dateString;
+    }
+  };
+
+  // Formatage de la monnaie en FCFA
+  const formatCurrency = (amount) => {
+    if (amount === undefined || amount === null) return "0 FCFA";
+
+    return new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "XOF",
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  // Gérer le succès de la mise à jour
+  const handleUpdateSuccess = (updatedMouvement) => {
+    // Mettre à jour les données locales
+    setMouvement(updatedMouvement);
+    toast.success("Mouvement mis à jour avec succès", {
+      description: `Les informations de "${updatedMouvement.nom}" ont été mises à jour.`,
+    });
+  };
+
+  // Gérer l'assignation d'un rôle
   const handleRoleAssigned = async () => {
     try {
       if (isNaN(mouvementId)) {
@@ -290,456 +311,687 @@ export default function MouvementDetailsPage() {
     }
   };
 
-  useEffect(() => {
-    const loadMouvementDetails = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        if (isNaN(mouvementId)) {
-          throw new Error("ID du mouvement invalide");
-        }
-
-        const data = await fetchMouvementDetails(mouvementId);
-        setMouvement(data);
-      } catch (err) {
-        console.error("Erreur lors du chargement des détails:", err);
-        if (err instanceof AuthenticationError) {
-          toast.error("Session expirée", {
-            description: "Veuillez vous reconnecter pour continuer.",
-          });
-          router.push("/login");
-        } else if (err instanceof ForbiddenError) {
-          setError(
-            "Vous n'avez pas les droits nécessaires pour accéder à cette ressource."
-          );
-        } else if (err instanceof NotFoundError) {
-          setError("Le mouvement ou l'association demandé n'existe pas.");
-        } else {
-          setError("Une erreur est survenue lors du chargement des données.");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadMouvementDetails();
-  }, [mouvementId, router]);
-
-  // Formatage de la monnaie
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "XOF",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  // Formatage de la date
-  const formatDate = (dateString: string): string => {
-    if (dateString === "now") return "Récemment";
-    try {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat("fr-FR", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }).format(date);
-    } catch (err) {
-      return "Date inconnue";
-    }
-  };
-
-  // État de chargement
-  if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-800"></div>
-      </div>
-    );
-  }
-
-  // État d'erreur
-  if (error) {
-    return (
-      <div className="container mx-auto py-8 max-w-4xl">
-        <Button
-          variant="ghost"
-          onClick={() => router.push("/mouvements")}
-          className="mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Retour à la liste
-        </Button>
-
-        <div className="bg-white rounded-lg shadow p-8 text-center">
-          <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold mb-2">Erreur</h2>
-          <p className="text-slate-600 mb-6">{error}</p>
-          <Button onClick={() => window.location.reload()}>Réessayer</Button>
-        </div>
-      </div>
-    );
-  }
-
-  // Si aucun mouvement n'est trouvé
-  if (!mouvement) {
-    return (
-      <div className="container mx-auto py-8 max-w-4xl">
-        <Button
-          variant="ghost"
-          onClick={() => router.push("/mouvements")}
-          className="mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Retour à la liste
-        </Button>
-
-        <div className="bg-white rounded-lg shadow p-8 text-center">
-          <Info className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold mb-2">Mouvement non trouvé</h2>
-          <p className="text-slate-600 mb-6">
-            Le mouvement ou l'association que vous recherchez n'existe pas ou a
-            été supprimé.
-          </p>
-          <Button onClick={() => router.push("/dashboard/paroisse/m&a")}>
-            Retour à la liste
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="container mx-auto py-6 max-w-7xl">
-      {/* En-tête avec navigation et actions */}
-      <div className="mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.back()}
-              className="flex items-center"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Retour
-            </Button>
-          </div>
-
-          <div className="flex space-x-3">
-            <Button variant="outline">
-              <FileText className="h-4 w-4 mr-2" />
-              Exporter
-            </Button>
-            <Button>
-              <Pencil className="h-4 w-4 mr-2" />
-              Modifier
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Onglets */}
-      <Card className="p-6">
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="mb-6 space-y-4"
-        >
-          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-            <TabsList className="grid grid-cols-4 w-full">
-              <TabsTrigger value="details" className="whitespace-nowrap">
-                <Info className="h-4 w-4 mr-2" />
-                Détails
-              </TabsTrigger>
-              <TabsTrigger value="membres" className="whitespace-nowrap">
-                <Users className="h-4 w-4 mr-2" />
-                Membres
-              </TabsTrigger>
-              <TabsTrigger value="finances" className="whitespace-nowrap">
-                <Wallet className="h-4 w-4 mr-2" />
-                Finances
-              </TabsTrigger>
-              <TabsTrigger value="activites" className="whitespace-nowrap">
-                <Calendar className="h-4 w-4 mr-2" />
-                Événements
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          {/* Contenu de l'onglet "Détails" */}
-          <TabsContent value="details" className="space-y-6">
-            {/* Informations générales */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="md:col-span-2">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">
-                    Informations générales
-                  </CardTitle>
-                  <Separator className="my-1" />
-                </CardHeader>
-
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <InfoItem
-                      icon={<BookOpen className="h-4 w-4" />}
-                      label="Nom"
-                      value={mouvement.nom}
-                    />
-                    <InfoItem
-                      icon={<Heart className="h-4 w-4" />}
-                      label="Type"
-                      value={mouvement.type}
-                    />
-                    <InfoItem
-                      icon={<Clock className="h-4 w-4" />}
-                      label="Date de création"
-                      value={formatDate(mouvement.created_at)}
-                    />
-                    <InfoItem
-                      icon={<Wallet className="h-4 w-4" />}
-                      label="Solde actuel"
-                      value={formatCurrency(mouvement.solde)}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Statistiques rapides */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Statistiques</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                      <div className="flex items-center">
-                        <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                          <Users className="h-4 w-4 text-blue-600" />
-                        </div>
-                        <span className="text-sm font-medium">Membres</span>
-                      </div>
-                      <span className="text-lg font-bold">0</span>{" "}
-                      {/* Données fictives */}
-                    </div>
-
-                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                      <div className="flex items-center">
-                        <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
-                          <CalendarDays className="h-4 w-4 text-green-600" />
-                        </div>
-                        <span className="text-sm font-medium">Activités</span>
-                      </div>
-                      <span className="text-lg font-bold">0</span>{" "}
-                      {/* Données fictives */}
-                    </div>
-
-                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                      <div className="flex items-center">
-                        <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center mr-3">
-                          <Wallet className="h-4 w-4 text-amber-600" />
-                        </div>
-                        <span className="text-sm font-medium">
-                          Transactions
-                        </span>
-                      </div>
-                      <span className="text-lg font-bold">0</span>{" "}
-                      {/* Données fictives */}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Responsables */}
-            <div>
-              <h2 className="text-xl font-bold text-slate-900 mb-4">
-                Responsables
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <PersonneCard
-                  personne={mouvement.aumonier}
-                  role="Aumônier"
-                  emptyMessage="Aucun aumônier"
-                  actionButton={
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-4 mx-auto"
-                      onClick={() => setAumonierModalOpen(true)}
-                    >
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      {mouvement.aumonier ? "Changer" : "Assigner"}
-                    </Button>
-                  }
-                />
-                <PersonneCard
-                  personne={mouvement.responsable}
-                  role="Responsable"
-                  emptyMessage="Aucun responsable"
-                  actionButton={
-                    <div className="w-full flex justify-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mt-4"
-                        onClick={() => setResponsableModalOpen(true)}
-                      >
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        {mouvement.responsable ? "Changer" : "Assigner"}
-                      </Button>
-                    </div>
-                  }
-                />
-
-                <PersonneCard
-                  personne={mouvement.parrain}
-                  role="Parrain"
-                  emptyMessage="Aucun parrain"
-                  actionButton={
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-4 mx-auto"
-                      onClick={() => setParrainModalOpen(true)}
-                    >
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      {mouvement.parrain ? "Changer" : "Assigner"}
-                    </Button>
-                  }
-                />
-              </div>
-            </div>
-
-            {/* Modaux */}
-            <AumonierModal
-              isOpen={aumonierModalOpen}
-              onClose={() => setAumonierModalOpen(false)}
-              mouvementId={mouvementId}
-              onAssigned={handleRoleAssigned}
-            />
-
-            <ResponsableModal
-              isOpen={responsableModalOpen}
-              onClose={() => setResponsableModalOpen(false)}
-              mouvementId={mouvementId}
-              onAssigned={handleRoleAssigned}
-            />
-
-            <ParrainModal
-              isOpen={parrainModalOpen}
-              onClose={() => setParrainModalOpen(false)}
-              mouvementId={mouvementId}
-              onAssigned={handleRoleAssigned}
-            />
-          </TabsContent>
-
-          {/* Onglet Membres */}
-          <TabsContent value="membres">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Users className="h-16 w-16 text-slate-300 mb-4" />
-                  <h3 className="text-lg font-medium text-slate-900 mb-2">
-                    Aucun membre enregistré
-                  </h3>
-                  <p className="text-slate-500 max-w-md mb-6">
-                    Ce mouvement n'a pas encore de membres enregistrés. Vous
-                    pouvez commencer à ajouter des membres maintenant.
-                  </p>
-                  <Button>
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Ajouter des membres
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Onglet Finances */}
-          <TabsContent value="finances">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Wallet className="h-16 w-16 text-slate-300 mb-4" />
-                  <h3 className="text-lg font-medium text-slate-900 mb-2">
-                    Aucune transaction enregistrée
-                  </h3>
-                  <p className="text-slate-500 max-w-md mb-6">
-                    Ce mouvement n'a pas encore de transactions enregistrées.
-                    Vous pouvez commencer à enregistrer des transactions
-                    financières.
-                  </p>
-                  <div className="flex space-x-3">
-                    <Button variant="outline">Enregistrer une dépense</Button>
-                    <Button>Enregistrer une recette</Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Onglet Activités */}
-          <TabsContent value="activites">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Calendar className="h-16 w-16 text-slate-300 mb-4" />
-                  <h3 className="text-lg font-medium text-slate-900 mb-2">
-                    Aucune événement planifié
-                  </h3>
-                  <p className="text-slate-500 max-w-md mb-6">
-                    Ce mouvement n'a pas encore d'activités planifiées. Vous
-                    pouvez commencer à créer des événements.
-                  </p>
-                  <Button>
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Créer un événement
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Onglet Paramètres */}
-          {/* <TabsContent value="parametres">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Paramètres du mouvement</CardTitle>
+  // Rendu du contenu en fonction de l'état
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="space-y-6">
+          <Card className="bg-slate-50 border-slate-100">
+            <CardHeader className="pb-3">
+              <Skeleton className="h-8 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-1/2" />
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button variant="outline" className="justify-start">
-                    <Pencil className="h-4 w-4 mr-2" />
-                    Modifier les informations
-                  </Button>
-
-                  <Button variant="outline" className="justify-start">
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Gérer les responsables
-                  </Button>
-
-                  <Button variant="outline" className="justify-start">
-                    <Building className="h-4 w-4 mr-2" />
-                    Changer de chapelle
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    className="justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Supprimer le mouvement
-                  </Button>
-                </div>
-              </div>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
             </CardContent>
           </Card>
-        </TabsContent> */}
-        </Tabs>
-      </Card>
+
+          <Card className="bg-slate-50 border-slate-100">
+            <CardHeader className="pb-3">
+              <Skeleton className="h-6 w-1/3 mb-2" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <Card className="bg-red-50 border-red-100">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-red-700">Erreur</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-red-600">{error}</p>
+            <div className="mt-4 flex justify-between">
+              <Button variant="outline" onClick={() => router.back()}>
+                Retour
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}
+              >
+                Réessayer
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (!mouvement) {
+      return (
+        <Card className="bg-amber-50 border-amber-100">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-amber-700">
+              Mouvement non trouvé
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-amber-600">
+              Le mouvement demandé n'existe pas ou a été supprimé.
+            </p>
+            <div className="mt-4">
+              <Button variant="outline" onClick={() => router.back()}>
+                Retour à la liste des mouvements
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // Afficher les détails du mouvement
+    return (
+      <div className="space-y-6">
+        {/* Informations générales */}
+        <Card className="bg-slate-50 border-slate-100">
+          <CardHeader className="pb-3">
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle className="text-xl font-bold">
+                  {mouvement.nom}
+                </CardTitle>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                onClick={() => setShowEditDialog(true)}
+              >
+                <Pencil className="h-3.5 w-3.5 mr-2" />
+                Modifier
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center">
+                  <CalendarDays className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500">
+                    Date de création
+                  </p>
+                  <p className="text-sm font-semibold">
+                    {formatDate(mouvement.created_at)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-purple-100 flex items-center justify-center">
+                  <Heart className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500">Type</p>
+                  <p className="text-sm font-semibold">{mouvement.type}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-purple-100 flex items-center justify-center">
+                  <Users className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500">
+                    Total Membres
+                  </p>
+                  <p className="text-sm font-semibold">
+                    {mouvement.membres?.length || 0}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-purple-100 flex items-center justify-center">
+                  <Calendar className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500">
+                    Total Evenements
+                  </p>
+                  <p className="text-sm font-semibold">
+                    {mouvement.evenements?.length || 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Système d'onglets pour Responsables, Membres, Événements */}
+        <Card className="bg-slate-50 border-slate-100">
+          <CardContent className="p-6">
+            <Tabs defaultValue="responsables" className="space-y-4">
+              <TabsList className="grid grid-cols-3 w-full">
+                <TabsTrigger
+                  value="responsables"
+                  className="flex items-center justify-center"
+                >
+                  <User className="h-4 w-4 mr-1" />
+                  Bureau
+                </TabsTrigger>
+                <TabsTrigger
+                  value="membres"
+                  className="flex items-center justify-center"
+                >
+                  <Users className="h-4 w-4 mr-1" />
+                  Membres
+                </TabsTrigger>
+                <TabsTrigger
+                  value="evenements"
+                  className="flex items-center justify-center"
+                >
+                  <Calendar className="h-4 w-4 mr-1" />
+                  Événements
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Contenu de l'onglet Responsables */}
+              <TabsContent value="responsables" className="pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Aumonier */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-md">Aumônier</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {mouvement.aumonier ? (
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-12 w-12">
+                              <AvatarFallback className="bg-blue-100 text-blue-600">
+                                {mouvement.aumonier.prenoms?.[0]}
+                                {mouvement.aumonier.nom?.[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium">
+                                {mouvement.aumonier.prenoms}{" "}
+                                {mouvement.aumonier.nom}
+                              </p>
+                              <p className="text-sm text-slate-500">Aumônier</p>
+                            </div>
+                          </div>
+
+                          {mouvement.aumonier.num_de_telephone && (
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-full bg-pink-100 flex items-center justify-center">
+                                <Phone className="h-5 w-5 text-pink-600" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-slate-500">
+                                  Téléphone
+                                </p>
+                                <p className="text-sm font-semibold">
+                                  {formatPhoneNumber(
+                                    mouvement.aumonier.num_de_telephone
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          {mouvement.aumonier.email && (
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-full bg-teal-100 flex items-center justify-center">
+                                <Mail className="h-5 w-5 text-teal-600" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-slate-500">
+                                  Email
+                                </p>
+                                <p className="text-sm font-semibold">
+                                  {mouvement.aumonier.email}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full mt-4"
+                            onClick={() => setAumonierModalOpen(true)}
+                          >
+                            <UserPlus className="h-3.5 w-3.5 mr-2" />
+                            Changer l'aumônier
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="p-4 bg-amber-50 rounded-md border border-amber-100">
+                          <p className="text-sm text-center text-amber-600">
+                            Aucun aumônier n'est assigné à ce mouvement.
+                          </p>
+                          <div className="flex justify-center mt-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-amber-600 border-amber-300 hover:bg-amber-100"
+                              onClick={() => setAumonierModalOpen(true)}
+                            >
+                              <UserPlus className="h-3.5 w-3.5 mr-2" />
+                              Assigner un aumônier
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Responsable */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-md">Responsable</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {mouvement.responsable ? (
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-12 w-12">
+                              <AvatarFallback className="bg-indigo-100 text-indigo-600">
+                                {mouvement.responsable.prenoms?.[0]}
+                                {mouvement.responsable.nom?.[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium">
+                                {mouvement.responsable.prenoms}{" "}
+                                {mouvement.responsable.nom}
+                              </p>
+                              <p className="text-sm text-slate-500">
+                                Responsable
+                              </p>
+                            </div>
+                          </div>
+
+                          {mouvement.responsable.num_de_telephone && (
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-full bg-pink-100 flex items-center justify-center">
+                                <Phone className="h-5 w-5 text-pink-600" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-slate-500">
+                                  Téléphone
+                                </p>
+                                <p className="text-sm font-semibold">
+                                  {formatPhoneNumber(
+                                    mouvement.responsable.num_de_telephone
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          {mouvement.responsable.email && (
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-full bg-teal-100 flex items-center justify-center">
+                                <Mail className="h-5 w-5 text-teal-600" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-slate-500">
+                                  Email
+                                </p>
+                                <p className="text-sm font-semibold">
+                                  {mouvement.responsable.email}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full mt-4"
+                            onClick={() => setResponsableModalOpen(true)}
+                          >
+                            <UserPlus className="h-3.5 w-3.5 mr-2" />
+                            Changer le responsable
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="p-4 bg-amber-50 rounded-md border border-amber-100">
+                          <p className="text-sm text-center text-amber-600">
+                            Aucun responsable n'est assigné à ce mouvement.
+                          </p>
+                          <div className="flex justify-center mt-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-amber-600 border-amber-300 hover:bg-amber-100"
+                              onClick={() => setResponsableModalOpen(true)}
+                            >
+                              <UserPlus className="h-3.5 w-3.5 mr-2" />
+                              Assigner un responsable
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Parrain */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-md">Parrain</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {mouvement.parrain ? (
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-12 w-12">
+                              <AvatarFallback className="bg-purple-100 text-purple-600">
+                                {mouvement.parrain.prenoms?.[0]}
+                                {mouvement.parrain.nom?.[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium">
+                                {mouvement.parrain.prenoms}{" "}
+                                {mouvement.parrain.nom}
+                              </p>
+                              <p className="text-sm text-slate-500">Parrain</p>
+                            </div>
+                          </div>
+
+                          {mouvement.parrain.num_de_telephone && (
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-full bg-pink-100 flex items-center justify-center">
+                                <Phone className="h-5 w-5 text-pink-600" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-slate-500">
+                                  Téléphone
+                                </p>
+                                <p className="text-sm font-semibold">
+                                  {formatPhoneNumber(
+                                    mouvement.parrain.num_de_telephone
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          {mouvement.parrain.email && (
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-full bg-teal-100 flex items-center justify-center">
+                                <Mail className="h-5 w-5 text-teal-600" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-slate-500">
+                                  Email
+                                </p>
+                                <p className="text-sm font-semibold">
+                                  {mouvement.parrain.email}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full mt-4"
+                            onClick={() => setParrainModalOpen(true)}
+                          >
+                            <UserPlus className="h-3.5 w-3.5 mr-2" />
+                            Changer le parrain
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="p-4 bg-amber-50 rounded-md border border-amber-100">
+                          <p className="text-sm text-center text-amber-600">
+                            Aucun parrain n'est assigné à ce mouvement.
+                          </p>
+                          <div className="flex justify-center mt-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-amber-600 border-amber-300 hover:bg-amber-100"
+                              onClick={() => setParrainModalOpen(true)}
+                            >
+                              <UserPlus className="h-3.5 w-3.5 mr-2" />
+                              Assigner un parrain
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* Contenu de l'onglet Membres */}
+              <TabsContent value="membres" className="pt-4">
+                {mouvement.membres && mouvement.membres.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-200">
+                            <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                              Nom Complet
+                            </th>
+                            <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                              Téléphone
+                            </th>
+                            <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                              Email
+                            </th>
+                            <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                              Statut
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {mouvement.membres.map((membre) => (
+                            <tr
+                              key={membre.id}
+                              className="border-b border-slate-100 hover:bg-slate-50"
+                            >
+                              <td className="py-3 px-4 text-sm text-slate-600">
+                                {membre.email || "Non renseigné"}
+                              </td>
+                              <td className="py-3 px-4">
+                                <Badge variant="outline">
+                                  {membre.statut || "Non défini"}
+                                </Badge>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button variant="outline" size="sm">
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Ajouter un membre
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center">
+                    <Users className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                    <h3 className="text-lg font-medium text-slate-900 mb-2">
+                      Aucun membre
+                    </h3>
+                    <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
+                      Ce mouvement n'a pas encore de membres enregistrés.
+                    </p>
+                    <Button>
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Ajouter des membres
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Contenu de l'onglet Événements */}
+              <TabsContent value="evenements" className="pt-4">
+                {mouvement.evenements && mouvement.evenements.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-200">
+                            <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                              Titre
+                            </th>
+                            <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                              Date
+                            </th>
+                            <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                              Description
+                            </th>
+                            <th className="py-3 px-4 text-right text-sm font-medium text-slate-500">
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {mouvement.evenements.map((evenement) => (
+                            <tr
+                              key={evenement.id}
+                              className="border-b border-slate-100 hover:bg-slate-50"
+                            >
+                              <td className="py-3 px-4">
+                                <div className="font-medium text-sm">
+                                  {evenement.titre}
+                                </div>
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="flex items-center text-sm text-slate-600">
+                                  <Calendar className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
+                                  {formatDate(evenement.date)}
+                                </div>
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="text-sm text-slate-600 max-w-xs truncate">
+                                  {evenement.description}
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 text-right">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8"
+                                >
+                                  <Edit className="h-4 w-4 text-slate-500" />
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button variant="outline" size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Ajouter un événement
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center">
+                    <Calendar className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                    <h3 className="text-lg font-medium text-slate-900 mb-2">
+                      Aucun événement
+                    </h3>
+                    <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
+                      Ce mouvement n'a pas encore d'événements planifiés.
+                    </p>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Créer un événement
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6 ">
+      {/* Fil d'Ariane */}
+      <div className="flex items-center mb-4 text-sm text-slate-500">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => router.back()}
+          className="flex items-center"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Retour
+        </Button>
+      </div>
+
+      {/* Titre et description */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-900 mb-1">
+          Détails du mouvement
+        </h1>
+        <p className="text-slate-500">
+          Informations détaillées sur le mouvement ou l'association
+        </p>
+      </div>
+
+      {/* Contenu principal */}
+      {renderContent()}
+
+      {/* Dialog de modification */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-[600px] w-[92vw] max-h-[90vh] overflow-y-auto p-3 sm:p-6">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-lg text-blue-800 font-semibold flex items-center">
+              Modifier le mouvement
+            </DialogTitle>
+          </DialogHeader>
+
+          {mouvement && (
+            <ModifierMouvementForm
+              onClose={() => setShowEditDialog(false)}
+              mouvementData={mouvement}
+              onSuccess={handleUpdateSuccess}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modaux pour assigner des responsables */}
+      <AumonierModal
+        isOpen={aumonierModalOpen}
+        onClose={() => setAumonierModalOpen(false)}
+        mouvementId={mouvementId}
+        onAssigned={handleRoleAssigned}
+      />
+
+      <ResponsableModal
+        isOpen={responsableModalOpen}
+        onClose={() => setResponsableModalOpen(false)}
+        mouvementId={mouvementId}
+        onAssigned={handleRoleAssigned}
+      />
+
+      <ParrainModal
+        isOpen={parrainModalOpen}
+        onClose={() => setParrainModalOpen(false)}
+        mouvementId={mouvementId}
+        onAssigned={handleRoleAssigned}
+      />
     </div>
   );
 }

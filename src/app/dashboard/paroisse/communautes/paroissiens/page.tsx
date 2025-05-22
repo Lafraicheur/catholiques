@@ -24,6 +24,7 @@ import {
   UserPlus,
   CheckCircle,
   Users,
+  Eye,
 } from "lucide-react";
 import {
   Card,
@@ -395,7 +396,7 @@ export default function ParoissiensPage() {
   // Rendu en cas d'erreur
   if (error) {
     return (
-      <div className="container mx-auto py-6 max-w-7xl">
+      <div className="space-y-6">
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 mb-1">
@@ -422,7 +423,7 @@ export default function ParoissiensPage() {
   }
 
   return (
-    <div className="container mx-auto py-6 max-w-7xl">
+    <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 mb-1">
@@ -622,38 +623,14 @@ export default function ParoissiensPage() {
                       </td>
 
                       <td className="py-3 px-4 text-right">
-                        <div
-                          className="inline-flex"
-                          onClick={(e) => {
-                            e.stopPropagation(); // Empêcher la navigation vers la page de détails
-                          }}
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 cursor-pointer"
+                          onClick={() => navigateToDetails(paroissien.id)}
                         >
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => navigateToDetails(paroissien.id)}
-                              >
-                                <User className="h-4 w-4 mr-2 text-slate-500" />
-                                Voir les détails
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => openEditModal(paroissien)}
-                              >
-                                <Edit className="h-4 w-4 mr-2 text-blue-600" />
-                                Modifier
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                          <Eye className="h-4 w-4 text-slate-500" />
+                        </Button>
                       </td>
                     </tr>
                   ))}

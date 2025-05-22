@@ -303,6 +303,7 @@ export default function ModifierSacrementIndividuelForm({
                 Annuler
               </Button>
             </DialogClose>
+            &nbsp;&nbsp;
             <Button type="submit" disabled={loading}>
               {loading ? (
                 <>

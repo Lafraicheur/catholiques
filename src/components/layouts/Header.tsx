@@ -192,7 +192,7 @@ export default function Header({
         {/* Bouton Sidebar avec amélioration d'accessibilité */}
         <button
           onClick={toggleSidebar}
-          className="p-2 mr-3 text-slate-600 rounded-full hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300 transition-colors"
+          className="p-2 mr-3 text-slate-600 rounded-full hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300 transition-colors cursor-pointer"
           aria-label={isSidebarOpen ? "Fermer le menu" : "Ouvrir le menu"}
           aria-expanded={isSidebarOpen}
         >
@@ -215,7 +215,7 @@ export default function Header({
             <div key={label} className="relative">
               <button
                 onClick={onClick}
-                className="p-2 text-slate-600 rounded-full hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300 transition-colors"
+                className="p-2 text-slate-600 rounded-full hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300 transition-colors cursor-pointer"
                 aria-label={label}
               >
                 <Icon size={18} />
@@ -229,7 +229,7 @@ export default function Header({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="flex items-center ml-2 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-slate-300 transition-colors"
+                className="flex items-center ml-2 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-slate-300 transition-colors cursor-pointer"
                 aria-label="Menu utilisateur"
               >
                 <Avatar className="h-8 w-8 border border-slate-200">

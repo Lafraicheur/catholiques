@@ -298,7 +298,7 @@ const AjouterCebForm = ({
           variant="outline"
           onClick={onClose}
           disabled={formLoading}
-          className="border-slate-300 hover:bg-slate-100 hover:text-slate-800 transition-colors w-full sm:w-auto"
+          className="border-slate-300 hover:bg-slate-100 hover:text-slate-800 transition-colors w-full sm:w-auto cursor-pointer"
         >
           Annuler
         </Button>
@@ -306,7 +306,7 @@ const AjouterCebForm = ({
         <Button
           type="submit"
           disabled={formLoading}
-          className="bg-green-600 hover:bg-green-700 text-white font-medium transition-colors w-full sm:w-auto"
+          className="text-white font-medium transition-colors w-full sm:w-auto cursor-pointer"
         >
           {formLoading ? (
             <>

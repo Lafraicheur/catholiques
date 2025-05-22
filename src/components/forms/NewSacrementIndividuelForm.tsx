@@ -16,7 +16,9 @@ interface NewSacrementIndividuelFormProps {
   onSuccess: () => void;
 }
 
-const NewSacrementIndividuelForm = ({ onSuccess }: NewSacrementIndividuelFormProps) => {
+const NewSacrementIndividuelForm = ({
+  onSuccess,
+}: NewSacrementIndividuelFormProps) => {
   const [showAddDialog, setShowAddDialog] = useState(false);
 
   // Ouvrir le modal d'ajout
@@ -33,7 +35,7 @@ const NewSacrementIndividuelForm = ({ onSuccess }: NewSacrementIndividuelFormPro
   const handleCreateSuccess = (newSacrement) => {
     // Fermer le modal
     closeAddModal();
-    
+
     // Notifier le parent du succès (qui actualisera la liste)
     onSuccess();
   };
@@ -41,26 +43,20 @@ const NewSacrementIndividuelForm = ({ onSuccess }: NewSacrementIndividuelFormPro
   return (
     <>
       {/* Bouton pour ouvrir le modal */}
-      <Button 
-        onClick={openAddModal}
-        className="bg-green-600 hover:bg-green-700 text-white"
-      >
+      <Button onClick={openAddModal} className="cursor-pointer">
         <Plus className="h-4 w-4 mr-2" />
         Nouveau Sacrement
       </Button>
 
       {/* Dialog d'ajout de sacrement */}
-      <Dialog 
-        open={showAddDialog} 
-        onOpenChange={setShowAddDialog}
-      >
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="sm:max-w-[600px] w-[92vw] max-h-[90vh] overflow-y-auto p-3 sm:p-6">
           <DialogHeader className="pb-2">
-            <DialogTitle className="text-lg text-green-800 font-semibold flex items-center">
+            <DialogTitle className="text-lg font-semibold flex items-center">
               Nouveau Sacrement Individuel
             </DialogTitle>
           </DialogHeader>
-          
+
           <AjouterSacrementIndividuelForm
             onClose={closeAddModal}
             onSuccess={handleCreateSuccess}

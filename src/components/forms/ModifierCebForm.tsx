@@ -1,4 +1,7 @@
 // ModifierCebForm.jsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -219,14 +222,15 @@ const ModifierCebForm = ({ onClose, cebData, onSuccess }) => {
           variant="outline"
           onClick={onClose}
           disabled={formLoading}
-          className="border-slate-300 hover:bg-slate-100 hover:text-slate-800 transition-colors w-full sm:w-auto"
+          className="border-slate-300 hover:bg-slate-100 hover:text-slate-800 transition-colors w-full sm:w-auto cursor-pointer"
         >
           Annuler
         </Button>
+        &nbsp;&nbsp;
         <Button
           type="submit"
           disabled={formLoading}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors w-full sm:w-auto"
+          className="text-white font-medium transition-colors w-full sm:w-auto cursor-pointer"
         >
           {formLoading ? (
             <>

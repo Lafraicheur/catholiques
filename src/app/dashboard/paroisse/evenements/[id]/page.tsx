@@ -1,366 +1,572 @@
-/* eslint-disable react/jsx-no-undef */
 /* eslint-disable react/no-unescaped-entities */
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Trash, Calendar, Clock, MapPin, User, FileText, CheckCircle, AlertCircle, Plus, Mail, Printer, Copy } from "lucide-react";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { Metadata } from "next";
+import {
+  Calendar,
+  Clock,
+  Target,
+  Eye,
+  EyeOff,
+  MapPin,
+  Building,
+  Users,
+  ArrowLeft,
+  Edit,
+  Pencil,
+  Tag,
+  FileText,
+  DollarSign,
+  Image as ImageIcon,
+  CheckCircle,
+  XCircle,
+  Activity,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
+import {
+  ApiError,
+  AuthenticationError,
+  ForbiddenError,
+  NotFoundError,
+} from "@/services/api";
+import { fetchEvenementDetails } from "@/services/evenement-services";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export const metadata: Metadata = {
-  title: "Détail Événement | Dashboard Église Catholique",
-};
+// Importer les composants de formulaire
 
-interface EvenementDetailPageProps {
-  params: {
-    id: string;
+export default function EvenementDetailsPage() {
+  const router = useRouter();
+  const params = useParams();
+  const evenementId = params?.id
+    ? parseInt(Array.isArray(params.id) ? params.id[0] : params.id, 10)
+    : null;
+
+  type EvenementImage = {
+    url: string;
+    name?: string;
+    [key: string]: any;
   };
-}
 
-// Simulation de la récupération des données d'un événement
-const getEvenement = (id: string) => {
-  // Dans une application réelle, vous feriez un appel API ici
-  const evenements = [
-    {
-      id: "1",
-      titre: "Messe dominicale",
-      date: "2025-05-18",
-      heure: "10:30",
-      duree: "1h30",
-      lieu: "Église principale",
-      description: "Messe du 6ème dimanche de Pâques. Lectures : Actes 10, 25-26.34-35.44-48 ; Psaume 97 ; 1 Jean 4, 7-10 ; Jean 15, 9-17.",
-      type: "messe",
-      statut: "programmé",
-      responsable: "Père Jean Dupont",
-      participants: [
-        { nom: "Père Jean Dupont", role: "Célébrant" },
-        { nom: "Michel Bernard", role: "Servant d'autel" },
-        { nom: "Marie Martin", role: "Lecteur" },
-        { nom: "Lucie Dubois", role: "Chorale" },
-      ],
-      taches: [
-        { nom: "Préparation de l'autel", statut: "terminé", responsable: "Michel Bernard" },
-        { nom: "Impression des feuilles de messe", statut: "terminé", responsable: "Sophie Petit" },
-        { nom: "Préparation des chants", statut: "en cours", responsable: "Lucie Dubois" },
-        { nom: "Fleurissement", statut: "à faire", responsable: "Jean Dupont" },
-      ],
-      notes: "Prévoir un baptême à la fin de la messe. Accueillir la famille du baptisé en début de célébration.",
-    },
-    {
-      id: "4",
-      titre: "Baptême - Marie Durand",
-      date: "2025-05-19",
-      heure: "11:00",
-      duree: "1h",
-      lieu: "Église principale",
-      description: "Baptême de Marie Durand, fille de Thomas et Sophie Durand. Parrain : Pierre Martin, Marraine : Julie Leclerc.",
-      type: "sacrement",
-      statut: "confirmé",
-      responsable: "Père Jean Dupont",
-      participants: [
-        { nom: "Père Jean Dupont", role: "Célébrant" },
-        { nom: "Marie Durand", role: "Baptisée" },
-        { nom: "Thomas Durand", role: "Père" },
-        { nom: "Sophie Durand", role: "Mère" },
-        { nom: "Pierre Martin", role: "Parrain" },
-        { nom: "Julie Leclerc", role: "Marraine" },
-      ],
-      taches: [
-        { nom: "Préparation des fonts baptismaux", statut: "à faire", responsable: "Michel Bernard" },
-        { nom: "Préparation du certificat de baptême", statut: "terminé", responsable: "Sophie Petit" },
-      ],
-      notes: "Famille à accueillir 30 minutes avant la cérémonie. Prévoir un photographe paroissial.",
+  type EvenementType = {
+    libelle: string;
+    description?: string;
+    type: string;
+    est_actif: boolean;
+    date_de_debut?: number;
+    date_de_fin?: number;
+    diocese_id?: number;
+    paroisse_id?: number;
+    mouvementassociation_id?: number;
+    ceb_id?: number;
+    est_limite_par_echeance?: boolean;
+    solde: number;
+    solde_cible: number;
+    solde_est_visibe?: boolean;
+    type_visibilite_solde?: string;
+    extras?: Record<string, any>;
+    image?: EvenementImage | null;
+    [key: string]: any;
+  };
+
+  const [evenement, setEvenement] = useState<EvenementType | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+
+  // Charger les détails de l'événement
+  useEffect(() => {
+    const loadEvenementDetails = async () => {
+      if (!evenementId) {
+        setError("ID d'événement non valide");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const data = await fetchEvenementDetails(evenementId);
+        setEvenement(data);
+      } catch (err) {
+        console.error(
+          "Erreur lors du chargement des détails de l'événement:",
+          err
+        );
+
+        if (err instanceof AuthenticationError) {
+          toast.error("Session expirée", {
+            description: "Veuillez vous reconnecter pour continuer.",
+          });
+          router.push("/login");
+        } else if (err instanceof ForbiddenError) {
+          setError(
+            "Vous n'avez pas les droits nécessaires pour accéder à cette ressource."
+          );
+        } else if (err instanceof NotFoundError) {
+          setError("Événement non trouvé.");
+        } else {
+          setError("Une erreur est survenue lors du chargement des données.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadEvenementDetails();
+  }, [evenementId, router]);
+
+  // Formater la date: timestamp -> 15/05/2023 15:30
+  const formatDate = (timestamp) => {
+    if (!timestamp) return "Non renseignée";
+
+    try {
+      const date = new Date(timestamp * 1000); // Convertir timestamp en millisecondes
+      return new Intl.DateTimeFormat("fr-FR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(date);
+    } catch (err) {
+      console.error("Erreur lors du formatage de la date:", err);
+      return "Date invalide";
     }
-  ];
+  };
 
-  return evenements.find(e => e.id === id);
-};
+  // Formater la monnaie en FCFA
+  const formatCurrency = (amount) => {
+    if (amount === undefined || amount === null) return "0 FCFA";
 
-// Formatage de la date
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-};
+    return new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "XOF",
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
 
-// Formater type d'événement pour Badge
-const getEventTypeDetails = (type: string) => {
-  switch (type) {
-    case "messe":
-      return { label: "Messe", variant: "default" as const };
-    case "formation":
-      return { label: "Formation", variant: "secondary" as const };
-    case "reunion":
-      return { label: "Réunion", variant: "outline" as const };
-    case "sacrement":
-      return { label: "Sacrement", variant: "destructive" as const };
-    case "priere":
-      return { label: "Prière", variant: "success" as const };
-    default:
-      return { label: type, variant: "default" as const };
-  }
-};
+  // Obtenir la couleur du badge selon le type
+  const getTypeColor = (type) => {
+    switch (type) {
+      case "ACTIVITÉ":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "FORMATION":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "COLLECTE":
+        return "bg-purple-100 text-purple-800 border-purple-200";
+      case "CÉLÉBRATION":
+        return "bg-amber-100 text-amber-800 border-amber-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
 
-// Formater statut d'événement pour Badge
-const getEventStatusDetails = (statut: string) => {
-  switch (statut) {
-    case "programmé":
-      return { label: "Programmé", variant: "outline" as const };
-    case "confirmé":
-      return { label: "Confirmé", variant: "success" as const };
-    case "terminé":
-      return { label: "Terminé", variant: "secondary" as const };
-    default:
-      return { label: statut, variant: "outline" as const };
-  }
-};
+  // Calculer le pourcentage d'atteinte de l'objectif
+  const getProgressPercentage = () => {
+    if (!evenement?.solde_cible || evenement.solde_cible === 0) return 0;
+    return Math.min((evenement.solde / evenement.solde_cible) * 100, 100);
+  };
 
-// Formater statut de tâche pour Badge
-const getTaskStatusDetails = (statut: string) => {
-  switch (statut) {
-    case "à faire":
-      return { label: "À faire", variant: "outline" as const, icon: <AlertCircle className="h-4 w-4 mr-1 text-amber-500" /> };
-    case "en cours":
-      return { label: "En cours", variant: "secondary" as const, icon: <Clock className="h-4 w-4 mr-1 text-blue-500" /> };
-    case "terminé":
-      return { label: "Terminé", variant: "success" as const, icon: <CheckCircle className="h-4 w-4 mr-1 text-green-500" /> };
-    default:
-      return { label: statut, variant: "outline" as const, icon: <AlertCircle className="h-4 w-4 mr-1" /> };
-  }
-};
+  // Obtenir le nom de l'entité organisatrice
+  const getOrganisateur = () => {
+    if (evenement?.diocese_id) return "Diocèse";
+    if (evenement?.paroisse_id) return "Paroisse";
+    if (evenement?.mouvementassociation_id) return "Mouvement/Association";
+    if (evenement?.ceb_id) return "CEB";
+    return "Non défini";
+  };
 
-export default function EvenementDetailPage({ params }: EvenementDetailPageProps) {
-  const evenement = getEvenement(params.id);
+  // Gérer le succès de la mise à jour
+  const handleUpdateSuccess = (updatedEvenement) => {
+    setEvenement(updatedEvenement);
+    toast.success("Événement mis à jour avec succès", {
+      description: `Les informations de "${updatedEvenement.libelle}" ont été mises à jour.`,
+    });
+  };
 
-  if (!evenement) {
+  // Rendu du contenu en fonction de l'état
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="space-y-6">
+          <Card className="bg-slate-50 border-slate-100">
+            <CardHeader className="pb-3">
+              <Skeleton className="h-8 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-1/2" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-50 border-slate-100">
+            <CardHeader className="pb-3">
+              <Skeleton className="h-6 w-1/3 mb-2" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <Card className="bg-red-50 border-red-100">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-red-700">Erreur</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-red-600">{error}</p>
+            <div className="mt-4 flex justify-between">
+              <Button variant="outline" onClick={() => router.back()}>
+                Retour
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}
+              >
+                Réessayer
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (!evenement) {
+      return (
+        <Card className="bg-amber-50 border-amber-100">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-amber-700">
+              Événement non trouvé
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-amber-600">
+              L'événement demandé n'existe pas ou a été supprimé.
+            </p>
+            <div className="mt-4">
+              <Button variant="outline" onClick={() => router.back()}>
+                Retour à la liste des événements
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // Afficher les détails de l'événement
     return (
-      <div className="text-center py-12">
-        <h1 className="text-2xl font-bold text-slate-900 mb-4">Événement non trouvé</h1>
-        <p className="text-slate-600 mb-6">L'événement que vous recherchez n'existe pas.</p>
-        <Link href="/dashboard/paroisse/evenements" passHref>
-          <Button>
-            <ArrowLeft className="mr-2 h-4 w-4" /> Retour à la liste
-          </Button>
-        </Link>
+      <div className="space-y-6">
+        {/* Informations générales */}
+        <Card className="bg-slate-50 border-slate-100">
+          <CardHeader className="pb-3">
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <CardTitle className="text-xl font-bold">
+                    {evenement.libelle}
+                  </CardTitle>
+                  <Badge className={getTypeColor(evenement.type)}>
+                    {evenement.type}
+                  </Badge>
+
+                  {evenement?.extras?.type_messe && (
+                    <Badge
+                      variant="outline"
+                      className="bg-green-50 text-green-700 border-green-200"
+                    >
+                      {evenement.extras.type_messe}
+                    </Badge>
+                  )}
+
+                  <Badge
+                    variant={evenement.est_actif ? "default" : "secondary"}
+                  >
+                    {evenement.est_actif ? (
+                      <>
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Actif
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-3 w-3 mr-1" />
+                        Inactif
+                      </>
+                    )}
+                  </Badge>
+                </div>
+                {evenement.description && (
+                  <CardDescription className="text-sm text-slate-600">
+                    {evenement.description}
+                  </CardDescription>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                onClick={() => setShowEditDialog(true)}
+              >
+                <Pencil className="h-3.5 w-3.5 mr-2" />
+                Modifier
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Calendar className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500">
+                    Date de début
+                  </p>
+                  <p className="text-sm font-semibold">
+                    {formatDate(evenement.date_de_debut)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-purple-100 flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500">
+                    Date de fin
+                  </p>
+                  <p className="text-sm font-semibold">
+                    {formatDate(evenement.date_de_fin)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-green-100 flex items-center justify-center">
+                  <DollarSign className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500">
+                    Solde actuel
+                  </p>
+                  <p className="text-sm font-semibold">
+                    {formatCurrency(evenement.solde)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Target className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500">Objectif</p>
+                  <p className="text-sm font-semibold">
+                    {formatCurrency(evenement.solde_cible)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Système d'onglets pour Financier, Paramètres, Image */}
+        <Card className="bg-slate-50 border-slate-100">
+          <CardContent className="p-6">
+            <Tabs defaultValue="parametres" className="space-y-4">
+              <TabsList className="grid grid-cols-2 w-full">
+                <TabsTrigger
+                  value="parametres"
+                  className="flex items-center justify-center"
+                >
+                  <Tag className="h-4 w-4 mr-1" />
+                  Paramètres
+                </TabsTrigger>
+                <TabsTrigger
+                  value="image"
+                  className="flex items-center justify-center"
+                >
+                  <ImageIcon className="h-4 w-4 mr-1" />
+                  Image
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Contenu de l'onglet Paramètres */}
+              <TabsContent value="parametres" className="pt-4">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-full bg-purple-100 flex items-center justify-center">
+                        {evenement.solde_est_visibe ? (
+                          <Eye className="h-5 w-5 text-purple-600" />
+                        ) : (
+                          <EyeOff className="h-5 w-5 text-purple-600" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-500">
+                          Visibilité du solde
+                        </p>
+                        <p className="text-sm font-semibold">
+                          {evenement.solde_est_visibe ? "Visible" : "Masqué"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-full bg-green-100 flex items-center justify-center">
+                        <Activity className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-500">
+                          Statut
+                        </p>
+                        <Badge
+                          variant={
+                            evenement.est_actif ? "default" : "secondary"
+                          }
+                        >
+                          {evenement.est_actif ? "Actif" : "Inactif"}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    {evenement.est_limite_par_echeance && (
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-full bg-amber-100 flex items-center justify-center">
+                          <Target className="h-5 w-5 text-amber-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-500">
+                            Limité par échéance
+                          </p>
+                          <p className="text-sm font-semibold text-amber-600">
+                            Oui
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {evenement.solde_cible > 0 && (
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-600">
+                            Progression vers l'objectif
+                          </span>
+                          <span className="font-medium">
+                            {getProgressPercentage().toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-200 rounded-full h-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${getProgressPercentage()}%` }}
+                          ></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-slate-500">
+                          <span>{formatCurrency(evenement.solde)}</span>
+                          <span>{formatCurrency(evenement.solde_cible)}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* Contenu de l'onglet Image */}
+              <TabsContent value="image" className="pt-4">
+                {evenement?.image ? (
+                  <div className="space-y-4">
+                    <div className="flex justify-center">
+                      <img
+                        src={evenement?.image?.url}
+                        alt={evenement?.image?.name}
+                        className="max-w-md max-h-64 object-cover rounded-lg border border-slate-200"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center">
+                    <ImageIcon className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                    <h3 className="text-lg font-medium text-slate-900 mb-2">
+                      Aucune image
+                    </h3>
+                    <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
+                      Aucune image n'est associée à cet événement.
+                    </p>
+                    <Button variant="outline">
+                      <ImageIcon className="h-4 w-4 mr-2" />
+                      Ajouter une image
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
     );
-  }
-
-  const { label: typeLabel, variant: typeVariant } = getEventTypeDetails(evenement.type);
-  const { label: statusLabel, variant: statusVariant } = getEventStatusDetails(evenement.statut);
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <Link href="/dashboard/paroisse/evenements" passHref>
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-bold text-slate-900">
-            {evenement.titre}
-          </h1>
-          <Badge variant={typeVariant}>{typeLabel}</Badge>
-          <Badge variant={statusVariant}>{statusLabel}</Badge>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <Edit className="mr-2 h-4 w-4" /> Modifier
-          </Button>
-          <Button variant="destructive">
-            <Trash className="mr-2 h-4 w-4" /> Supprimer
-          </Button>
-        </div>
+      {/* Fil d'Ariane */}
+      <div className="flex items-center mb-4 text-sm text-slate-500">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => router.back()}
+          className="flex items-center"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Retour
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Informations sur l'événement</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-slate-500">Date</p>
-                  <p className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-2 text-slate-400" />
-                    {formatDate(evenement.date)}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-slate-500">Horaire</p>
-                  <p className="flex items-center">
-                    <Clock className="h-4 w-4 mr-2 text-slate-400" />
-                    {evenement.heure} ({evenement.duree})
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-slate-500">Lieu</p>
-                  <p className="flex items-center">
-                    <MapPin className="h-4 w-4 mr-2 text-slate-400" />
-                    {evenement.lieu}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-slate-500">Responsable</p>
-                  <p className="flex items-center">
-                    <User className="h-4 w-4 mr-2 text-slate-400" />
-                    {evenement.responsable}
-                  </p>
-                </div>
-                <div className="space-y-1 col-span-full">
-                  <p className="text-sm font-medium text-slate-500">Description</p>
-                  <p className="flex items-start">
-                    <FileText className="h-4 w-4 mr-2 mt-1 text-slate-400" />
-                    <span>{evenement.description}</span>
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Participants</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {evenement.participants.map((participant, index) => (
-                  <div 
-                    key={index} 
-                    className="flex items-center p-3 border border-slate-200 rounded-md"
-                  >
-                    <div className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 mr-3">
-                      <User className="h-5 w-5 text-slate-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">{participant.nom}</h3>
-                      <p className="text-xs text-slate-500">{participant.role}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {evenement.participants.length === 0 && (
-                <p className="text-center py-4 text-slate-500">
-                  Aucun participant enregistré
-                </p>
-              )}
-
-              <Button className="w-full mt-4">
-                <Plus className="mr-2 h-4 w-4" /> Ajouter un participant
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Liste des tâches</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {evenement.taches.map((tache, index) => {
-                  const { label, variant, icon } = getTaskStatusDetails(tache.statut);
-                  
-                  return (
-                    <div 
-                      key={index} 
-                      className="flex items-center justify-between p-3 border border-slate-200 rounded-md"
-                    >
-                      <div className="flex items-center">
-                        <div className="mr-3">
-                          {icon}
-                        </div>
-                        <div>
-                          <h3 className="font-medium">{tache.nom}</h3>
-                          <p className="text-xs text-slate-500">Responsable: {tache.responsable}</p>
-                        </div>
-                      </div>
-                      <Badge variant={variant}>{label}</Badge>
-                    </div>
-                  );
-                })}
-
-                {evenement.taches.length === 0 && (
-                  <p className="text-center py-4 text-slate-500">
-                    Aucune tâche enregistrée
-                  </p>
-                )}
-
-                <Button className="w-full mt-4">
-                  <Plus className="mr-2 h-4 w-4" /> Ajouter une tâche
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Statut de l'événement</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-500">Statut actuel</span>
-                  <Badge variant={statusVariant} className="text-sm">{statusLabel}</Badge>
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-slate-500">Changer le statut</p>
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" size="sm">Programmé</Button>
-                    <Button variant="outline" size="sm">Confirmé</Button>
-                    <Button variant="outline" size="sm">Terminé</Button>
-                    <Button variant="outline" size="sm">Annulé</Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Actions rapides</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <Button className="w-full justify-start">
-                  <Mail className="mr-2 h-4 w-4" /> Envoyer un rappel
-                </Button>
-                <Button className="w-full justify-start" variant="outline">
-                  <Printer className="mr-2 h-4 w-4" /> Imprimer les détails
-                </Button>
-                <Button className="w-full justify-start" variant="outline">
-                  <Copy className="mr-2 h-4 w-4" /> Dupliquer l'événement
-                </Button>
-                <Button className="w-full justify-start" variant="outline">
-                  <Calendar className="mr-2 h-4 w-4" /> Ajouter au calendrier
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Notes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-slate-700">{evenement.notes}</p>
-              <Button variant="outline" className="w-full mt-4">
-                <Edit className="mr-2 h-4 w-4" /> Modifier les notes
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+      {/* Titre et description */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-900 mb-1">
+          Détails de l'événement
+        </h1>
+        <p className="text-slate-500">
+          Informations détaillées sur l'événement
+        </p>
       </div>
+
+      {/* Contenu principal */}
+      {renderContent()}
     </div>
   );
 }

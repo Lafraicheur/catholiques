@@ -111,6 +111,7 @@ const DeleteCebConfirmation = ({ ceb, onClose, onSuccess }) => {
         >
           Annuler
         </Button>
+        &nbsp;&nbsp;
         <Button 
           variant="destructive" 
           onClick={handleDelete}

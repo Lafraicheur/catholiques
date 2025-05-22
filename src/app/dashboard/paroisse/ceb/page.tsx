@@ -1,5 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -253,7 +254,7 @@ export default function CebsPage() {
   };
 
   return (
-    <div className="container mx-auto py-6 max-w-7xl">
+    <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 mb-1">
@@ -327,7 +328,7 @@ export default function CebsPage() {
             className="pl-9"
           />
         </div>
-        <Button onClick={openAddModal}>
+        <Button onClick={openAddModal} className="cursor-pointer">
           <Plus className="h-4 w-4 mr-2" />
           Nouvelle CEB
         </Button>
@@ -409,9 +410,9 @@ export default function CebsPage() {
                     <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
                       Nom
                     </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                    {/* <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
                       Solde
-                    </th>
+                    </th> */}
                     <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
                       Président
                     </th>
@@ -425,9 +426,9 @@ export default function CebsPage() {
                     <tr
                       key={ceb.id}
                       className="border-b border-slate-100 hover:bg-slate-100 cursor-pointer"
-                      onClick={() =>
-                        router.push(`/dashboard/paroisse/ceb/${ceb.id}`)
-                      }
+                      // onClick={() =>
+                      //   router.push(`/dashboard/paroisse/ceb/${ceb.id}`)
+                      // }
                     >
                       <td className="py-3 px-4">
                         <div className="text-sm text-slate-700">
@@ -439,11 +440,11 @@ export default function CebsPage() {
                           {ceb.nom}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
+                      {/* <td className="py-3 px-4">
                         <div className="font-medium text-sm">
                           {formatCurrency(ceb.solde)}
                         </div>
-                      </td>
+                      </td> */}
                       <td className="py-3 px-4">
                         {ceb.president ? (
                           <div className="flex items-center text-sm">
@@ -517,7 +518,7 @@ export default function CebsPage() {
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="sm:max-w-[600px] w-[92vw] max-h-[90vh] overflow-y-auto p-3 sm:p-6">
           <DialogHeader className="pb-2">
-            <DialogTitle className="text-lg text-green-800 font-semibold flex items-center">
+            <DialogTitle className="text-lg font-semibold flex items-center">
               Nouvelle Communauté Ecclésiale de Base
             </DialogTitle>
           </DialogHeader>

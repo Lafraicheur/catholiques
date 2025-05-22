@@ -1,6 +1,6 @@
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 
-const API_URL = 'https://api.cathoconnect.ci/api:HzF8fFua';
+const API_URL = process.env.NEXT_PUBLIC_API_URL_STATISTIQUE || "https://api.cathoconnect.ci/api:HzF8fFua";
 
 // Types d'erreurs personnalisés
 export class ApiError extends Error {

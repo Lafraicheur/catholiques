@@ -1,10 +1,13 @@
 // Fichier: services/api.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // Service d'API pour gérer les appels à l'API CathoConnect
 
 import { Evenement, EventType } from "./types";
 
 // URL de base de l'API
-const API_BASE_URL = 'https://api.cathoconnect.ci/api:HzF8fFua';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL_STATISTIQUE || "https://api.cathoconnect.ci/api:HzF8fFua";
 
 // Classes d'erreurs personnalisées
 export class ApiError extends Error {

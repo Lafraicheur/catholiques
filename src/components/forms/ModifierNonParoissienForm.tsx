@@ -1,4 +1,7 @@
 // ModifierNonParoissienForm.jsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -321,6 +324,7 @@ const ModifierNonParoissienForm = ({ nonParoissien, onClose, onSuccess }) => {
         >
           Annuler
         </Button>
+        &nbsp;&nbsp;
         <Button
           type="submit"
           disabled={formLoading}

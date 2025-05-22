@@ -110,13 +110,16 @@ const DeleteConfirmationDialog = ({ mouvement, onClose, onSuccess }) => {
           variant="outline"
           onClick={onClose}
           disabled={loading}
+          className="cursor-pointer"
         >
           Annuler
         </Button>
+        &nbsp;&nbsp;
         <Button 
           variant="destructive" 
           onClick={handleDelete}
           disabled={loading}
+          className="cursor-pointer"
         >
           {loading ? (
             <>

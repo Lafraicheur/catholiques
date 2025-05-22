@@ -141,10 +141,11 @@ const NominerPresidentForm = ({ cebId, onClose, onSuccess }) => {
       </div>
 
       <DialogFooter className="gap-2 sm:gap-0">
-        <Button type="button" variant="outline" onClick={onClose}>
+        <Button type="button" variant="outline" onClick={onClose} className="cursor-pointer">
           Annuler
         </Button>
-        <Button type="submit" disabled={loading}>
+        &nbsp;&nbsp;
+        <Button type="submit" disabled={loading} className="cursor-pointer">
           {loading ? (
             <>
               <span className="animate-spin mr-2">&#9696;</span>

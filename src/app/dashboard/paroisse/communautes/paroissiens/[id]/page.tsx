@@ -1,5 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -574,7 +575,7 @@ export default function ParoissienDetailPage() {
   };
 
   return (
-    <div className="container mx-auto py-6 max-w-7xl">
+    <div className="space-y-6">
       {/* Fil d'Ariane */}
       <div className="flex items-center mb-4 text-sm text-slate-500">
         <Button

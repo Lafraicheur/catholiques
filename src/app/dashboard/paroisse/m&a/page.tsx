@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
@@ -23,6 +24,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
+  Trash2
 } from "lucide-react";
 import {
   Card,
@@ -68,7 +70,6 @@ import {
 
 // Importer les nouveaux composants de formulaire
 import AjouterMouvementForm from "@/components/forms/AjouterMouvementForm";
-import ModifierMouvementForm from "@/components/forms/ModifierMouvementForm";
 import DeleteConfirmationDialog from "@/components/forms/DeleteConfirmationDialog";
 import { TYPES_MOUVEMENT } from "@/lib/constants";
 // Types
@@ -278,7 +279,8 @@ export default function MouvementsAssociationsPage() {
   };
 
   return (
-    <div className="container mx-auto py-6 max-w-7xl">
+    // <div className="container mx-auto py-6">
+    <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 mb-1">
@@ -357,21 +359,21 @@ export default function MouvementsAssociationsPage() {
         <div className="w-full md:w-120">
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger>
-              <div className="flex items-center">
+              <div className="flex items-center cursor-pointer">
                 <Filter className="h-4 w-4 mr-2 text-slate-400" />
                 <SelectValue placeholder="Filtrer par type" />
               </div>
             </SelectTrigger>
             <SelectContent className="max-h-72 overflow-y-auto">
               {TYPES_MOUVEMENT_FILTER.map((type) => (
-                <SelectItem key={type} value={type}>
+                <SelectItem key={type} value={type} className="cursor-pointer">
                   {type === "TOUS" ? "TOUS LES TYPES" : type}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={openAddModal}>
+        <Button onClick={openAddModal} className="cursor-pointer">
           <Plus className="h-4 w-4 mr-2" />
           Nouveau Mouvement
         </Button>
@@ -458,9 +460,6 @@ export default function MouvementsAssociationsPage() {
                       Type
                     </th>
                     <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Solde
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
                       Responsable
                     </th>
                     <th className="py-3 px-4 text-right text-sm font-medium text-slate-500">
@@ -473,9 +472,9 @@ export default function MouvementsAssociationsPage() {
                     <tr
                       key={mouvement.id}
                       className="border-b border-slate-100 hover:bg-slate-100 cursor-pointer"
-                      onClick={() =>
-                        router.push(`/dashboard/paroisse/m&a/${mouvement.id}`)
-                      }
+                      // onClick={() =>
+                      //   router.push(`/dashboard/paroisse/m&a/${mouvement.id}`)
+                      // }
                     >
                       <td className="py-3 px-4">
                         <div className="text-sm text-slate-700">
@@ -491,11 +490,6 @@ export default function MouvementsAssociationsPage() {
                         <Badge variant="outline" className="font-normal">
                           {mouvement.type}
                         </Badge>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="font-medium text-sm">
-                          {formatCurrency(mouvement.solde)}
-                        </div>
                       </td>
                       <td className="py-3 px-4">
                         {mouvement.responsable_id ? (
@@ -518,7 +512,7 @@ export default function MouvementsAssociationsPage() {
                           <Button
                             variant="outline"
                             size="icon"
-                            className="h-8 w-8"
+                            className="h-8 w-8 cursor-pointer"
                             onClick={() =>
                               router.push(
                                 `/dashboard/paroisse/m&a/${mouvement.id}`
@@ -528,35 +522,14 @@ export default function MouvementsAssociationsPage() {
                             <Eye className="h-4 w-4 text-slate-500" />
                           </Button>
 
-                          <Button
+                          {/* <Button
                             variant="outline"
                             size="icon"
-                            className="h-8 w-8"
+                            className="h-8 w-8 cursor-pointer"
                             onClick={() => openDeleteModal(mouvement)}
                           >
-                            <XCircle className="h-4 w-4 text-slate-500" />
-                          </Button>
-
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => openEditModal(mouvement)}
-                              >
-                                <Edit className="h-4 w-4 mr-2 text-blue-600" />
-                                Modifier
-                              </DropdownMenuItem>
-                              
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button> */}
                         </div>
                       </td>
                     </tr>
@@ -619,7 +592,7 @@ export default function MouvementsAssociationsPage() {
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="sm:max-w-[600px] w-[92vw] max-h-[90vh] overflow-y-auto p-3 sm:p-6">
           <DialogHeader className="pb-2">
-            <DialogTitle className="text-lg text-green-800 font-semibold flex items-center">
+            <DialogTitle className="text-lg font-semibold flex items-center">
               Nouveau Mouvement ou Association
             </DialogTitle>
           </DialogHeader>
@@ -628,33 +601,6 @@ export default function MouvementsAssociationsPage() {
             onClose={() => setShowAddDialog(false)}
             onSuccess={handleCreateSuccess}
           />
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog de modification de mouvement */}
-      <Dialog
-        open={showEditDialog}
-        onOpenChange={(open) => {
-          setShowEditDialog(open);
-          if (!open) {
-            setSelectedMouvement(null);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-[600px] w-[92vw] max-h-[90vh] overflow-y-auto p-3 sm:p-6">
-          <DialogHeader className="pb-2">
-            <DialogTitle className="text-lg text-blue-800 font-semibold flex items-center">
-              Modifier le mouvement
-            </DialogTitle>
-          </DialogHeader>
-
-          {selectedMouvement && (
-            <ModifierMouvementForm
-              onClose={() => setShowEditDialog(false)}
-              mouvementData={selectedMouvement}
-              onSuccess={handleUpdateSuccess}
-            />
-          )}
         </DialogContent>
       </Dialog>
     </div>

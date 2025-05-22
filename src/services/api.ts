@@ -1,6 +1,7 @@
 import axios, { AxiosError } from 'axios';
 
-const API_URL = 'https://api.cathoconnect.ci/api:HzF8fFua';
+const API_URL = process.env.NEXT_PUBLIC_API_URL_STATISTIQUE || "https://api.cathoconnect.ci/api:HzF8fFua";
+
 
 // Définition des types
 interface Mouvement {
@@ -24,7 +25,7 @@ interface ApiResponse {
 // Types d'erreurs personnalisés
 export class ApiError extends Error {
   statusCode: number;
-  
+
   constructor(message: string, statusCode: number) {
     super(message);
     this.name = 'ApiError';
@@ -69,13 +70,13 @@ export class ValidationError extends ApiError {
 
 export const fetchMouvements = async (paroisseId: number): Promise<Mouvement[]> => {
   const token = localStorage.getItem('auth_token');
-  
+
   if (!token) {
     throw new AuthenticationError('Token d\'authentification non trouvé');
   }
-  
+
   try {
-    const response = await axios.get<ApiResponse>(`${API_URL}/mouvementassociation/obtenir-tous`, {
+    const response = await axios.get<ApiResponse>(`https://api.cathoconnect.ci/api:HzF8fFua/mouvementassociation/obtenir-tous`, {
       params: { paroisse_id: paroisseId },
       headers: {
         Authorization: `Bearer ${token}`,
@@ -83,7 +84,7 @@ export const fetchMouvements = async (paroisseId: number): Promise<Mouvement[]> 
         'Content-Type': 'application/json'
       }
     });
-    
+
     return response.data.items || [];
   } catch (error) {
     handleApiError(error);
@@ -99,7 +100,7 @@ function handleApiError(error: unknown): never {
     const axiosError = error as AxiosError;
     const statusCode = axiosError.response?.status || 500;
     const errorMessage = axiosError.response?.data?.message || axiosError.message || 'Une erreur est survenue';
-    
+
     // Gérer les différents codes d'erreur
     switch (statusCode) {
       case 400:
@@ -123,22 +124,3 @@ function handleApiError(error: unknown): never {
     throw new ApiError('Une erreur inconnue est survenue', 500);
   }
 }
-
-// Exemple d'utilisation
-/* 
-try {
-  const mouvements = await fetchMouvements(123);
-  console.log('Mouvements récupérés:', mouvements);
-} catch (error) {
-  if (error instanceof AuthenticationError) {
-    // Rediriger vers la page de connexion
-    console.error('Erreur d\'authentification:', error.message);
-  } else if (error instanceof ForbiddenError) {
-    // Afficher un message d'accès refusé
-    console.error('Accès refusé:', error.message);
-  } else {
-    // Gérer les autres types d'erreurs
-    console.error('Erreur:', error instanceof Error ? error.message : 'Erreur inconnue');
-  }
-}
-*/

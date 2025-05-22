@@ -45,7 +45,37 @@ export default function DemandeMesseDetailsPage() {
     ? parseInt(Array.isArray(params.id) ? params.id[0] : params.id, 10)
     : null;
 
-  const [demandeMesse, setDemandeMesse] = useState(null);
+  interface Initiateur {
+    nom?: string;
+    prenoms?: string;
+    num_de_telephone?: string;
+  }
+
+  interface MesseExtras {
+    type_messe?: string;
+    heure_de_debut?: string | number | Date;
+    heure_de_fin?: string | number | Date;
+  }
+
+  interface Messe {
+    libelle?: string;
+    date_de_debut?: string | number | Date;
+    extras?: MesseExtras;
+  }
+
+  interface DemandeMesse {
+    created_at?: string | number | Date;
+    intention?: string;
+    montant?: string | number | bigint | null | undefined;
+    est_payee?: boolean;
+    demandeur?: string;
+    concerne?: string;
+    description?: string;
+    messe?: Messe;
+    initiateur?: Initiateur;
+  }
+
+  const [demandeMesse, setDemandeMesse] = useState<DemandeMesse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,7 +104,10 @@ export default function DemandeMesseDetailsPage() {
         const data = await fetchDemandeMesseDetails(demandeMesseId);
         setDemandeMesse(data);
       } catch (err) {
-        console.error("Erreur lors du chargement des détails de la demande de messe:", err);
+        console.error(
+          "Erreur lors du chargement des détails de la demande de messe:",
+          err
+        );
 
         if (err instanceof AuthenticationError) {
           toast.error("Session expirée", {
@@ -142,7 +175,9 @@ export default function DemandeMesseDetailsPage() {
   };
 
   // Formater la monnaie en FCFA
-  const formatCurrency = (amount: string | number | bigint | null | undefined) => {
+  const formatCurrency = (
+    amount: string | number | bigint | null | undefined
+  ) => {
     if (amount === undefined || amount === null) return "0 FCFA";
 
     return new Intl.NumberFormat("fr-FR", {
@@ -212,7 +247,9 @@ export default function DemandeMesseDetailsPage() {
       return (
         <Card className="bg-amber-50 border-amber-100">
           <CardHeader className="pb-3">
-            <CardTitle className="text-amber-700">Demande de messe non trouvée</CardTitle>
+            <CardTitle className="text-amber-700">
+              Demande de messe non trouvée
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-amber-600">
@@ -229,11 +266,16 @@ export default function DemandeMesseDetailsPage() {
     }
 
     // Déterminer la couleur du badge pour le statut de paiement
-    const paymentStatusStyle = demandeMesse.est_payee ? "success" : "destructive";
+    const paymentStatusStyle = demandeMesse.est_payee
+      ? "success"
+      : "destructive";
     const paymentStatusText = demandeMesse.est_payee ? "Payée" : "Non payée";
 
     // Déterminer la couleur du badge pour l'intention
-    const intentionStyle = intentionTypes[demandeMesse.intention] || "default";
+    const intentionStyle =
+      demandeMesse.intention && intentionTypes[demandeMesse.intention]
+        ? intentionTypes[demandeMesse.intention]
+        : "default";
 
     // Afficher les détails de la demande de messe
     return (
@@ -244,7 +286,8 @@ export default function DemandeMesseDetailsPage() {
             <div className="flex justify-between items-start">
               <div>
                 <CardDescription>
-                  <span className="font-medium">Créée le:</span> {formatDate(demandeMesse.created_at)}
+                  <span className="font-medium">Créée le:</span>{" "}
+                  {formatDate(demandeMesse.created_at)}
                 </CardDescription>
               </div>
             </div>
@@ -272,9 +315,7 @@ export default function DemandeMesseDetailsPage() {
                   <Wallet className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-slate-500">
-                    Montant
-                  </p>
+                  <p className="text-sm font-medium text-slate-500">Montant</p>
                   <p className="text-sm font-semibold">
                     {formatCurrency(demandeMesse.montant)}
                   </p>
@@ -304,139 +345,147 @@ export default function DemandeMesseDetailsPage() {
 
             <Separator className="my-4" />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h3 className="text-sm font-medium text-slate-700 mb-3">Informations sur la demande</h3>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center mt-0.5">
-                      <User className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-500">
-                        Demandeur
-                      </p>
-                      <p className="text-sm font-semibold">
-                        {demandeMesse.demandeur}
-                      </p>
-                    </div>
-                  </div>
+            <div>
+              <h3 className="text-sm font-medium text-slate-700 mb-3">
+                Informations sur l'initiateur
+              </h3>
 
-                  <div className="flex items-start gap-3">
-                    <div className="h-9 w-9 rounded-full bg-purple-100 flex items-center justify-center mt-0.5">
-                      <User className="h-5 w-5 text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-500">
-                        Concerne
-                      </p>
-                      <p className="text-sm font-semibold">
-                        {demandeMesse.concerne}
-                      </p>
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center">
+                    <User className="h-5 w-5 text-blue-600" />
                   </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="h-9 w-9 rounded-full bg-teal-100 flex items-center justify-center mt-0.5">
-                      <FileText className="h-5 w-5 text-teal-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-500">
-                        Description
-                      </p>
-                      <p className="text-sm text-slate-800 whitespace-pre-wrap">
-                        {demandeMesse.description}
-                      </p>
-                    </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-500">
+                      Nom complet
+                    </p>
+                    <p className="text-sm font-semibold">
+                      {demandeMesse.initiateur?.prenoms}{" "}
+                      {demandeMesse.initiateur?.nom}{" "}
+                    </p>
                   </div>
                 </div>
-              </div>
 
-              <div>
-                <h3 className="text-sm font-medium text-slate-700 mb-3">Informations sur la messe</h3>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="h-9 w-9 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
-                      <Church className="h-5 w-5 text-red-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-500">
-                        Libellé de la messe
-                      </p>
-                      <p className="text-sm font-semibold">
-                        {demandeMesse.messe?.libelle || "Non spécifié"}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        Type: {demandeMesse.messe?.extras?.type_messe || "Non spécifié"}
-                      </p>
-                    </div>
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-pink-100 flex items-center justify-center">
+                    <Phone className="h-5 w-5 text-pink-600" />
                   </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="h-9 w-9 rounded-full bg-orange-100 flex items-center justify-center mt-0.5">
-                      <Calendar className="h-5 w-5 text-orange-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-500">
-                        Date de la messe
-                      </p>
-                      <p className="text-sm font-semibold">
-                        {formatDate(demandeMesse.messe?.date_de_debut)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="h-9 w-9 rounded-full bg-pink-100 flex items-center justify-center mt-0.5">
-                      <Clock className="h-5 w-5 text-pink-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-500">
-                        Horaire
-                      </p>
-                      <p className="text-sm font-semibold">
-                        {formatTime(demandeMesse.messe?.extras?.heure_de_debut)} - {formatTime(demandeMesse.messe?.extras?.heure_de_fin)}
-                      </p>
-                    </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-500">
+                      Téléphone
+                    </p>
+                    <p className="text-sm font-semibold">
+                      {formatPhoneNumber(
+                        demandeMesse.initiateur?.num_de_telephone
+                      )}{" "}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Informations sur l'initiateur */}
-        <Card className="bg-slate-50 border-slate-100">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-semibold">Informations sur l'initiateur</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center">
-                  <User className="h-5 w-5 text-blue-600" />
+            <Separator className="my-4" />
+
+            <div>
+              <h3 className="text-sm font-medium text-slate-700 mb-3">
+                Informations sur la demande
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center mt-0.5">
+                    <User className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-500">
+                      Demandeur
+                    </p>
+                    <p className="text-sm font-semibold">
+                      {demandeMesse.demandeur}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-500">
-                    Nom complet
-                  </p>
-                  <p className="text-sm font-semibold">
-                    {demandeMesse.initiateur?.prenoms} {demandeMesse.initiateur?.nom}
-                  </p>
+
+                <div className="flex items-start gap-3">
+                  <div className="h-9 w-9 rounded-full bg-purple-100 flex items-center justify-center mt-0.5">
+                    <User className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-500">
+                      Concerne
+                    </p>
+                    <p className="text-sm font-semibold">
+                      {demandeMesse.concerne}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="h-9 w-9 rounded-full bg-teal-100 flex items-center justify-center mt-0.5">
+                    <FileText className="h-5 w-5 text-teal-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-500">
+                      Description
+                    </p>
+                    <p className="text-sm text-slate-800 whitespace-pre-wrap">
+                      {demandeMesse.description}
+                    </p>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-pink-100 flex items-center justify-center">
-                  <Phone className="h-5 w-5 text-pink-600" />
+            <Separator className="my-4" />
+            <div>
+              <h3 className="text-sm font-medium text-slate-700 mb-3">
+                Informations sur la messe
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="h-9 w-9 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
+                    <Church className="h-5 w-5 text-red-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-500">
+                      Libellé de la messe
+                    </p>
+                    <p className="text-sm font-semibold">
+                      {demandeMesse.messe?.libelle || "Non spécifié"}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Type:{" "}
+                      {demandeMesse.messe?.extras?.type_messe || "Non spécifié"}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-500">
-                    Téléphone
-                  </p>
-                  <p className="text-sm font-semibold">
-                    {formatPhoneNumber(demandeMesse.initiateur?.num_de_telephone)}
-                  </p>
+
+                <div className="flex items-start gap-3">
+                  <div className="h-9 w-9 rounded-full bg-orange-100 flex items-center justify-center mt-0.5">
+                    <Calendar className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-500">
+                      Date de la messe
+                    </p>
+                    <p className="text-sm font-semibold">
+                      {formatDate(demandeMesse.messe?.date_de_debut)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="h-9 w-9 rounded-full bg-pink-100 flex items-center justify-center mt-0.5">
+                    <Clock className="h-5 w-5 text-pink-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-500">
+                      Horaire
+                    </p>
+                    <p className="text-sm font-semibold">
+                      {formatTime(demandeMesse.messe?.extras?.heure_de_debut)} -{" "}
+                      {formatTime(demandeMesse.messe?.extras?.heure_de_fin)}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -447,7 +496,7 @@ export default function DemandeMesseDetailsPage() {
   };
 
   return (
-    <div className="container mx-auto py-6 max-w-5xl">
+    <div className="space-y-6">
       {/* Fil d'Ariane */}
       <div className="flex items-center mb-4 text-sm text-slate-500">
         <Button

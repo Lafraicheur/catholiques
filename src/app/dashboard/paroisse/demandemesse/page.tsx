@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
@@ -278,7 +279,7 @@ export default function DemandeMessePage() {
   };
 
   return (
-    <div className="container mx-auto py-6 max-w-7xl">
+    <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 mb-1">
@@ -352,6 +353,7 @@ export default function DemandeMessePage() {
           <Button
             variant={filtrePayee === true ? "default" : "outline"}
             onClick={() => setFiltrePayee(filtrePayee === true ? null : true)}
+            className="cursor-pointer"
           >
             <CheckCircle className="h-4 w-4 mr-2" />
             Payées
@@ -359,6 +361,7 @@ export default function DemandeMessePage() {
           <Button
             variant={filtrePayee === false ? "default" : "outline"}
             onClick={() => setFiltrePayee(filtrePayee === false ? null : false)}
+            className="cursor-pointer"
           >
             <Clock className="h-4 w-4 mr-2" />
             Non payées
@@ -463,25 +466,25 @@ export default function DemandeMessePage() {
                     <tr
                       key={demande.id}
                       className="border-b border-slate-100 hover:bg-slate-100 cursor-pointer"
-                      onClick={() =>
-                        router.push(
-                          `/dashboard/paroisse/demandemesse/${demande.id}`
-                        )
-                      }
+                      // onClick={() =>
+                      //   router.push(
+                      //     `/dashboard/paroisse/demandemesse/${demande.id}`
+                      //   )
+                      // }
                     >
                       <td className="py-3 px-4">
                         <div className="text-sm text-slate-700">
-                          {formatDate(demande.created_at)}
+                          {formatDate(demande?.created_at)}
                         </div>
                       </td>
                       <td className="py-3 px-4">
                         <div className="text-sm text-slate-700 whitespace-nowrap">
-                          {demande.initiateur.prenoms} {demande.initiateur.nom}
+                          {demande?.initiateur?.prenoms} {demande?.initiateur?.nom}
                         </div>
                       </td>
                       <td className="py-3 px-4">
                         <div className="font-medium text-slate-700 whitespace-nowrap">
-                          {demande.demandeur}
+                          {demande?.demandeur}
                         </div>
                         {/* {demande.initiateur && (
                           <div className="text-xs text-slate-500">
@@ -491,19 +494,19 @@ export default function DemandeMessePage() {
                       </td>
                       <td className="py-3 px-4">
                         <div className="text-sm text-slate-700 whitespace-nowrap">
-                          {demande.intention}
+                          {demande?.intention}
                         </div>
                       </td>
                       <td className="py-3 px-4">
                         <div className="text-sm text-slate-700 whitespace-nowrap">
-                          {demande.concerne}
+                          {demande?.concerne}
                         </div>
                       </td>
                       <td className="py-3 px-5">
-                        {demande.est_payee ? (
+                        {demande?.est_payee ? (
                           <Badge
                             variant="success"
-                            className="bg-green-100 text-green-800 hover:bg-green-200 text-xs whitespace-nowrap py-0.5 px-1.5"
+                            className="bg-green-100 text-green-800 hover:bg-green-200 text-xs whitespace-nowrap py-0.5 px-1.5 "
                           >
                             <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
                             Payée
@@ -523,7 +526,7 @@ export default function DemandeMessePage() {
                           {demande.messe?.libelle}
                         </div>
                         <div className="text-xs text-slate-500">
-                          {demande.messe.extras.type_messe}
+                          {demande.messe?.extras.type_messe}
                         </div>
                       </td>
                       <td className="py-3 px-4 text-right">

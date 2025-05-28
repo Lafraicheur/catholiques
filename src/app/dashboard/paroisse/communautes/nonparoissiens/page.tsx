@@ -80,6 +80,9 @@ export default function NonParoissiensPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [genreFilter, setGenreFilter] = useState("TOUS");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
 
   // États pour les dialogues
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -138,6 +141,7 @@ export default function NonParoissiensPage() {
         const data = await response.json();
         setNonParoissiens(data);
         setFilteredNonParoissiens(data);
+        setTotalPages(Math.ceil(data.length / itemsPerPage));
       } catch (err) {
         console.error("Erreur lors du chargement des non-paroissiens:", err);
 
@@ -161,7 +165,7 @@ export default function NonParoissiensPage() {
     };
 
     loadNonParoissiens();
-  }, [router]);
+  }, [router, itemsPerPage]);
 
   // Filtrer les non-paroissiens selon la recherche et le genre
   useEffect(() => {
@@ -184,7 +188,30 @@ export default function NonParoissiensPage() {
     }
 
     setFilteredNonParoissiens(results);
-  }, [searchQuery, genreFilter, nonParoissiens]);
+    setCurrentPage(1);
+
+    setTotalPages(Math.ceil(results.length / itemsPerPage));
+  }, [searchQuery, genreFilter, nonParoissiens, itemsPerPage]);
+
+    // Calculer les mouvements à afficher pour la pagination
+  const getCurrentPageItems = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredNonParoissiens.slice(startIndex, endIndex);
+  };
+
+  // Navigation de pagination
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   // Formatage de la date
   const formatDate = (dateString: string): string => {
@@ -335,7 +362,10 @@ export default function NonParoissiensPage() {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={() => setShowAddDialog(true)} className="cursor-pointer">
+        <Button
+          onClick={() => setShowAddDialog(true)}
+          className="cursor-pointer"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Nouveau
         </Button>
@@ -374,7 +404,6 @@ export default function NonParoissiensPage() {
           </p>
           {searchQuery || genreFilter !== "TOUS" ? (
             <Button
-              variant="outline"
               onClick={() => {
                 setSearchQuery("");
                 setGenreFilter("TOUS");
@@ -412,14 +441,14 @@ export default function NonParoissiensPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredNonParoissiens.map((np, index) => (
+              {getCurrentPageItems().map((np) => (
                 <TableRow
                   key={np.id}
-                  className={`hover:bg-slate-50/80 ${index % 2 === 0 ? "bg-white" : "bg-slate-50/40"} border-slate-200`}
+                  className="hover:bg-slate-50/80 border-slate-200"
                 >
                   <TableCell className="text-slate-500 py-3 px-4">
                     <div className="flex items-center">
-                      <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                      <div className="h-2 w-2 rounded-full"></div>
                       {formatDate(np.created_at)}
                     </div>
                   </TableCell>
@@ -516,9 +545,32 @@ export default function NonParoissiensPage() {
               ))}
             </TableBody>
           </Table>
-          <div className="py-3 px-4 bg-slate-50 border-t border-slate-200 text-sm text-slate-500">
+          {/* <div className="py-3 px-4 bg-slate-50 border-t border-slate-200 text-sm text-slate-500">
             Affichage de {filteredNonParoissiens.length} non-paroissien(s) sur{" "}
             {nonParoissiens.length} au total
+          </div> */}
+          <div className="py-3 px-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+            <p className="text-sm text-slate-500">
+              Page {currentPage} sur {totalPages}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
+              >
+                Précédent
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+              >
+                Suivant
+              </Button>
+            </div>
           </div>
         </div>
       )}

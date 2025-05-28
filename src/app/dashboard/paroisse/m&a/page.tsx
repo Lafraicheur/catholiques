@@ -24,7 +24,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
-  Trash2
+  Trash2,
 } from "lucide-react";
 import {
   Card,
@@ -72,6 +72,14 @@ import {
 import AjouterMouvementForm from "@/components/forms/AjouterMouvementForm";
 import DeleteConfirmationDialog from "@/components/forms/DeleteConfirmationDialog";
 import { TYPES_MOUVEMENT } from "@/lib/constants";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 // Types
 interface Mouvement {
   [x: string]: any;
@@ -279,7 +287,6 @@ export default function MouvementsAssociationsPage() {
   };
 
   return (
-    // <div className="container mx-auto py-6">
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -292,7 +299,6 @@ export default function MouvementsAssociationsPage() {
         </div>
       </div>
 
-      {/* Statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardContent className="pt-6">
@@ -303,25 +309,6 @@ export default function MouvementsAssociationsPage() {
               </div>
               <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                 <Users className="h-5 w-5 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">
-                  Solde total
-                </p>
-                <h3 className="text-2xl font-bold">
-                  {formatCurrency(
-                    mouvements.reduce((sum, m) => sum + m.solde, 0)
-                  )}
-                </h3>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                <Wallet className="h-5 w-5 text-green-600" />
               </div>
             </div>
           </CardContent>
@@ -345,7 +332,6 @@ export default function MouvementsAssociationsPage() {
         </Card>
       </div>
 
-      {/* Filtres et recherche */}
       <div className="mb-6 flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -379,203 +365,171 @@ export default function MouvementsAssociationsPage() {
         </Button>
       </div>
 
-      {/* Liste des mouvements en tableau */}
-      <Card className="bg-slate-50 border-slate-100">
-        <CardContent className="p-6">
-          {loading ? (
-            <div className="space-y-4">
-              {Array(6)
-                .fill(0)
-                .map((_, index) => (
-                  <div key={index} className="border-b pb-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div>
-                        <Skeleton className="h-6 w-48 mb-2" />
-                        <Skeleton className="h-4 w-32" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Skeleton className="h-8 w-20" />
-                        <Skeleton className="h-8 w-10" />
-                      </div>
-                    </div>
+      {loading ? (
+        <div className="space-y-4">
+          {Array(6)
+            .fill(0)
+            .map((_, index) => (
+              <div key={index} className="border-b pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <Skeleton className="h-6 w-48 mb-2" />
+                    <Skeleton className="h-4 w-32" />
                   </div>
-                ))}
-            </div>
-          ) : error ? (
-            <div className="text-center py-12">
-              <XCircle className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-              <h3 className="text-lg font-medium text-slate-900 mb-2">
-                Impossible de charger les données
-              </h3>
-              <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
-                {error}
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => window.location.reload()}
-              >
-                Réessayer
-              </Button>
-            </div>
-          ) : filteredMouvements.length === 0 ? (
-            <div className="text-center py-12">
-              <Users className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-              <h3 className="text-lg font-medium text-slate-900 mb-2">
-                Aucun mouvement trouvé
-              </h3>
-              <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
-                {searchQuery || typeFilter !== "TOUS"
-                  ? "Aucun mouvement ou association ne correspond à vos critères de recherche."
-                  : "Aucun mouvement ou association n'est enregistré pour cette paroisse."}
-              </p>
-              {searchQuery || typeFilter !== "TOUS" ? (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setTypeFilter("TOUS");
-                  }}
-                >
-                  Réinitialiser les filtres
-                </Button>
-              ) : (
-                <Button onClick={openAddModal}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Créer un mouvement
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200">
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Date d'ajout
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Nom
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Type
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Responsable
-                    </th>
-                    <th className="py-3 px-4 text-right text-sm font-medium text-slate-500">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {getCurrentPageItems().map((mouvement) => (
-                    <tr
-                      key={mouvement.id}
-                      className="border-b border-slate-100 hover:bg-slate-100 cursor-pointer"
-                      // onClick={() =>
-                      //   router.push(`/dashboard/paroisse/m&a/${mouvement.id}`)
-                      // }
-                    >
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-slate-700">
-                          {formatDate(mouvement.created_at)}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="font-medium text-slate-900">
-                          {mouvement.nom}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <Badge variant="outline" className="font-normal">
-                          {mouvement.type}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-4">
-                        {mouvement.responsable_id ? (
-                          <div className="flex items-center text-sm">
-                            <User className="h-3.5 w-3.5 mr-1 opacity-70" />
-                            <span>
-                              {mouvement.responsable.nom}{" "}
-                              {mouvement.responsable.prenoms}
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center text-amber-600 text-sm">
-                            <User className="h-3.5 w-3.5 mr-1 opacity-70" />
-                            <span>Non assigné</span>
-                          </div>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <div className="inline-flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8 cursor-pointer"
-                            onClick={() =>
-                              router.push(
-                                `/dashboard/paroisse/m&a/${mouvement.id}`
-                              )
-                            }
-                          >
-                            <Eye className="h-4 w-4 text-slate-500" />
-                          </Button>
-
-                          {/* <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8 cursor-pointer"
-                            onClick={() => openDeleteModal(mouvement)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button> */}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              {/* Pagination */}
-              {filteredMouvements.length > 0 && (
-                <div className="mt-6 flex items-center justify-between">
-                  <div className="text-sm text-slate-500">
-                    Affichage de {(currentPage - 1) * itemsPerPage + 1} à{" "}
-                    {Math.min(
-                      currentPage * itemsPerPage,
-                      filteredMouvements.length
-                    )}{" "}
-                    sur {filteredMouvements.length} mouvements
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={goToPreviousPage}
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4 mr-1" />
-                      Précédent
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={goToNextPage}
-                      disabled={currentPage === totalPages}
-                    >
-                      Suivant
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-8 w-20" />
+                    <Skeleton className="h-8 w-10" />
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            ))}
+        </div>
+      ) : error ? (
+        <div className="text-center py-12">
+          <XCircle className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">
+            Impossible de charger les données
+          </h3>
+          <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
+            {error}
+          </p>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Réessayer
+          </Button>
+        </div>
+      ) : filteredMouvements.length === 0 ? (
+        <div className="text-center py-12">
+          <Users className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">
+            Aucun mouvement trouvé
+          </h3>
+          <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
+            {searchQuery || typeFilter !== "TOUS"
+              ? "Aucun mouvement ou association ne correspond à vos critères de recherche."
+              : "Aucun mouvement ou association n'est enregistré pour cette paroisse."}
+          </p>
+          {searchQuery || typeFilter !== "TOUS" ? (
+            <Button
+              onClick={() => {
+                setSearchQuery("");
+                setTypeFilter("TOUS");
+              }}
+              className="cursor-pointer"
+            >
+              Réinitialiser les filtres
+            </Button>
+          ) : (
+            <Button onClick={openAddModal}>
+              <Plus className="h-4 w-4 mr-2" />
+              Créer un mouvement
+            </Button>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-slate-200 overflow-hidden bg-white shadow-sm">
+          <Table className="w-full">
+            <TableHeader className="bg-slate-50">
+              <TableRow className="hover:bg-slate-100 border-slate-200">
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                  Date d'ajout
+                </TableHead>
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                  Nom Complets
+                </TableHead>
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                  Type
+                </TableHead>
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                  Responsable
+                </TableHead>
+                <TableHead className="font-semibold text-center text-slate-600 py-3 px-4">
+                  Total Membres
+                </TableHead>
+                <TableHead className="font-semibold text-slate-600 py-3 px-4 text-right">
+                  Détails
+                </TableHead>
+              </TableRow>
+            </TableHeader>
 
-      {/* Dialog de confirmation de suppression */}
+            <TableBody>
+              {getCurrentPageItems().map((mouvement) => (
+                <TableRow
+                  key={mouvement.id}
+                  className="hover:bg-slate-50/80 border-slate-200"
+                >
+                  <TableCell className="text-slate-500 py-3 px-4">
+                    <div className="flex items-center">
+                      <div className="h-2 w-2 rounded-full mr-2 " />
+                      {formatDate(mouvement.created_at)}{" "}
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3 px-4 font-medium text-slate-900">
+                    {mouvement.nom}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="font-normal">
+                      {mouvement.type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {mouvement.responsable_id ? (
+                      <div className="flex items-center text-sm">
+                        <User className="h-3.5 w-3.5 mr-1 opacity-70" />
+                        <span>
+                          {mouvement.responsable.nom}{" "}
+                          {mouvement.responsable.prenoms}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-sm">Aucun</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center font-medium">0</TableCell>
+                  <TableCell className="text-right py-2 px-4">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center text-blue-600 hover:bg-blue-50 cursor-pointer"
+                        onClick={() =>
+                          router.push(`/dashboard/paroisse/m&a/${mouvement.id}`)
+                        }
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          <div className="py-3 px-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+            <p className="text-sm text-slate-500">
+              Page {currentPage} sur {totalPages}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
+              >
+                Précédent
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+              >
+                Suivant
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           {selectedMouvement && (
@@ -588,7 +542,6 @@ export default function MouvementsAssociationsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog d'ajout de mouvement */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="sm:max-w-[600px] w-[92vw] max-h-[90vh] overflow-y-auto p-3 sm:p-6">
           <DialogHeader className="pb-2">
@@ -596,7 +549,6 @@ export default function MouvementsAssociationsPage() {
               Nouveau Mouvement ou Association
             </DialogTitle>
           </DialogHeader>
-
           <AjouterMouvementForm
             onClose={() => setShowAddDialog(false)}
             onSuccess={handleCreateSuccess}
@@ -606,3 +558,5 @@ export default function MouvementsAssociationsPage() {
     </div>
   );
 }
+
+// <div className="container mx-auto py-6">

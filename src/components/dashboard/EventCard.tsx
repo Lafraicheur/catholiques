@@ -1,4 +1,4 @@
-import { Calendar } from "lucide-react";
+import { AlarmClock, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 // Types
@@ -177,7 +177,7 @@ export default function EventCard({
             <div className="flex items-center gap-3 text-sm text-slate-500">
               {event?.extras?.heure_de_debut && (
                 <div className="flex text-xs items-center">
-                  <Calendar className="h-3.5 w-3.5 mr-1" />
+                  <AlarmClock className="h-3.5 w-3.5 mr-1" />
                   {formatHeure(event.extras.heure_de_debut)}
                 </div>
               )}

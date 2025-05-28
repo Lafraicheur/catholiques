@@ -178,7 +178,7 @@ export default function ParoisseDashboardPage() {
 
     // Option 1 : Espaces (format français) - ACTUEL
     return (
-      new Intl.NumberFormat("fr-FR", {
+      new Intl.NumberFormat("en-US", {
         useGrouping: true,
         minimumFractionDigits: 0,
         maximumFractionDigits: 2,
@@ -356,7 +356,7 @@ export default function ParoisseDashboardPage() {
             <p className="text-xs font-medium text-slate-600">
               {paroisseData.statut || "Paroisse"}
             </p>
-            <h1 className="text-lg font-bold text-slate-800">
+            <h1 className="text-[16px] font-bold text-slate-800">
               {paroisseData.nom || "Ma Paroisse"}
             </h1>
           </div>
@@ -367,7 +367,7 @@ export default function ParoisseDashboardPage() {
             <User className="h-8 w-8 text-slate-700 mr-1 shrink-0" />
             <div>
               <p className="text-xs text-slate-700 font-medium">Curé</p>
-              <h1 className="text-lg font-bold text-slate-800">
+              <h1 className="text-[16px] font-bold text-slate-800">
                 {paroisseData.cure
                   ? `Père ${paroisseData.cure.nom} ${paroisseData.cure.prenoms}`
                   : "Non assigné"}
@@ -379,7 +379,7 @@ export default function ParoisseDashboardPage() {
             <MapPin className="h-8 w-8 text-slate-700 mr-1 shrink-0" />
             <div>
               <p className="text-xs text-slate-700 font-medium">Localisation</p>
-              <h1 className="text-lg font-bold text-slate-800">
+              <h1 className="text-[16px] font-bold text-slate-800">
                 {paroisseData.quartier || "Non spécifié"},{" "}
                 {paroisseData.ville || "Non spécifié"}
               </h1>

@@ -164,10 +164,6 @@ const ModifierMouvementForm = ({ onClose, mouvementData, onSuccess }) => {
 
       const data = await response.json();
 
-      toast.success("Mouvement modifié avec succès", {
-        description: `"${formData.nom}" a été mis à jour.`,
-      });
-
       // Fermer le formulaire et notifier le parent du succès
       onClose();
       onSuccess(data.item);
@@ -275,7 +271,7 @@ const ModifierMouvementForm = ({ onClose, mouvementData, onSuccess }) => {
         <Button
           type="submit"
           disabled={formLoading}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors w-full sm:w-auto"
+          className=" text-white font-medium transition-colors w-full sm:w-auto"
         >
           {formLoading ? (
             <>

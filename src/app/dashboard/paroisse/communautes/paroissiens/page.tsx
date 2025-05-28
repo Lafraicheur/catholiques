@@ -66,6 +66,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
 
 // Importer le formulaire de modification des paroissiens
 import ModifierParoissienForm from "@/components/forms/ModifierParoissienForm";
@@ -529,127 +537,120 @@ export default function ParoissiensPage() {
         </div>
       </div>
 
-      <Card className="bg-slate-50 border-slate-100">
-        <CardContent className="p-6">
-          {/* Liste des paroissiens */}
-          {filteredParoissiens.length === 0 ? (
-            <div className="text-center py-12">
-              <User className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-              <h3 className="text-lg font-medium text-slate-900 mb-2">
-                Aucun paroissien trouvé
-              </h3>
-              <p className="text-slate-500 max-w-md mx-auto mb-6">
-                {searchQuery
-                  ? "Aucun paroissien ne correspond à votre recherche."
-                  : "Aucun paroissien n'est enregistré pour cette paroisse."}
-              </p>
-              {searchQuery ? (
-                <Button variant="outline" onClick={() => setSearchQuery("")}>
-                  Réinitialiser la recherche
-                </Button>
-              ) : (
-                <Button
-                  onClick={() =>
-                    router.push("/dashboard/paroisse/paroissiens/ajouter")
-                  }
-                ></Button>
-              )}
-            </div>
+      {/* Liste des paroissiens */}
+      {filteredParoissiens.length === 0 ? (
+        <div className="text-center py-12">
+          <User className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">
+            Aucun paroissien trouvé
+          </h3>
+          <p className="text-slate-500 max-w-md mx-auto mb-6">
+            {searchQuery
+              ? "Aucun paroissien ne correspond à votre recherche."
+              : "Aucun paroissien n'est enregistré pour cette paroisse."}
+          </p>
+          {searchQuery ? (
+            <Button variant="outline" onClick={() => setSearchQuery("")}>
+              Réinitialiser la recherche
+            </Button>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200">
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Date d'ajout
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Nom
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Téléphone
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Statut
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Abonnement
-                    </th>
-                    <th className="py-3 px-4 text-right text-sm font-medium text-slate-500">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {getCurrentPageItems().map((paroissien) => (
-                    <tr
-                      key={paroissien.id}
-                      className="border-b border-slate-100 hover:bg-slate-100 cursor-pointer"
-                      onClick={() => navigateToDetails(paroissien.id)}
-                    >
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-slate-700">
-                          {formatDate(paroissien.created_at)}
-                        </div>
-                      </td>
-
-                      <td className="py-3 px-4">
-                        <div className="font-medium text-xs text-slate-900">
-                          {paroissien.nom} {paroissien.prenoms}
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          Né(e) le {formatDate(paroissien.date_de_naissance)}
-                        </div>
-                      </td>
-
-                      <td className="py-3 px-4 text-xs text-slate-700">
-                        {formatPhoneNumber(paroissien.num_de_telephone)}
-                      </td>
-
-                      <td className="py-3 px-4">
-                        {getStatusBadge(paroissien.statut)}
-                      </td>
-
-                      <td className="py-3 px-4">
-                        {paroissien.est_abonne ? (
-                          <Badge variant="success" className="bg-green-800">
-                            {paroissien.abonnement?.intitule || "Abonné"}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-slate-500">
-                            Aucun
-                          </Badge>
-                        )}
-                      </td>
-
-                      <td className="py-3 px-4 text-right">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8 cursor-pointer"
-                          onClick={() => navigateToDetails(paroissien.id)}
-                        >
-                          <Eye className="h-4 w-4 text-slate-500" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Button
+              onClick={() =>
+                router.push("/dashboard/paroisse/paroissiens/ajouter")
+              }
+            ></Button>
           )}
+        </div>
+      ) : (
+        <div className="rounded-lg border border-slate-200 overflow-hidden bg-white shadow-sm">
+          <Table className="w-full">
+            <TableHeader className="bg-slate-50">
+              <TableRow className="hover:bg-slate-100 border-slate-200">
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                  Date d'ajout
+                </TableHead>
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                  Nom
+                </TableHead>
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                  Téléphone
+                </TableHead>
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                  Statut
+                </TableHead>
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                  Abonnement
+                </TableHead>
+                <TableHead className="font-semibold text-slate-600 py-3 px-4 text-right">
+                  Détails
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {getCurrentPageItems().map((paroissien) => (
+                <TableRow
+                  key={paroissien.id}
+                  // onClick={() => navigateToDetails(paroissien.id)}
+                  className="hover:bg-slate-50/80 border-slate-200"
+                >
+                  <TableCell className="text-slate-500 py-3 px-4">
+                    <div className="flex items-center">
+                      <div className="h-2 w-2 rounded-full mr-2 " />
+                      {formatDate(paroissien.created_at)}
+                    </div>
+                  </TableCell>
 
-          {/* Pagination */}
+                  <TableCell className="py-3 px-4 font-medium text-slate-900">
+                    <div className="font-medium text-xs text-slate-900">
+                      {paroissien.nom} {paroissien.prenoms}
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      Né(e) le {formatDate(paroissien.date_de_naissance)}
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="text-xs text-slate-700">
+                    {formatPhoneNumber(paroissien.num_de_telephone)}
+                  </TableCell>
+
+                  <TableCell>{getStatusBadge(paroissien.statut)}</TableCell>
+
+                  <TableCell>
+                    {paroissien.est_abonne ? (
+                      <Badge variant="success" className="bg-green-800">
+                        {paroissien.abonnement?.intitule || "Abonné"}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-slate-500">
+                        Aucun
+                      </Badge>
+                    )}
+                  </TableCell>
+
+                  <TableCell className="text-right py-2 px-4">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center text-blue-600 hover:bg-blue-50 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigateToDetails(paroissien.id);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
           {filteredParoissiens.length > 0 && (
-            <div className="mt-6 flex items-center justify-between">
-              <div className="text-sm text-slate-500">
-                Affichage de {(currentPage - 1) * itemsPerPage + 1} à{" "}
-                {Math.min(
-                  currentPage * itemsPerPage,
-                  filteredParoissiens.length
-                )}{" "}
-                sur {filteredParoissiens.length} paroissiens
-              </div>
+            <div className="py-3 px-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+              <p className="text-sm text-slate-500">
+                Page {currentPage} sur {totalPages}
+              </p>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -672,8 +673,90 @@ export default function ParoissiensPage() {
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+        // <div className="overflow-x-auto">
+        //   <table className="w-full border-collapse">
+        //     <thead>
+        //       <tr className="border-b border-slate-200">
+        //         <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+        //           Date d'ajout
+        //         </th>
+        //         <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+        //           Nom
+        //         </th>
+        //         <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+        //           Téléphone
+        //         </th>
+        //         <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+        //           Statut
+        //         </th>
+        //         <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+        //           Abonnement
+        //         </th>
+        //         <th className="py-3 px-4 text-right text-sm font-medium text-slate-500">
+        //           Actions
+        //         </th>
+        //       </tr>
+        //     </thead>
+        //     <tbody>
+        //       {getCurrentPageItems().map((paroissien) => (
+        //         <tr
+        //           key={paroissien.id}
+        //           className="border-b border-slate-100 hover:bg-slate-100 cursor-pointer"
+        //           onClick={() => navigateToDetails(paroissien.id)}
+        //         >
+        //           <td className="py-3 px-4">
+        //             <div className="text-sm text-slate-700">
+        //               {formatDate(paroissien.created_at)}
+        //             </div>
+        //           </td>
+
+        //           <td className="py-3 px-4">
+        //             <div className="font-medium text-xs text-slate-900">
+        //               {paroissien.nom} {paroissien.prenoms}
+        //             </div>
+        //             <div className="text-xs text-slate-500">
+        //               Né(e) le {formatDate(paroissien.date_de_naissance)}
+        //             </div>
+        //           </td>
+
+        //           <td className="py-3 px-4 text-xs text-slate-700">
+        //             {formatPhoneNumber(paroissien.num_de_telephone)}
+        //           </td>
+
+        //           <td className="py-3 px-4">
+        //             {getStatusBadge(paroissien.statut)}
+        //           </td>
+
+        //           <td className="py-3 px-4">
+        //             {paroissien.est_abonne ? (
+        //               <Badge variant="success" className="bg-green-800">
+        //                 {paroissien.abonnement?.intitule || "Abonné"}
+        //               </Badge>
+        //             ) : (
+        //               <Badge variant="outline" className="text-slate-500">
+        //                 Aucun
+        //               </Badge>
+        //             )}
+        //           </td>
+
+        //           <td className="py-3 px-4 text-right">
+        //             <Button
+        //               variant="outline"
+        //               size="icon"
+        //               className="h-8 w-8 cursor-pointer"
+        //               onClick={() => navigateToDetails(paroissien.id)}
+        //             >
+        //               <Eye className="h-4 w-4 text-slate-500" />
+        //             </Button>
+        //           </td>
+        //         </tr>
+        //       ))}
+        //     </tbody>
+        //   </table>
+        // </div>
+      )}
 
       {/* Dialog de modification de paroissien */}
       <Dialog

@@ -147,10 +147,6 @@ const ModifierCebForm = ({ onClose, cebData, onSuccess }) => {
 
       const data = await response.json();
 
-      toast.success("CEB modifiée avec succès", {
-        description: `"${formData.nom}" a été mise à jour.`,
-      });
-
       // Fermer le formulaire et notifier le parent du succès
       onClose();
       onSuccess(data.item);

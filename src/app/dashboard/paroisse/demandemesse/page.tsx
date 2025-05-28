@@ -50,6 +50,14 @@ import {
   ForbiddenError,
   NotFoundError,
 } from "@/services/api";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 // Types
 interface Initiateur {
@@ -370,223 +378,186 @@ export default function DemandeMessePage() {
       </div>
 
       {/* Liste des demandes */}
-      <Card className="bg-slate-50 border-slate-100">
-        <CardContent className="p-6">
-          {loading ? (
-            <div className="space-y-4">
-              {Array(6)
-                .fill(0)
-                .map((_, index) => (
-                  <div key={index} className="border-b pb-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div>
-                        <Skeleton className="h-6 w-48 mb-2" />
-                        <Skeleton className="h-4 w-32" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Skeleton className="h-8 w-20" />
-                        <Skeleton className="h-8 w-10" />
-                      </div>
-                    </div>
+      {loading ? (
+        <div className="space-y-4">
+          {Array(6)
+            .fill(0)
+            .map((_, index) => (
+              <div key={index} className="border-b pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <Skeleton className="h-6 w-48 mb-2" />
+                    <Skeleton className="h-4 w-32" />
                   </div>
-                ))}
-            </div>
-          ) : error ? (
-            <div className="text-center py-12">
-              <XCircle className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-              <h3 className="text-lg font-medium text-slate-900 mb-2">
-                Impossible de charger les données
-              </h3>
-              <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
-                {error}
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => window.location.reload()}
-              >
-                Réessayer
-              </Button>
-            </div>
-          ) : filteredDemandes.length === 0 ? (
-            <div className="text-center py-12">
-              <Hand className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-              <h3 className="text-lg font-medium text-slate-900 mb-2">
-                Aucune demande de messe trouvée
-              </h3>
-              <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
-                {searchQuery || filtrePayee !== null
-                  ? "Aucune demande ne correspond à vos critères de recherche."
-                  : "Aucune demande n'est enregistrée pour cette paroisse."}
-              </p>
-              {searchQuery || filtrePayee !== null ? (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setFiltrePayee(null);
-                  }}
-                >
-                  Réinitialiser les filtres
-                </Button>
-              ) : null}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200">
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Date de demande
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Initateur
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Demandeur
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Intention
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Concerne
-                    </th>
-                    <th className="py-3 px-5 text-left text-sm font-medium text-slate-500">
-                      Statut
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Messe
-                    </th>
-                    <th className="py-3 px-4 text-right text-sm font-medium text-slate-500">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {getCurrentPageItems().map((demande) => (
-                    <tr
-                      key={demande.id}
-                      className="border-b border-slate-100 hover:bg-slate-100 cursor-pointer"
-                      // onClick={() =>
-                      //   router.push(
-                      //     `/dashboard/paroisse/demandemesse/${demande.id}`
-                      //   )
-                      // }
-                    >
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-slate-700">
-                          {formatDate(demande?.created_at)}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-slate-700 whitespace-nowrap">
-                          {demande?.initiateur?.prenoms} {demande?.initiateur?.nom}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="font-medium text-slate-700 whitespace-nowrap">
-                          {demande?.demandeur}
-                        </div>
-                        {/* {demande.initiateur && (
-                          <div className="text-xs text-slate-500">
-                            Par: {demande.initiateur.prenoms} {demande.initiateur.nom}
-                          </div>
-                        )} */}
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-slate-700 whitespace-nowrap">
-                          {demande?.intention}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-slate-700 whitespace-nowrap">
-                          {demande?.concerne}
-                        </div>
-                      </td>
-                      <td className="py-3 px-5">
-                        {demande?.est_payee ? (
-                          <Badge
-                            variant="success"
-                            className="bg-green-100 text-green-800 hover:bg-green-200 text-xs whitespace-nowrap py-0.5 px-1.5 "
-                          >
-                            <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
-                            Payée
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="bg-amber-100 text-amber-800 hover:bg-amber-200 text-[12px] whitespace-nowrap py-0.5 px-1.5"
-                          >
-                            <Clock className="h-2.5 w-2.5 mr-0.5" />
-                            Non Payée
-                          </Badge>
-                        )}
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="font-medium text-slate-700">
-                          {demande.messe?.libelle}
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          {demande.messe?.extras.type_messe}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <div className="inline-flex">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8 cursor-pointer"
-                            onClick={() =>
-                              router.push(
-                                `/dashboard/paroisse/demandemesse/${demande.id}`
-                              )
-                            }
-                          >
-                            <Eye className="h-4 w-4 text-slate-500" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              {/* Pagination */}
-              {filteredDemandes.length > 0 && (
-                <div className="mt-6 flex items-center justify-between">
-                  <div className="text-sm text-slate-500">
-                    Affichage de {(currentPage - 1) * itemsPerPage + 1} à{" "}
-                    {Math.min(
-                      currentPage * itemsPerPage,
-                      filteredDemandes.length
-                    )}{" "}
-                    sur {filteredDemandes.length} demandes
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={goToPreviousPage}
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4 mr-1" />
-                      Précédent
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={goToNextPage}
-                      disabled={currentPage === totalPages}
-                    >
-                      Suivant
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-8 w-20" />
+                    <Skeleton className="h-8 w-10" />
                   </div>
                 </div>
-              )}
+              </div>
+            ))}
+        </div>
+      ) : error ? (
+        <div className="text-center py-12">
+          <XCircle className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">
+            Impossible de charger les données
+          </h3>
+          <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
+            {error}
+          </p>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Réessayer
+          </Button>
+        </div>
+      ) : filteredDemandes.length === 0 ? (
+        <div className="text-center py-12">
+          <Hand className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">
+            Aucune demande de messe trouvée
+          </h3>
+          <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
+            {searchQuery || filtrePayee !== null
+              ? "Aucune demande ne correspond à vos critères de recherche."
+              : "Aucune demande n'est enregistrée pour cette paroisse."}
+          </p>
+          {searchQuery || filtrePayee !== null ? (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchQuery("");
+                setFiltrePayee(null);
+              }}
+            >
+              Réinitialiser les filtres
+            </Button>
+          ) : null}
+        </div>
+      ) : (
+        <div className="rounded-lg border border-slate-200 overflow-hidden bg-white shadow-sm">
+          <Table className="w-full">
+            <TableHeader className="bg-slate-50">
+              <TableRow className="hover:bg-slate-100 border-slate-200">
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                  Date de demande
+                </TableHead>
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                  Initiateur
+                </TableHead>
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                  Demandeur
+                </TableHead>
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                  Intention
+                </TableHead>
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                  Concerne
+                </TableHead>
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                  Statut
+                </TableHead>
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                  Messe
+                </TableHead>
+                <TableHead className="text-right">Détails</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {getCurrentPageItems().map((demande) => (
+                <TableRow
+                  key={demande.id}
+                  className="hover:bg-slate-100 cursor-pointer"
+                >
+                  <TableCell className="text-slate-500 py-3 px-4">
+                    <div className="flex items-center">
+                      <div className="h-2 w-2 rounded-full mr-2 " />
+                      {formatDate(demande?.created_at)}
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3 px-4 font-medium text-slate-900">
+                    {demande?.initiateur?.prenoms} {demande?.initiateur?.nom}
+                  </TableCell>
+                  <TableCell className="py-3 px-4 font-medium text-slate-900">
+                    {demande?.demandeur}
+                  </TableCell>
+                  <TableCell className="py-3 px-4 font-medium text-slate-900">
+                    {demande?.intention}
+                  </TableCell>
+                  <TableCell className="py-3 px-4 font-medium text-slate-900">
+                    {demande?.concerne}
+                  </TableCell>
+                  <TableCell>
+                    {demande?.est_payee ? (
+                      <Badge
+                        variant="success"
+                        className="bg-green-100 text-green-800 hover:bg-green-200 text-xs py-0.5 px-1.5"
+                      >
+                        <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
+                        Payée
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant="outline"
+                        className="bg-amber-100 text-amber-800 hover:bg-amber-200 text-[12px] py-0.5 px-1.5"
+                      >
+                        <Clock className="h-2.5 w-2.5 mr-0.5" />
+                        Non Payée
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-3 px-4 font-medium text-slate-900">
+                    <div className="font-medium text-slate-700">
+                      {demande.messe?.libelle}
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      {demande.messe?.extras?.type_messe}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right py-2 px-4">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center text-blue-600 hover:bg-blue-50 cursor-pointer"
+                        onClick={() =>
+                          router.push(
+                            `/dashboard/paroisse/demandemesse/${demande.id}`
+                          )
+                        }
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <div className="py-3 px-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+            <p className="text-sm text-slate-500">
+              Page {currentPage} sur {totalPages}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
+              >
+                Précédent
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+              >
+                Suivant
+              </Button>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

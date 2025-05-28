@@ -107,7 +107,7 @@ const SupprimerNonParoissienConfirmation = ({ nonParoissien, onClose, onSuccess 
           variant="outline"
           onClick={onClose}
           disabled={loading}
-          className="sm:mt-0"
+          className="sm:mt-0 cursor-pointer"
         >
           Annuler
         </Button>
@@ -115,6 +115,7 @@ const SupprimerNonParoissienConfirmation = ({ nonParoissien, onClose, onSuccess 
           variant="destructive" 
           onClick={handleDelete}
           disabled={loading}
+          className="cursor-pointer"
         >
           {loading ? (
             <>

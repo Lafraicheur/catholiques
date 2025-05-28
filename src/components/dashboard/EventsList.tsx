@@ -127,7 +127,7 @@ export default function EventsList() {
     switch (type.toUpperCase()) {
       case "MESSE":
         return { label: "Messe", variant: "default" as const };
-      case "ACTIVITE":
+      case "ACTIVITÉ":
         return { label: "Activité", variant: "secondary" as const };
       case "COTISATION":
         return { label: "Cotisation", variant: "outline" as const };

@@ -592,34 +592,34 @@ export default function SacrementsIndividuelsPage() {
       {/* Statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-4 flex flex-col items-center justify-center">
-          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mb-2">
+          {/* <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mb-2">
             <Heart className="h-4 w-4 text-blue-600" />
-          </div>
+          </div> */}
           <p className="text-sm font-medium text-slate-500">Baptêmes</p>
           <p className="text-2xl font-bold">{counts.baptemes}</p>
         </Card>
         <Card className="p-4 flex flex-col items-center justify-center">
-          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mb-2">
+          {/* <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mb-2">
             <Heart className="h-4 w-4 text-green-600" />
-          </div>
+          </div> */}
           <p className="text-sm font-medium text-slate-500">
             Première Communion
           </p>
           <p className="text-2xl font-bold">{counts.firstcommunions}</p>
         </Card>
         <Card className="p-4 flex flex-col items-center justify-center">
-          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mb-2">
+          {/* <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mb-2">
             <Heart className="h-4 w-4 text-indigo-600" />
-          </div>
+          </div> */}
           <p className="text-sm font-medium text-slate-500">
             Profession de Foi
           </p>
           <p className="text-2xl font-bold">{counts.professiondefoi}</p>
         </Card>
         <Card className="p-4 flex flex-col items-center justify-center">
-          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mb-2">
+          {/* <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mb-2">
             <Heart className="h-4 w-4 text-slate-600" />
-          </div>
+          </div> */}
           <p className="text-sm font-medium text-slate-500">
             Sacrement de Malade
           </p>
@@ -718,9 +718,9 @@ export default function SacrementsIndividuelsPage() {
                       <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
                         Description
                       </th>
-                      <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                      {/* <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
                         Statut
-                      </th>
+                      </th> */}
                       <th className="py-3 px-4 text-right text-sm font-medium text-slate-500">
                         Actions
                       </th>
@@ -749,6 +749,7 @@ export default function SacrementsIndividuelsPage() {
                             >
                               {typeIcon} {typeLabel}
                             </Badge>
+                            {sacrement.sous_type}
                           </td>
                           <td className="py-3 px-4">
                             <div className="flex items-center text-sm text-slate-700">
@@ -761,14 +762,14 @@ export default function SacrementsIndividuelsPage() {
                               {sacrement.description}
                             </div>
                           </td>
-                          <td className="py-3 px-4">
+                          {/* <td className="py-3 px-4">
                             <Badge
                               variant={statusVariant}
                               className="text-xs px-2 py-0.5"
                             >
                               {statusLabel}
                             </Badge>
-                          </td>
+                          </td> */}
                           <td className="py-3 px-4 text-right">
                             <div className="flex justify-end gap-2">
                               <Button

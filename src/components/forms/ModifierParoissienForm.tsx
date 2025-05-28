@@ -196,10 +196,6 @@ const ModifierParoissienForm = ({ onClose, paroissienData, onSuccess }) => {
       // Appel API pour mettre à jour le paroissien
       const result = await updateParoissien(formData);
 
-      toast.success("Paroissien modifié avec succès", {
-        description: `Les informations de "${formData.prenoms} ${formData.nom}" ont été mises à jour.`,
-      });
-
       // Fermer le formulaire et notifier le parent du succès
       onClose();
 

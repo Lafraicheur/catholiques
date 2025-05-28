@@ -289,7 +289,7 @@ export default function EvenementsPage() {
           Événements
         </h1>
         <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
-          <Button
+          {/* <Button
             className="w-full xs:w-auto"
             size="sm"
             // onClick={handleOpenCreateModal}
@@ -297,7 +297,7 @@ export default function EvenementsPage() {
           >
             <Plus className="mr-2 h-4 w-4" />
             Créer événement
-          </Button>
+          </Button> */}
         </div>
       </div>
 

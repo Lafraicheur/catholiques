@@ -292,7 +292,7 @@ export default function CebDetailsPage() {
                     Total Evenements
                   </p>
                   <p className="text-sm font-semibold">
-                    {ceb.evenements?.length}
+                    {ceb?.evenements?.length}
                   </p>
                 </div>
               </div>
@@ -330,7 +330,7 @@ export default function CebDetailsPage() {
 
               {/* Contenu de l'onglet Président */}
               <TabsContent value="president" className="pt-4">
-                {ceb.president ? (
+                {ceb?.president ? (
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div className="flex items-center gap-3">
@@ -342,7 +342,7 @@ export default function CebDetailsPage() {
                             Nom complet
                           </p>
                           <p className="text-sm font-semibold">
-                            {ceb.president.nom} {ceb.president.prenoms}
+                            {ceb?.president?.nom} {ceb?.president?.prenoms}
                           </p>
                         </div>
                       </div>
@@ -356,12 +356,14 @@ export default function CebDetailsPage() {
                             Téléphone
                           </p>
                           <p className="text-sm font-semibold">
-                            {formatPhoneNumber(ceb.president.num_de_telephone)}
+                            {formatPhoneNumber(
+                              ceb?.president?.num_de_telephone
+                            )}
                           </p>
                         </div>
                       </div>
 
-                      {ceb.president.email && (
+                      {ceb?.president?.email && (
                         <div className="flex items-center gap-3">
                           <div className="h-9 w-9 rounded-full bg-teal-100 flex items-center justify-center">
                             <Mail className="h-5 w-5 text-teal-600" />
@@ -371,7 +373,7 @@ export default function CebDetailsPage() {
                               Email
                             </p>
                             <p className="text-sm font-semibold">
-                              {ceb.president.email}
+                              {ceb?.president?.email}
                             </p>
                           </div>
                         </div>
@@ -388,10 +390,10 @@ export default function CebDetailsPage() {
                         </p>
                         <p className="text-sm font-semibold">
                           {[
-                            ceb.president.quartier,
-                            ceb.president.commune,
-                            ceb.president.ville,
-                            ceb.president.pays,
+                            ceb?.president?.quartier,
+                            ceb?.president?.commune,
+                            ceb?.president?.ville,
+                            ceb?.president?.pays,
                           ]
                             .filter(Boolean)
                             .join(", ") || "Non renseignée"}
@@ -400,21 +402,37 @@ export default function CebDetailsPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="p-4 bg-amber-50 rounded-md border border-amber-100">
-                    <p className="text-sm text-center text-amber-600">
-                      Aucun président n'est assigné à cette CEB.
+                  // <div className="p-4 bg-amber-50 rounded-md border border-amber-100">
+                  //   <p className="text-sm text-center text-amber-600">
+                  //   </p>
+                  //   <div className="flex justify-center mt-2">
+                  //     <Button
+                  //       size="sm"
+                  //       variant="outline"
+                  //       className="text-amber-600 border-amber-300 hover:bg-amber-100"
+                  //       onClick={() => setShowNominerPresidentDialog(true)}
+                  //     >
+                  //       <UserPlus className="h-3.5 w-3.5 mr-2" />
+                  //       Nommer un président
+                  //     </Button>
+                  //   </div>
+                  // </div>
+                  <div className="p-8 text-center">
+                    <User className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                    <h3 className="text-lg font-medium text-slate-900 mb-2">
+                      Aucun président
+                    </h3>
+                    <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
+                      Cette CEB n'a pas encore de président enregistrés.
                     </p>
-                    <div className="flex justify-center mt-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-amber-600 border-amber-300 hover:bg-amber-100"
-                        onClick={() => setShowNominerPresidentDialog(true)}
-                      >
-                        <UserPlus className="h-3.5 w-3.5 mr-2" />
-                        Nommer un président
-                      </Button>
-                    </div>
+
+                    <Button
+                      onClick={() => setShowNominerPresidentDialog(true)}
+                      className="cursor-pointer"
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Nommer un président
+                    </Button>
                   </div>
                 )}
               </TabsContent>

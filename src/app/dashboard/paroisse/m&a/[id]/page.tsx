@@ -404,7 +404,7 @@ export default function MouvementDetailsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                className="text-blue-600 border-blue-200 hover:bg-blue-50 cursor-pointer"
                 onClick={() => setShowEditDialog(true)}
               >
                 <Pencil className="h-3.5 w-3.5 mr-2" />
@@ -569,22 +569,39 @@ export default function MouvementDetailsPage() {
                           </Button>
                         </div>
                       ) : (
-                        <div className="p-4 bg-amber-50 rounded-md border border-amber-100">
-                          <p className="text-sm text-center text-amber-600">
-                            Aucun aumônier n'est assigné à ce mouvement.
+
+                         <div className="p-8 text-center">
+                          <User className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                          <h3 className="text-lg font-medium text-slate-900 mb-2">
+                            Aucun responsable
+                          </h3>
+                          <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
+                            Aucun aumônier assigné à ce mouvement.
                           </p>
-                          <div className="flex justify-center mt-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-amber-600 border-amber-300 hover:bg-amber-100"
-                              onClick={() => setAumonierModalOpen(true)}
-                            >
-                              <UserPlus className="h-3.5 w-3.5 mr-2" />
-                              Assigner un aumônier
-                            </Button>
-                          </div>
+                          <Button
+                            onClick={() => setAumonierModalOpen(true)}
+                            className="cursor-pointer"
+                          >
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Ajouter un responsable
+                          </Button>
                         </div>
+                        // <div className="p-4 bg-amber-50 rounded-md border border-amber-100">
+                        //   <p className="text-sm text-center text-amber-600">
+                        //     Aucun aumônier n'est assigné à ce mouvement.
+                        //   </p>
+                        //   <div className="flex justify-center mt-2">
+                        //     <Button
+                        //       size="sm"
+                        //       variant="outline"
+                        //       className="text-amber-600 border-amber-300 hover:bg-amber-100"
+                        //       onClick={() => setAumonierModalOpen(true)}
+                        //     >
+                        //       <UserPlus className="h-3.5 w-3.5 mr-2" />
+                        //       Assigner un aumônier
+                        //     </Button>
+                        //   </div>
+                        // </div>
                       )}
                     </CardContent>
                   </Card>
@@ -660,22 +677,38 @@ export default function MouvementDetailsPage() {
                           </Button>
                         </div>
                       ) : (
-                        <div className="p-4 bg-amber-50 rounded-md border border-amber-100">
-                          <p className="text-sm text-center text-amber-600">
-                            Aucun responsable n'est assigné à ce mouvement.
+                        <div className="p-8 text-center">
+                          <User className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                          <h3 className="text-lg font-medium text-slate-900 mb-2">
+                            Aucun responsable
+                          </h3>
+                          <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
+                            Aucun responsable assigné à ce mouvement.
                           </p>
-                          <div className="flex justify-center mt-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-amber-600 border-amber-300 hover:bg-amber-100"
-                              onClick={() => setResponsableModalOpen(true)}
-                            >
-                              <UserPlus className="h-3.5 w-3.5 mr-2" />
-                              Assigner un responsable
-                            </Button>
-                          </div>
+                          <Button
+                            onClick={() => setResponsableModalOpen(true)}
+                            className="cursor-pointer"
+                          >
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Ajouter un responsable
+                          </Button>
                         </div>
+                        // <div className="p-4 bg-amber-50 rounded-md border border-amber-100">
+                        //   <p className="text-sm text-center text-amber-600">
+                        //     Aucun responsable n'est assigné à ce mouvement.
+                        //   </p>
+                        //   <div className="flex justify-center mt-2">
+                        //     <Button
+                        //       size="sm"
+                        //       variant="outline"
+                        //       className="text-amber-600 border-amber-300 hover:bg-amber-100"
+                        //       onClick={() => setResponsableModalOpen(true)}
+                        //     >
+                        //       <UserPlus className="h-3.5 w-3.5 mr-2" />
+                        //       Assigner un responsable
+                        //     </Button>
+                        //   </div>
+                        // </div>
                       )}
                     </CardContent>
                   </Card>
@@ -749,22 +782,38 @@ export default function MouvementDetailsPage() {
                           </Button>
                         </div>
                       ) : (
-                        <div className="p-4 bg-amber-50 rounded-md border border-amber-100">
-                          <p className="text-sm text-center text-amber-600">
-                            Aucun parrain n'est assigné à ce mouvement.
+                        <div className="p-8 text-center">
+                          <User className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                          <h3 className="text-lg font-medium text-slate-900 mb-2">
+                            Aucun parrain
+                          </h3>
+                          <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
+                            Aucun parrain assigné à ce mouvement.
                           </p>
-                          <div className="flex justify-center mt-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-amber-600 border-amber-300 hover:bg-amber-100"
-                              onClick={() => setParrainModalOpen(true)}
-                            >
-                              <UserPlus className="h-3.5 w-3.5 mr-2" />
-                              Assigner un parrain
-                            </Button>
-                          </div>
+                          <Button
+                            onClick={() => setParrainModalOpen(true)}
+                            className="cursor-pointer"
+                          >
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Ajouter un parrain
+                          </Button>
                         </div>
+                        // <div className="p-4 bg-amber-50 rounded-md border border-amber-100">
+                        //   <p className="text-sm text-center text-amber-600">
+                        //     Aucun parrain n'est assigné à ce mouvement.
+                        //   </p>
+                        //   <div className="flex justify-center mt-2">
+                        //     <Button
+                        //       size="sm"
+                        //       variant="outline"
+                        //       className="text-amber-600 border-amber-300 hover:bg-amber-100"
+                        //       onClick={() => setParrainModalOpen(true)}
+                        //     >
+                        //       <UserPlus className="h-3.5 w-3.5 mr-2" />
+                        //       Assigner un parrain
+                        //     </Button>
+                        //   </div>
+                        // </div>
                       )}
                     </CardContent>
                   </Card>

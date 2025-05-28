@@ -470,7 +470,7 @@ export default function ParoissienDetailPage() {
                     paroissien.date_de_fin_abonnement !== 0
                       ? formatDate(
                           new Date(
-                            paroissien.date_de_fin_abonnement * 1000
+                            paroissien.date_de_fin_abonnement
                           ).toISOString()
                         )
                       : "Non applicable"}

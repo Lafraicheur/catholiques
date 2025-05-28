@@ -28,7 +28,7 @@ import {
 const ModifierNonParoissienForm = ({ nonParoissien, onClose, onSuccess }) => {
   const router = useRouter();
   const [formLoading, setFormLoading] = useState(false);
-  
+
   // État pour le formulaire
   const [formData, setFormData] = useState({
     nonparoissien_id: 0,
@@ -37,9 +37,9 @@ const ModifierNonParoissienForm = ({ nonParoissien, onClose, onSuccess }) => {
     genre: "M",
     num_de_telephone: "",
   });
-  
+
   const [formErrors, setFormErrors] = useState({});
-  
+
   // Initialiser le formulaire avec les données existantes
   useEffect(() => {
     if (nonParoissien) {
@@ -120,7 +120,8 @@ const ModifierNonParoissienForm = ({ nonParoissien, onClose, onSuccess }) => {
 
     // Validation du numéro de téléphone (10 chiffres si fourni)
     if (formData.num_de_telephone && formData.num_de_telephone.length !== 10) {
-      newErrors.num_de_telephone = "Le numéro de téléphone doit comporter 10 chiffres";
+      newErrors.num_de_telephone =
+        "Le numéro de téléphone doit comporter 10 chiffres";
     }
 
     setFormErrors(newErrors);
@@ -174,10 +175,14 @@ const ModifierNonParoissienForm = ({ nonParoissien, onClose, onSuccess }) => {
           throw new NotFoundError("Ressource non trouvée");
         } else if (response.status === 400) {
           // Erreur de validation
-          const errorMessage = errorData.message || "Le formulaire contient des erreurs.";
+          const errorMessage =
+            errorData.message || "Le formulaire contient des erreurs.";
           throw new ApiError(errorMessage, 400);
         } else if (response.status === 429) {
-          throw new ApiError("Trop de requêtes, veuillez réessayer plus tard", 429);
+          throw new ApiError(
+            "Trop de requêtes, veuillez réessayer plus tard",
+            429
+          );
         } else {
           throw new ApiError(
             errorData.message || "Erreur lors de la modification",
@@ -205,7 +210,8 @@ const ModifierNonParoissienForm = ({ nonParoissien, onClose, onSuccess }) => {
         router.push("/login");
       } else {
         toast.error("Échec de la modification", {
-          description: err instanceof ApiError ? err.message : "Une erreur est survenue.",
+          description:
+            err instanceof ApiError ? err.message : "Une erreur est survenue.",
         });
       }
     } finally {
@@ -216,101 +222,119 @@ const ModifierNonParoissienForm = ({ nonParoissien, onClose, onSuccess }) => {
   return (
     <form onSubmit={handleSubmit}>
       <div className="space-y-4 py-2">
-        {/* Nom */}
-        <div className="space-y-1">
-          <label htmlFor="nom" className="text-sm font-medium text-slate-700">
-            Nom <span className="text-red-500">*</span>
-          </label>
-          <Input
-            id="nom"
-            name="nom"
-            value={formData.nom}
-            onChange={handleChange}
-            placeholder="Nom"
-            required
-            className={formErrors.nom ? "border-red-500" : ""}
-          />
-          {formErrors.nom && <p className="text-xs text-red-500">{formErrors.nom}</p>}
-        </div>
-
-        {/* Prénom */}
-        <div className="space-y-1">
-          <label htmlFor="prenom" className="text-sm font-medium text-slate-700">
-            Prénom <span className="text-red-500">*</span>
-          </label>
-          <Input
-            id="prenom"
-            name="prenom"
-            value={formData.prenom}
-            onChange={handleChange}
-            placeholder="Prénom"
-            required
-            className={formErrors.prenom ? "border-red-500" : ""}
-          />
-          {formErrors.prenom && <p className="text-xs text-red-500">{formErrors.prenom}</p>}
-        </div>
-
-        {/* Genre */}
-        <div className="space-y-1">
-          <label htmlFor="genre" className="text-sm font-medium text-slate-700">
-            Genre <span className="text-red-500">*</span>
-          </label>
-          <Select
-            value={formData.genre}
-            onValueChange={(value) => handleSelectChange("genre", value)}
-            required
-          >
-            <SelectTrigger id="genre">
-              <SelectValue placeholder="Sélectionner un genre" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="M">
-                <div className="flex items-center">
-                  <Mars className="h-4 w-4 mr-2 text-blue-600" />
-                  Homme
-                </div>
-              </SelectItem>
-              <SelectItem value="F">
-                <div className="flex items-center">
-                  <Venus className="h-4 w-4 mr-2 text-pink-600" />
-                  Femme
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Téléphone */}
-        <div className="space-y-1">
-          <label htmlFor="num_de_telephone" className="text-sm font-medium text-slate-700">
-            Numéro de téléphone
-          </label>
-          <div className="relative">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 text-xs sm:text-sm">
-              +225
-            </span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Nom */}
+          <div className="space-y-1">
+            <label htmlFor="nom" className="text-sm font-medium text-slate-700">
+              Nom <span className="text-red-500">*</span>
+            </label>
             <Input
-              id="num_de_telephone"
-              name="num_de_telephone"
-              value={formData.num_de_telephone}
+              id="nom"
+              name="nom"
+              value={formData.nom}
               onChange={handleChange}
-              placeholder="Ex: 0101020304"
-              type="tel"
-              className={`${formErrors.num_de_telephone ? "border-red-500" : ""} pl-12 text-sm`}
-              maxLength={10}
-              inputMode="numeric"
+              placeholder="Nom"
+              required
+              className={formErrors.nom ? "border-red-500" : ""}
             />
+            {formErrors.nom && (
+              <p className="text-xs text-red-500">{formErrors.nom}</p>
+            )}
           </div>
-          {formErrors.num_de_telephone && (
-            <p className="text-xs text-red-500">{formErrors.num_de_telephone}</p>
-          )}
-          {formData.num_de_telephone &&
-            formData.num_de_telephone.length > 0 &&
-            !formErrors.num_de_telephone && (
-              <p className="text-xs text-slate-600 font-medium pl-2">
-                {formatPhoneDisplay(formData.num_de_telephone)}
+
+          {/* Prénom */}
+          <div className="space-y-1">
+            <label
+              htmlFor="prenom"
+              className="text-sm font-medium text-slate-700"
+            >
+              Prénom <span className="text-red-500">*</span>
+            </label>
+            <Input
+              id="prenom"
+              name="prenom"
+              value={formData.prenom}
+              onChange={handleChange}
+              placeholder="Prénom"
+              required
+              className={formErrors.prenom ? "border-red-500" : ""}
+            />
+            {formErrors.prenom && (
+              <p className="text-xs text-red-500">{formErrors.prenom}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Genre */}
+          <div className="space-y-1">
+            <label
+              htmlFor="genre"
+              className="text-sm font-medium text-slate-700"
+            >
+              Genre <span className="text-red-500">*</span>
+            </label>
+            
+            <Select
+              value={formData.genre}
+              onValueChange={(value) => handleSelectChange("genre", value)}
+              required
+            >
+              <SelectTrigger id="genre">
+                <SelectValue placeholder="Sélectionner un genre" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="M">
+                  <div className="flex items-center">
+                    <Mars className="h-4 w-4 mr-2 text-blue-600" />
+                    Homme
+                  </div>
+                </SelectItem>
+                <SelectItem value="F">
+                  <div className="flex items-center">
+                    <Venus className="h-4 w-4 mr-2 text-pink-600" />
+                    Femme
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Téléphone */}
+          <div className="space-y-1">
+            <label
+              htmlFor="num_de_telephone"
+              className="text-sm font-medium text-slate-700"
+            >
+              Numéro de téléphone
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 text-xs sm:text-sm">
+                +225
+              </span>
+              <Input
+                id="num_de_telephone"
+                name="num_de_telephone"
+                value={formData.num_de_telephone}
+                onChange={handleChange}
+                placeholder="Ex: 0101020304"
+                type="tel"
+                className={`${formErrors.num_de_telephone ? "border-red-500" : ""} pl-12 text-sm`}
+                maxLength={10}
+                inputMode="numeric"
+              />
+            </div>
+            {formErrors.num_de_telephone && (
+              <p className="text-xs text-red-500">
+                {formErrors.num_de_telephone}
               </p>
             )}
+            {formData.num_de_telephone &&
+              formData.num_de_telephone.length > 0 &&
+              !formErrors.num_de_telephone && (
+                <p className="text-xs text-slate-600 font-medium pl-2"></p>
+              )}
+          </div>
         </div>
       </div>
 
@@ -328,7 +352,7 @@ const ModifierNonParoissienForm = ({ nonParoissien, onClose, onSuccess }) => {
         <Button
           type="submit"
           disabled={formLoading}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors w-full sm:w-auto"
+          className="text-white font-medium transition-colors w-full sm:w-auto cursor-pointer"
         >
           {formLoading ? (
             <>

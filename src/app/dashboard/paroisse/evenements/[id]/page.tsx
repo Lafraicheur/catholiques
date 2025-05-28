@@ -53,6 +53,7 @@ import {
 } from "@/services/api";
 import { fetchEvenementDetails } from "@/services/evenement-services";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import EvenementEditModal from "@/components/forms/EvenementEditModal";
 
 // Importer les composants de formulaire
 
@@ -143,7 +144,7 @@ export default function EvenementDetailsPage() {
     if (!timestamp) return "Non renseignée";
 
     try {
-      const date = new Date(timestamp * 1000); // Convertir timestamp en millisecondes
+      const date = new Date(); // Convertir timestamp en millisecondes
       return new Intl.DateTimeFormat("fr-FR", {
         day: "2-digit",
         month: "2-digit",
@@ -567,6 +568,14 @@ export default function EvenementDetailsPage() {
 
       {/* Contenu principal */}
       {renderContent()}
+
+      {/* Modal de modification */}
+      <EvenementEditModal
+        isOpen={showEditDialog}
+        onClose={() => setShowEditDialog(false)}
+        evenement={evenement}
+        onSuccess={handleUpdateSuccess}
+      />
     </div>
   );
 }

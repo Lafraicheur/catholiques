@@ -60,6 +60,14 @@ import { fetchCebs } from "@/services/ceb-services";
 import AjouterCebForm from "@/components/forms/AjouterCebForm";
 import ModifierCebForm from "@/components/forms/ModifierCebForm";
 import DeleteCebConfirmation from "@/components/forms/DeleteCebConfirmation";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 // Types
 interface Ceb {
@@ -188,15 +196,6 @@ export default function CebsPage() {
     }
   };
 
-  // Formater la monnaie en FCFA
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "XOF",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
   // Formater les dates: 2023-05-15 -> 15/05/2023
   const formatDate = (dateString: string | null | undefined): string => {
     if (!dateString) return "Non renseignée";
@@ -255,6 +254,7 @@ export default function CebsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 mb-1">
@@ -281,25 +281,9 @@ export default function CebsPage() {
             </div>
           </CardContent>
         </Card>
+
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">
-                  Solde total
-                </p>
-                <h3 className="text-2xl font-bold">
-                  {formatCurrency(cebs.reduce((sum, c) => sum + c.solde, 0))}
-                </h3>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                <Wallet className="h-5 w-5 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6 ">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-500">
@@ -317,7 +301,7 @@ export default function CebsPage() {
         </Card>
       </div>
 
-      {/* Recherche et bouton d'ajout */}
+      {/* Barre de recherche + bouton */}
       <div className="mb-6 flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -334,187 +318,161 @@ export default function CebsPage() {
         </Button>
       </div>
 
-      {/* Liste des CEB */}
-      <Card className="bg-slate-50 border-slate-100">
-        <CardContent className="p-6">
-          {loading ? (
-            <div className="space-y-4">
-              {Array(6)
-                .fill(0)
-                .map((_, index) => (
-                  <div key={index} className="border-b pb-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div>
-                        <Skeleton className="h-6 w-48 mb-2" />
-                        <Skeleton className="h-4 w-32" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Skeleton className="h-8 w-20" />
-                        <Skeleton className="h-8 w-10" />
-                      </div>
-                    </div>
+      {/* Affichage conditionnel */}
+      {loading ? (
+        <div className="space-y-4">
+          {Array(6)
+            .fill(0)
+            .map((_, index) => (
+              <div key={index} className="border-b pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <Skeleton className="h-6 w-48 mb-2" />
+                    <Skeleton className="h-4 w-32" />
                   </div>
-                ))}
-            </div>
-          ) : error ? (
-            <div className="text-center py-12">
-              <XCircle className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-              <h3 className="text-lg font-medium text-slate-900 mb-2">
-                Impossible de charger les données
-              </h3>
-              <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
-                {error}
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => window.location.reload()}
-              >
-                Réessayer
-              </Button>
-            </div>
-          ) : filteredCebs.length === 0 ? (
-            <div className="text-center py-12">
-              <Church className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-              <h3 className="text-lg font-medium text-slate-900 mb-2">
-                Aucune CEB trouvée
-              </h3>
-              <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
-                {searchQuery
-                  ? "Aucune CEB ne correspond à vos critères de recherche."
-                  : "Aucune CEB n'est enregistrée pour cette paroisse."}
-              </p>
-              {searchQuery ? (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearchQuery("");
-                  }}
-                >
-                  Réinitialiser la recherche
-                </Button>
-              ) : (
-                <Button onClick={openAddModal}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Créer une CEB
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200">
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Date d'ajout
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Nom
-                    </th>
-                    {/* <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Solde
-                    </th> */}
-                    <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                      Président
-                    </th>
-                    <th className="py-3 px-4 text-right text-sm font-medium text-slate-500">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {getCurrentPageItems().map((ceb) => (
-                    <tr
-                      key={ceb.id}
-                      className="border-b border-slate-100 hover:bg-slate-100 cursor-pointer"
-                      // onClick={() =>
-                      //   router.push(`/dashboard/paroisse/ceb/${ceb.id}`)
-                      // }
-                    >
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-slate-700">
-                          {formatDate(ceb.created_at)}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="font-medium text-slate-900">
-                          {ceb.nom}
-                        </div>
-                      </td>
-                      {/* <td className="py-3 px-4">
-                        <div className="font-medium text-sm">
-                          {formatCurrency(ceb.solde)}
-                        </div>
-                      </td> */}
-                      <td className="py-3 px-4">
-                        {ceb.president ? (
-                          <div className="flex items-center text-sm">
-                            <User className="h-3.5 w-3.5 mr-1 opacity-70" />
-                            <span>
-                              {ceb.president.nom} {ceb.president.prenoms}
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center text-amber-600 text-sm">
-                            <User className="h-3.5 w-3.5 mr-1 opacity-70" />
-                            <span>Sans président</span>
-                          </div>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <div className="inline-flex cursor-pointer">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8 cursor-pointer"
-                            onClick={() =>
-                              router.push(`/dashboard/paroisse/ceb/${ceb.id}`)
-                            }
-                          >
-                            <Eye className="h-4 w-4 text-slate-500" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              {/* Pagination */}
-              {filteredCebs.length > 0 && (
-                <div className="mt-6 flex items-center justify-between">
-                  <div className="text-sm text-slate-500">
-                    Affichage de {(currentPage - 1) * itemsPerPage + 1} à{" "}
-                    {Math.min(currentPage * itemsPerPage, filteredCebs.length)}{" "}
-                    sur {filteredCebs.length} CEB
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={goToPreviousPage}
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4 mr-1" />
-                      Précédent
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={goToNextPage}
-                      disabled={currentPage === totalPages}
-                    >
-                      Suivant
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-8 w-20" />
+                    <Skeleton className="h-8 w-10" />
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            ))}
+        </div>
+      ) : error ? (
+        <div className="text-center py-12">
+          <XCircle className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">
+            Impossible de charger les données
+          </h3>
+          <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
+            {error}
+          </p>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Réessayer
+          </Button>
+        </div>
+      ) : filteredCebs.length === 0 ? (
+        <div className="text-center py-12">
+          <Church className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">
+            Aucune CEB trouvée
+          </h3>
+          <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
+            {searchQuery
+              ? "Aucune CEB ne correspond à vos critères de recherche."
+              : "Aucune CEB n'est enregistrée pour cette paroisse."}
+          </p>
+          {searchQuery ? (
+            <Button variant="outline" onClick={() => setSearchQuery("")}>
+              Réinitialiser la recherche
+            </Button>
+          ) : (
+            <Button onClick={openAddModal}>
+              <Plus className="h-4 w-4 mr-2" />
+              Créer une CEB
+            </Button>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-slate-200 overflow-hidden bg-white shadow-sm">
+          <Table className="w-full">
+            <TableHeader className="bg-slate-50">
+              <TableRow className="hover:bg-slate-100 border-slate-200">
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                  Date d'ajout
+                </TableHead>
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                  Nom Complets
+                </TableHead>
+                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                  Président
+                </TableHead>
+                <TableHead className="font-semibold text-center text-slate-600 py-3 px-4">
+                  Total Membres
+                </TableHead>
+                <TableHead className="font-semibold text-slate-600 py-3 px-4 text-right">
+                  Détails
+                </TableHead>
+              </TableRow>
+            </TableHeader>
 
-      {/* Dialog d'ajout de CEB */}
+            <TableBody>
+              {getCurrentPageItems().map((ceb) => (
+                <TableRow
+                  key={ceb.id}
+                  className="hover:bg-slate-50/80 border-slate-200"
+                >
+                  <TableCell className="text-slate-500 py-3 px-4">
+                    <div className="flex items-center">
+                      <div className="h-2 w-2 rounded-full mr-2 " />
+                      {formatDate(ceb.created_at)}
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3 px-4 font-medium text-slate-900">
+                    {ceb.nom}
+                  </TableCell>
+                  <TableCell className="py-3 px-4">
+                    {ceb.president ? (
+                      <div className="flex items-center text-sm">
+                        <User className="h-3.5 w-3.5 mr-1 opacity-70" />
+                        <span>
+                          {ceb.president.nom} {ceb.president.prenoms}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center text-sm">
+                        <span>Aucun</span>
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-3 px-4">
+                    <div className="font-medium text-center">0</div>
+                  </TableCell>
+                  <TableCell className="text-right py-2 px-4">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center text-blue-600 hover:bg-blue-50 cursor-pointer"
+                        onClick={() =>
+                          router.push(`/dashboard/paroisse/ceb/${ceb.id}`)
+                        }
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <div className="py-3 px-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+            <p className="text-sm text-slate-500">
+              Page {currentPage} sur {totalPages}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
+              >
+                Précédent
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+              >
+                Suivant
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dialog d'ajout */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="sm:max-w-[600px] w-[92vw] max-h-[90vh] overflow-y-auto p-3 sm:p-6">
           <DialogHeader className="pb-2">
@@ -522,7 +480,6 @@ export default function CebsPage() {
               Nouvelle Communauté Ecclésiale de Base
             </DialogTitle>
           </DialogHeader>
-
           <AjouterCebForm
             onClose={() => setShowAddDialog(false)}
             onSuccess={handleCreateSuccess}
@@ -530,14 +487,12 @@ export default function CebsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog de modification de CEB */}
+      {/* Dialog de modification */}
       <Dialog
         open={showEditDialog}
         onOpenChange={(open) => {
           setShowEditDialog(open);
-          if (!open) {
-            setSelectedCeb(null);
-          }
+          if (!open) setSelectedCeb(null);
         }}
       >
         <DialogContent className="sm:max-w-[600px] w-[92vw] max-h-[90vh] overflow-y-auto p-3 sm:p-6">
@@ -546,7 +501,6 @@ export default function CebsPage() {
               Modifier la CEB
             </DialogTitle>
           </DialogHeader>
-
           {selectedCeb && (
             <ModifierCebForm
               onClose={() => setShowEditDialog(false)}

@@ -272,7 +272,7 @@ const AjouterMouvementForm = ({
             name="nom"
             value={formData.nom}
             onChange={handleChange}
-            placeholder="Nom (min. 10 caractères)"
+            placeholder="Nom"
             required
             className={`${formErrors.nom ? "border-red-500" : "border-green-200"} focus:border-green-500 focus:ring-green-500`}
           />

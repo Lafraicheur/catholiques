@@ -38,7 +38,22 @@ const getUserParoisseId = () => {
   return 0;
 };
 
-const ConvertirEnParoissienForm = ({ nonParoissien, onClose, onSuccess }) => {
+interface ConvertirEnParoissienFormProps {
+  nonParoissien: {
+    id: number;
+    prenom: string;
+    nom: string;
+    // Ajoutez d'autres propriétés si nécessaire
+  };
+  onClose: () => void;
+  onSuccess: (id: number) => void;
+}
+
+const ConvertirEnParoissienForm = ({
+  nonParoissien,
+  onClose,
+  onSuccess,
+}: ConvertirEnParoissienFormProps) => {
   const router = useRouter();
   const [formLoading, setFormLoading] = useState(false);
   
@@ -60,7 +75,7 @@ const ConvertirEnParoissienForm = ({ nonParoissien, onClose, onSuccess }) => {
   }, [nonParoissien]);
 
   // Soumission du formulaire
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
     
     if (!formData.nonparoissien_id || !formData.paroisse_id) {

@@ -1,4 +1,6 @@
+/* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // ModifierParoissienForm.jsx
 "use client";
 
@@ -36,7 +38,37 @@ import {
 } from "@/services/api";
 import { updateParoissien } from "@/services/parishioner-service";
 
-const ModifierParoissienForm = ({ onClose, paroissienData, onSuccess }) => {
+type ParoissienData = {
+  id: number;
+  nom: string;
+  prenoms: string;
+  genre: string;
+  num_de_telephone: string;
+  email: string;
+  date_de_naissance: string;
+  pays: string;
+  nationalite: string;
+  ville: string;
+  commune: string;
+  quartier: string;
+  est_abonne: boolean;
+  date_de_fin_abonnement: number;
+  statut: string;
+  abonnement_id: number;
+  [key: string]: any;
+};
+
+interface ModifierParoissienFormProps {
+  onClose: () => void;
+  paroissienData: ParoissienData;
+  onSuccess: (updatedParoissien: ParoissienData) => void;
+}
+
+const ModifierParoissienForm = ({
+  onClose,
+  paroissienData,
+  onSuccess,
+}: ModifierParoissienFormProps) => {
   const router = useRouter();
 
   // État pour le formulaire
@@ -59,7 +91,7 @@ const ModifierParoissienForm = ({ onClose, paroissienData, onSuccess }) => {
     abonnement_id: 0,
   });
 
-  const [formErrors, setFormErrors] = useState({});
+  const [formErrors, setFormErrors] = useState<Record<string, string | null>>({});
   const [formLoading, setFormLoading] = useState(false);
 
   // Initialiser le formulaire avec les données existantes
@@ -95,7 +127,7 @@ const ModifierParoissienForm = ({ onClose, paroissienData, onSuccess }) => {
   }, [paroissienData]);
 
   // Gestion des changements dans le formulaire
-  const handleChange = (e) => {
+  const handleChange = (e: { target: { name: any; value: any; type: any; checked: any; }; }) => {
     const { name, value, type, checked } = e.target;
 
     // Pour les cases à cocher, utilisez la propriété checked
@@ -124,7 +156,7 @@ const ModifierParoissienForm = ({ onClose, paroissienData, onSuccess }) => {
     }
   };
 
-  const handleSelectChange = (name, value) => {
+  const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -140,7 +172,7 @@ const ModifierParoissienForm = ({ onClose, paroissienData, onSuccess }) => {
   };
 
   // Formater le numéro pour l'affichage (XX XX XX XX XX)
-  const formatPhoneDisplay = (phone) => {
+  const formatPhoneDisplay = (phone: string | any[]) => {
     if (!phone) return "";
     const groups = [];
     for (let i = 0; i < phone.length; i += 2) {
@@ -151,7 +183,7 @@ const ModifierParoissienForm = ({ onClose, paroissienData, onSuccess }) => {
 
   // Validation du formulaire
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors: Record<string, string | null> = {};
 
     // Validation du nom (requis)
     if (!formData.nom.trim()) {
@@ -179,7 +211,7 @@ const ModifierParoissienForm = ({ onClose, paroissienData, onSuccess }) => {
   };
 
   // Soumission du formulaire
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
 
     // Valider le formulaire avant soumission

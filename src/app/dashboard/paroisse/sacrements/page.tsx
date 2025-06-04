@@ -301,8 +301,9 @@ export default function SacrementsPage() {
       } catch (err) {
         console.error("Erreur lors du chargement des sacrements:", err);
         setError(
-          err.message ||
-            "Une erreur est survenue lors du chargement des données."
+          err instanceof Error
+            ? err.message
+            : "Une erreur est survenue lors du chargement des données."
         );
         toast.error("Erreur", {
           description: "Impossible de charger les sacrements.",
@@ -347,10 +348,11 @@ export default function SacrementsPage() {
   }, [searchQuery, activeTab, sacrements]);
 
   // Compter les sacrements à venir par catégorie
+  type SacrementCategory = "baptemes" | "communions" | "confirmations" | "mariages" | "onctions" | "autres";
   const countFutureSacrements = () => {
     const now = new Date();
 
-    const counts = {
+    const counts: Record<SacrementCategory, number> = {
       baptemes: 0,
       communions: 0,
       confirmations: 0,
@@ -361,7 +363,7 @@ export default function SacrementsPage() {
 
     sacrements.forEach((sacrement) => {
       if (new Date(sacrement.date) >= now) {
-        const category = getSacrementTypeDetails(sacrement.type).category;
+        const category = getSacrementTypeDetails(sacrement.type).category as SacrementCategory;
         counts[category]++;
       }
     });

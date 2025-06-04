@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import {
   Church,
@@ -67,6 +67,10 @@ import {
   ForbiddenError,
   NotFoundError,
 } from "@/services/api";
+import { Download, FileSpreadsheet, FileDown } from "lucide-react";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // Importer les nouveaux composants de formulaire
 import AjouterMouvementForm from "@/components/forms/AjouterMouvementForm";
@@ -120,6 +124,7 @@ export default function MouvementsAssociationsPage() {
   const [selectedMouvement, setSelectedMouvement] = useState<Mouvement | null>(
     null
   );
+  const [exporting, setExporting] = useState(false);
 
   // Récupérer l'ID de la paroisse à partir du localStorage
   const getUserParoisseId = (): number => {
@@ -241,14 +246,221 @@ export default function MouvementsAssociationsPage() {
     }
   };
 
+  const getParoisseName = (): string => {
+    try {
+      const userProfileStr = localStorage.getItem("user_profile");
+      if (userProfileStr) {
+        const userProfile = JSON.parse(userProfileStr);
+        return userProfile.paroisse_nom || "Paroisse";
+      }
+    } catch (err) {
+      console.error(
+        "Erreur lors de la récupération du nom de la paroisse:",
+        err
+      );
+    }
+    return "Paroisse";
+  };
+
+  const formatExportDate = (): string => {
+    return new Intl.DateTimeFormat("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date());
+  };
+
+  const exportToExcel = async () => {
+    try {
+      setExporting(true);
+
+      const exportDate = formatExportDate();
+      const paroisseName = getParoisseName();
+
+      const exportData = filteredMouvements.map((mouvement, index) => ({
+        "N°": index + 1,
+        "Date d'ajout": formatDate(mouvement.created_at),
+        "Nom du Mouvement": mouvement.nom,
+        Type: mouvement.type,
+        Identifiant: mouvement.identifiant || "N/A",
+        Responsable: mouvement.responsable
+          ? `${mouvement.responsable.nom} ${mouvement.responsable.prenoms}`
+          : "Aucun",
+        "Solde (FCFA)": mouvement.solde || 0,
+        "Nombre de Membres": 0, // À remplacer par la vraie valeur
+      }));
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportData);
+
+      XLSX.utils.sheet_add_aoa(
+        ws,
+        [
+          [`Liste des Mouvements et Associations`],
+          [`${paroisseName}`],
+          [`Date d'exportation: ${exportDate}`],
+          [`Nombre total: ${filteredMouvements.length}`],
+          [],
+        ],
+        { origin: "A1" }
+      );
+
+      const colWidths = [
+        { wch: 5 }, // N°
+        { wch: 15 }, // Date
+        { wch: 30 }, // Nom
+        { wch: 20 }, // Type
+        { wch: 15 }, // Identifiant
+        { wch: 25 }, // Responsable
+        { wch: 12 }, // Solde
+        { wch: 10 }, // Membres
+      ];
+      ws["!cols"] = colWidths;
+
+      XLSX.utils.book_append_sheet(wb, ws, "Mouvements");
+
+      const fileName = `Mouvements_${paroisseName.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+
+      toast.success("Exportation Excel réussie", {
+        description: `Le fichier ${fileName} a été téléchargé.`,
+      });
+    } catch (error) {
+      console.error("Erreur lors de l'exportation Excel:", error);
+      toast.error("Erreur lors de l'exportation Excel");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const exportToPDF = async () => {
+    try {
+      setExporting(true);
+
+      const exportDate = formatExportDate();
+      const paroisseName = getParoisseName();
+
+      const doc = new jsPDF();
+
+      const primaryColor: [number, number, number] = [59, 130, 246];
+      const secondaryColor: [number, number, number] = [148, 163, 184];
+      const textColor: [number, number, number] = [15, 23, 42];
+
+      // En-tête
+      doc.setFillColor(...primaryColor);
+      doc.rect(0, 0, 210, 35, "F");
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.setFont("helvetica", "bold");
+      doc.text("MOUVEMENTS ET ASSOCIATIONS", 105, 15, { align: "center" });
+
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      doc.text(paroisseName, 105, 25, { align: "center" });
+
+      // Informations
+      doc.setTextColor(...textColor);
+      doc.setFontSize(10);
+      doc.text(`Date d'exportation: ${exportDate}`, 20, 45);
+      doc.text(`Nombre total: ${filteredMouvements.length}`, 20, 52);
+
+      doc.setDrawColor(...secondaryColor);
+      doc.setLineWidth(0.5);
+      doc.line(20, 58, 190, 58);
+
+      // Données du tableau
+      const tableData = filteredMouvements.map((mouvement, index) => [
+        (index + 1).toString(),
+        formatDate(mouvement.created_at),
+        mouvement.nom.length > 25
+          ? mouvement.nom
+          : mouvement.nom,
+        mouvement.type,
+        mouvement.responsable
+          ? `${mouvement.responsable.nom} ${mouvement.responsable.prenoms}`
+              .length > 20
+            ? `${mouvement.responsable.nom} ${mouvement.responsable.prenoms}`
+            : `${mouvement.responsable.nom} ${mouvement.responsable.prenoms}`
+          : "Aucun",
+        "0", // Membres
+      ]);
+
+      autoTable(doc, {
+        startY: 65,
+        head: [
+          ["N°", "Date", "Nom du Mouvement", "Type", "Responsable", "Membres"],
+        ],
+        body: tableData,
+        theme: "grid",
+        styles: {
+          fontSize: 9,
+          cellPadding: 4,
+          textColor: textColor,
+        },
+        headStyles: {
+          fillColor: primaryColor,
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+          fontSize: 10,
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252],
+        },
+        columnStyles: {
+          0: { cellWidth: 15, halign: "center" },
+          1: { cellWidth: 25 },
+          2: { cellWidth: 45 },
+          3: { cellWidth: 25 },
+          4: { cellWidth: 35 },
+          5: { cellWidth: 20, halign: "center" },
+        },
+        margin: { left: 20, right: 20 },
+      });
+
+      // Pied de page (même logique que CEB)
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        const pageHeight = doc.internal.pageSize.height;
+        doc.setDrawColor(...secondaryColor);
+        doc.line(20, pageHeight - 20, 190, pageHeight - 20);
+
+        doc.setFontSize(8);
+        doc.setTextColor(...secondaryColor);
+        doc.text(`Page ${i} sur ${pageCount}`, 105, pageHeight - 12, {
+          align: "center",
+        });
+        doc.text(`Généré le ${exportDate}`, 20, pageHeight - 12);
+        doc.text("Système de Gestion Paroissiale", 190, pageHeight - 12, {
+          align: "right",
+        });
+      }
+
+      const fileName = `Mouvements_${paroisseName.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.pdf`;
+      doc.save(fileName);
+
+      toast.success("Exportation PDF réussie", {
+        description: `Le fichier ${fileName} a été téléchargé.`,
+      });
+    } catch (error) {
+      console.error("Erreur lors de l'exportation PDF:", error);
+      toast.error("Erreur lors de l'exportation PDF");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   // Gérer le succès de la création
-  const handleCreateSuccess = (newMouvement) => {
+  const handleCreateSuccess = (newMouvement: Mouvement) => {
     // Ajouter le nouveau mouvement à la liste
     setMouvements((prevMouvements) => [newMouvement, ...prevMouvements]);
   };
 
   // Gérer le succès de la mise à jour
-  const handleUpdateSuccess = (updatedMouvement) => {
+  const handleUpdateSuccess = (updatedMouvement: Mouvement) => {
     // Remplacer le mouvement existant dans la liste
     setMouvements((prevMouvements) =>
       prevMouvements.map((m) =>
@@ -260,7 +472,7 @@ export default function MouvementsAssociationsPage() {
   };
 
   // Gérer le succès de la suppression
-  const handleDeleteSuccess = (deletedId) => {
+  const handleDeleteSuccess = (deletedId: string | number) => {
     // Filtrer le mouvement supprimé de la liste
     const updatedList = mouvements.filter((m) => m.id !== deletedId);
     setMouvements(updatedList);
@@ -270,13 +482,13 @@ export default function MouvementsAssociationsPage() {
   };
 
   // Ouvrir le modal en mode édition
-  const openEditModal = (mouvement) => {
+  const openEditModal = (mouvement: SetStateAction<Mouvement | null>) => {
     setSelectedMouvement(mouvement);
     setShowEditDialog(true);
   };
 
   // Ouvrir le modal en mode suppression
-  const openDeleteModal = (mouvement) => {
+  const openDeleteModal = (mouvement: SetStateAction<Mouvement | null>) => {
     setSelectedMouvement(mouvement);
     setShowDeleteDialog(true);
   };
@@ -359,6 +571,31 @@ export default function MouvementsAssociationsPage() {
             </SelectContent>
           </Select>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="cursor-pointer"
+              disabled={exporting || filteredMouvements.length === 0}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {exporting ? "Exportation..." : "Exporter"}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={exportToExcel}
+              className="cursor-pointer"
+            >
+              <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
+              Exporter en Excel
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={exportToPDF} className="cursor-pointer">
+              <FileDown className="h-4 w-4 mr-2 text-red-600" />
+              Exporter en PDF
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button onClick={openAddModal} className="cursor-pointer">
           <Plus className="h-4 w-4 mr-2" />
           Nouveau Mouvement

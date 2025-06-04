@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, SetStateAction } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -110,7 +110,7 @@ export default function EvenementDetailsPage() {
         setError(null);
 
         const data = await fetchEvenementDetails(evenementId);
-        setEvenement(data);
+        setEvenement(data as EvenementType);
       } catch (err) {
         console.error(
           "Erreur lors du chargement des détails de l'événement:",
@@ -140,7 +140,7 @@ export default function EvenementDetailsPage() {
   }, [evenementId, router]);
 
   // Formater la date: timestamp -> 15/05/2023 15:30
-  const formatDate = (timestamp) => {
+  const formatDate = (timestamp: number | undefined) => {
     if (!timestamp) return "Non renseignée";
 
     try {
@@ -159,18 +159,21 @@ export default function EvenementDetailsPage() {
   };
 
   // Formater la monnaie en FCFA
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount: string | number | bigint | null | undefined) => {
     if (amount === undefined || amount === null) return "0 FCFA";
+
+    const numericAmount =
+      typeof amount === "string" ? Number(amount) : amount;
 
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
       currency: "XOF",
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(numericAmount as number | bigint);
   };
 
   // Obtenir la couleur du badge selon le type
-  const getTypeColor = (type) => {
+  const getTypeColor = (type: string) => {
     switch (type) {
       case "ACTIVITÉ":
         return "bg-blue-100 text-blue-800 border-blue-200";
@@ -201,10 +204,14 @@ export default function EvenementDetailsPage() {
   };
 
   // Gérer le succès de la mise à jour
-  const handleUpdateSuccess = (updatedEvenement) => {
+  const handleUpdateSuccess = (updatedEvenement: SetStateAction<{ [key: string]: any; libelle: string; description?: string; type: string; est_actif: boolean; date_de_debut?: number; date_de_fin?: number; diocese_id?: number; paroisse_id?: number; mouvementassociation_id?: number; ceb_id?: number; est_limite_par_echeance?: boolean; solde: number; solde_cible: number; solde_est_visibe?: boolean; type_visibilite_solde?: string; extras?: Record<string, any>; image?: { [key: string]: any; url: string; name?: string; } | null; } | null>) => {
     setEvenement(updatedEvenement);
     toast.success("Événement mis à jour avec succès", {
-      description: `Les informations de "${updatedEvenement.libelle}" ont été mises à jour.`,
+      description: `Les informations de "${
+        updatedEvenement && typeof updatedEvenement !== "function" && updatedEvenement.libelle
+          ? updatedEvenement.libelle
+          : ""
+      }" ont été mises à jour.`,
     });
   };
 

@@ -32,10 +32,15 @@ const getUserParoisseId = () => {
   return 0;
 };
 
+interface AjouterCebFormProps {
+  onClose: () => void;
+  onSuccess: (item: any) => void;
+}
+
 const AjouterCebForm = ({ 
   onClose, 
   onSuccess 
-}) => {
+}: AjouterCebFormProps) => {
   const router = useRouter();
   
   // État pour le formulaire
@@ -44,7 +49,7 @@ const AjouterCebForm = ({
     president: "",
   });
   
-  const [formErrors, setFormErrors] = useState({});
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string | null }>({});
   const [formLoading, setFormLoading] = useState(false);
   
   // Réinitialiser le formulaire à l'ouverture
@@ -59,7 +64,7 @@ const AjouterCebForm = ({
   }, []);
   
   // Gestion des changements dans le formulaire
-  const handleChange = (e) => {
+  const handleChange = (e: { target: { name: any; value: any; }; }) => {
     const { name, value } = e.target;
     
     // Pour le champ téléphone du président, n'accepter que les chiffres
@@ -97,7 +102,7 @@ const AjouterCebForm = ({
   
   // Validation du formulaire
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors: { [key: string]: string | null } = {};
     
     // Validation du nom (ne doit pas être vide)
     if (!formData.nom.trim()) {
@@ -114,7 +119,7 @@ const AjouterCebForm = ({
   };
   
   // Soumission du formulaire
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
     
     // Valider le formulaire avant soumission

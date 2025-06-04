@@ -29,7 +29,7 @@ export default function RetraitButton({
         variant={variant}
         size={size}
         onClick={() => setShowForm(true)}
-        className={`flex items-center gap-2 ${className}`}
+        className={`flex items-center gap-2 cursor-pointer ${className}`}
       >
         <ArrowDownToLine className="h-4 w-4" />
         Effectuer un retrait

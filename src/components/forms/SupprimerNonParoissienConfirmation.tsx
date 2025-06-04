@@ -13,7 +13,24 @@ import {
 import { toast } from "sonner";
 import { AuthenticationError, ApiError, ForbiddenError, NotFoundError } from "@/services/api";
 
-const SupprimerNonParoissienConfirmation = ({ nonParoissien, onClose, onSuccess }) => {
+interface NonParoissien {
+  id: string | number;
+  prenom: string;
+  nom: string;
+  // Ajoutez d'autres propriétés si nécessaire
+}
+
+interface SupprimerNonParoissienConfirmationProps {
+  nonParoissien: NonParoissien;
+  onClose: () => void;
+  onSuccess: (id: NonParoissien["id"]) => void;
+}
+
+const SupprimerNonParoissienConfirmation = ({
+  nonParoissien,
+  onClose,
+  onSuccess,
+}: SupprimerNonParoissienConfirmationProps) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   

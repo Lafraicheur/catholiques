@@ -13,7 +13,13 @@ import {
 import { toast } from "sonner";
 import { AuthenticationError, ApiError, ForbiddenError, NotFoundError } from "@/services/api";
 
-const DeleteCebConfirmation = ({ ceb, onClose, onSuccess }) => {
+interface DeleteCebConfirmationProps {
+  ceb: { id: string | number; nom: string }; // Adjust types as needed
+  onClose: () => void;
+  onSuccess: (id: string | number) => void;
+}
+
+const DeleteCebConfirmation = ({ ceb, onClose, onSuccess }: DeleteCebConfirmationProps) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   

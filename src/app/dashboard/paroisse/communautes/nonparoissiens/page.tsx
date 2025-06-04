@@ -59,6 +59,16 @@ import AjouterNonParoissienForm from "@/components/forms/AjouterNonParoissienFor
 import ModifierNonParoissienForm from "@/components/forms/ModifierNonParoissienForm";
 import SupprimerNonParoissienConfirmation from "@/components/forms/SupprimerNonParoissienConfirmation";
 import ConvertirEnParoissienForm from "@/components/forms/ConvertirEnParoissienForm";
+import { Download, FileSpreadsheet, FileDown } from "lucide-react";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Types
 interface NonParoissien {
@@ -91,6 +101,7 @@ export default function NonParoissiensPage() {
   const [showConvertDialog, setShowConvertDialog] = useState(false);
   const [selectedNonParoissien, setSelectedNonParoissien] =
     useState<NonParoissien | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     const loadNonParoissiens = async () => {
@@ -193,7 +204,190 @@ export default function NonParoissiensPage() {
     setTotalPages(Math.ceil(results.length / itemsPerPage));
   }, [searchQuery, genreFilter, nonParoissiens, itemsPerPage]);
 
-    // Calculer les mouvements à afficher pour la pagination
+  const formatExportDate = (): string => {
+    return new Intl.DateTimeFormat("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date());
+  };
+
+  // Exportation Excel
+  const exportToExcel = async () => {
+    try {
+      setExporting(true);
+
+      const exportDate = formatExportDate();
+
+      const exportData = filteredNonParoissiens.map((np, index) => ({
+        "N°": index + 1,
+        "Date d'ajout": formatDate(np.created_at),
+        Nom: np.nom,
+        Prénom: np.prenom,
+        Genre: np.genre === "M" ? "Homme" : "Femme",
+        Téléphone: formatPhoneDisplay(np.num_de_telephone) || "Non renseigné",
+      }));
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportData);
+
+      // En-tête informatif
+      XLSX.utils.sheet_add_aoa(
+        ws,
+        [
+          [`Liste des Non-Paroissiens`],
+          [`Date d'exportation: ${exportDate}`],
+          [`Nombre total: ${filteredNonParoissiens.length}`],
+          [
+            `Hommes: ${filteredNonParoissiens.filter((np) => np.genre === "M").length}`,
+          ],
+          [
+            `Femmes: ${filteredNonParoissiens.filter((np) => np.genre === "F").length}`,
+          ],
+          [],
+        ],
+        { origin: "A1" }
+      );
+
+      // Largeurs des colonnes
+      const colWidths = [
+        { wch: 5 }, // N°
+        { wch: 15 }, // Date
+        { wch: 20 }, // Nom
+        { wch: 20 }, // Prénom
+        { wch: 10 }, // Genre
+        { wch: 15 }, // Téléphone
+      ];
+      ws["!cols"] = colWidths;
+
+      XLSX.utils.book_append_sheet(wb, ws, "Non-Paroissiens");
+
+      const fileName = `Non_Paroissiens_${new Date().toISOString().split("T")[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+
+      toast.success("Exportation Excel réussie", {
+        description: `Le fichier ${fileName} a été téléchargé.`,
+      });
+    } catch (error) {
+      console.error("Erreur lors de l'exportation Excel:", error);
+      toast.error("Erreur lors de l'exportation Excel");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Exportation PDF
+  const exportToPDF = async () => {
+    try {
+      setExporting(true);
+
+      const exportDate = formatExportDate();
+
+      const doc = new jsPDF("l"); // Format paysage
+
+      const primaryColor: [number, number, number] = [59, 130, 246];
+      const secondaryColor: [number, number, number] = [148, 163, 184];
+      const textColor: [number, number, number] = [15, 23, 42];
+
+      // En-tête avec design spécialisé
+      doc.setFillColor(...primaryColor);
+      doc.rect(0, 0, 297, 35, "F"); // Format paysage
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.setFont("helvetica", "bold");
+      doc.text("LISTE DES NON-PAROISSIENS", 148.5, 15, { align: "center" });
+
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+
+      // Statistiques avec icônes
+      doc.setTextColor(...textColor);
+      doc.setFontSize(10);
+      doc.text(`Date d'exportation: ${exportDate}`, 20, 45);
+      doc.text(`Nombre total: ${filteredNonParoissiens.length}`, 20, 52);
+
+      // Ligne de séparation
+      doc.setDrawColor(...secondaryColor);
+      doc.setLineWidth(0.5);
+      doc.line(20, 58, 277, 58);
+
+      // Données du tableau
+      const tableData = filteredNonParoissiens.map((np, index) => [
+        (index + 1).toString(),
+        formatDate(np.created_at),
+        `${np.prenom} ${np.nom}`.length > 25
+          ? `${np.prenom} ${np.nom}`
+          : `${np.prenom} ${np.nom}`,
+        np.genre === "M" ? "Homme" : "Femme",
+        formatPhoneDisplay(np.num_de_telephone) || "N/A",
+      ]);
+
+      autoTable(doc, {
+        startY: 65,
+        head: [["N°", "Date d'ajout", "Nom Complet", "Genre", "Téléphone"]],
+        body: tableData,
+        theme: "grid",
+        styles: {
+          fontSize: 9,
+          cellPadding: 4,
+          textColor: textColor,
+        },
+        headStyles: {
+          fillColor: primaryColor,
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+          fontSize: 10,
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252],
+        },
+        columnStyles: {
+          0: { cellWidth: 15, halign: "center" },
+          1: { cellWidth: 30, halign: "center" },
+          2: { cellWidth: 70 },
+          3: { cellWidth: 30, halign: "center" },
+          4: { cellWidth: 35, halign: "center" },
+        },
+        margin: { left: 20, right: 20 },
+      });
+
+      // Pied de page
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        const pageHeight = doc.internal.pageSize.height;
+        doc.setDrawColor(...secondaryColor);
+        doc.line(20, pageHeight - 20, 277, pageHeight - 20);
+
+        doc.setFontSize(8);
+        doc.setTextColor(...secondaryColor);
+        doc.text(`Page ${i} sur ${pageCount}`, 148.5, pageHeight - 12, {
+          align: "center",
+        });
+        doc.text(`Généré le ${exportDate}`, 20, pageHeight - 12);
+        doc.text("Gestion Non-Paroissiens", 277, pageHeight - 12, {
+          align: "right",
+        });
+      }
+
+      const fileName = `Non_Paroissiens_${new Date().toISOString().split("T")[0]}.pdf`;
+      doc.save(fileName);
+
+      toast.success("Exportation PDF réussie", {
+        description: `Le fichier ${fileName} a été téléchargé.`,
+      });
+    } catch (error) {
+      console.error("Erreur lors de l'exportation PDF:", error);
+      toast.error("Erreur lors de l'exportation PDF");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Calculer les mouvements à afficher pour la pagination
   const getCurrentPageItems = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
@@ -239,13 +433,13 @@ export default function NonParoissiensPage() {
   };
 
   // Gérer le succès de l'ajout
-  const handleCreateSuccess = (newNonParoissien) => {
+  const handleCreateSuccess = (newNonParoissien: NonParoissien) => {
     // Ajouter le nouveau non-paroissien à la liste
     setNonParoissiens((prevList) => [newNonParoissien, ...prevList]);
   };
 
   // Gérer le succès de la modification
-  const handleUpdateSuccess = (updatedNonParoissien) => {
+  const handleUpdateSuccess = (updatedNonParoissien: NonParoissien) => {
     // Mettre à jour la liste
     setNonParoissiens((prevList) =>
       prevList.map((item) =>
@@ -257,7 +451,7 @@ export default function NonParoissiensPage() {
   };
 
   // Gérer le succès de la suppression
-  const handleDeleteSuccess = (deletedId) => {
+  const handleDeleteSuccess = (deletedId: string | number) => {
     // Mettre à jour la liste
     setNonParoissiens((prevList) =>
       prevList.filter((item) => item.id !== deletedId)
@@ -267,7 +461,7 @@ export default function NonParoissiensPage() {
   };
 
   // Gérer le succès de la conversion
-  const handleConvertSuccess = (convertedId) => {
+  const handleConvertSuccess = (convertedId: number) => {
     // Mettre à jour la liste
     setNonParoissiens((prevList) =>
       prevList.filter((item) => item.id !== convertedId)
@@ -347,28 +541,62 @@ export default function NonParoissiensPage() {
             className="pl-9"
           />
         </div>
-        <div className="w-full md:w-48">
-          <Select value={genreFilter} onValueChange={setGenreFilter}>
-            <SelectTrigger>
-              <div className="flex items-center">
-                <Filter className="h-4 w-4 mr-2 text-slate-400" />
-                <SelectValue placeholder="Genre" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="TOUS">Tous</SelectItem>
-              <SelectItem value="M">Hommes</SelectItem>
-              <SelectItem value="F">Femmes</SelectItem>
-            </SelectContent>
-          </Select>
+
+        <div className="flex gap-2">
+          {/* Filtre par genre existant */}
+          <div className="w-full md:w-48">
+            <Select value={genreFilter} onValueChange={setGenreFilter}>
+              <SelectTrigger>
+                <div className="flex items-center">
+                  <Filter className="h-4 w-4 mr-2 text-slate-400" />
+                  <SelectValue placeholder="Genre" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="TOUS">Tous</SelectItem>
+                <SelectItem value="M">Hommes</SelectItem>
+                <SelectItem value="F">Femmes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Nouveau bouton d'exportation */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="cursor-pointer"
+                disabled={exporting || filteredNonParoissiens.length === 0}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {exporting ? "Export..." : "Exporter"}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={exportToExcel}
+                className="cursor-pointer"
+              >
+                <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
+                Exporter en Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={exportToPDF}
+                className="cursor-pointer"
+              >
+                <FileDown className="h-4 w-4 mr-2 text-red-600" />
+                Exporter en PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            onClick={() => setShowAddDialog(true)}
+            className="cursor-pointer"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Nouveau
+          </Button>
         </div>
-        <Button
-          onClick={() => setShowAddDialog(true)}
-          className="cursor-pointer"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Nouveau
-        </Button>
       </div>
 
       {/* Liste des non-paroissiens */}
@@ -545,10 +773,6 @@ export default function NonParoissiensPage() {
               ))}
             </TableBody>
           </Table>
-          {/* <div className="py-3 px-4 bg-slate-50 border-t border-slate-200 text-sm text-slate-500">
-            Affichage de {filteredNonParoissiens.length} non-paroissien(s) sur{" "}
-            {nonParoissiens.length} au total
-          </div> */}
           <div className="py-3 px-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
             <p className="text-sm text-slate-500">
               Page {currentPage} sur {totalPages}

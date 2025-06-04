@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, SetStateAction } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -59,12 +59,58 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ModifierCebForm from "@/components/forms/ModifierCebForm";
 import NominerPresidentForm from "@/components/forms/NominerPresidentForm";
 
+// Types harmonisés avec ceux du ModifierCebForm
+interface President {
+  id: number;
+  nom: string;
+  prenoms: string;
+  num_de_telephone: string;
+  email?: string;
+  quartier?: string;
+  commune?: string;
+  ville?: string;
+  pays?: string;
+}
+
+interface Membre {
+  id: number;
+  nom: string;
+  prenoms: string;
+  num_de_telephone?: string;
+  email?: string;
+  statut?: string;
+}
+
+interface Evenement {
+  id: number;
+  titre: string;
+  date: string;
+  description?: string;
+}
+
+// Type Ceb complet et harmonisé
+interface Ceb {
+  id: number;
+  created_at: string;
+  identifiant: string;
+  nom: string;
+  solde: number;
+  paroisse_id: number;
+  chapelle_id: number | null;
+  president_id: number | null;
+  president?: President | null;
+  membres?: Membre[];
+  evenements?: Evenement[];
+}
+
 export default function CebDetailsPage() {
   const router = useRouter();
   const params = useParams();
-  const cebId = params?.id ? parseInt(params.id, 10) : null;
+  const cebId = params?.id
+    ? parseInt(Array.isArray(params.id) ? params.id[0] : params.id, 10)
+    : null;
 
-  const [ceb, setCeb] = useState(null);
+  const [ceb, setCeb] = useState<Ceb | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -84,8 +130,36 @@ export default function CebDetailsPage() {
         setLoading(true);
         setError(null);
 
-        const data = await fetchCebDetails(cebId);
-        setCeb(data);
+        const data = await fetchCebDetails(cebId) as Ceb;
+
+        // Transformer les données pour correspondre au type Ceb complet
+        const transformedCeb: Ceb = {
+          id: data.id,
+          created_at: data.created_at || new Date().toISOString(),
+          identifiant: data.identifiant || `CEB-${data.id}`,
+          nom: data.nom,
+          solde: data.solde || 0,
+          paroisse_id: data.paroisse_id || 0,
+          chapelle_id: data.chapelle_id || null,
+          president_id: data.president_id || null,
+          president: data.president
+            ? {
+                id: data.president.id || 0,
+                nom: data.president.nom,
+                prenoms: data.president.prenoms,
+                num_de_telephone: data.president.num_de_telephone || "",
+                email: data.president.email,
+                quartier: data.president.quartier,
+                commune: data.president.commune,
+                ville: data.president.ville,
+                pays: data.president.pays,
+              }
+            : null,
+          membres: data.membres || [],
+          evenements: data.evenements || [],
+        };
+
+        setCeb(transformedCeb);
       } catch (err) {
         console.error("Erreur lors du chargement des détails de la CEB:", err);
 
@@ -112,7 +186,7 @@ export default function CebDetailsPage() {
   }, [cebId, router]);
 
   // Formater un numéro de téléphone: 0101020304 -> 01 01 02 03 04
-  const formatPhoneNumber = (phone) => {
+  const formatPhoneNumber = (phone: string | undefined) => {
     if (!phone) return "Non renseigné";
 
     const cleaned = phone.replace(/\D/g, "");
@@ -126,7 +200,7 @@ export default function CebDetailsPage() {
   };
 
   // Formater la date: 2023-05-15 -> 15/05/2023
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string | number | Date | undefined) => {
     if (!dateString) return "Non renseignée";
 
     try {
@@ -134,28 +208,49 @@ export default function CebDetailsPage() {
       return new Intl.DateTimeFormat("fr-FR").format(date);
     } catch (err) {
       console.error("Erreur lors du formatage de la date:", err);
-      return dateString;
+      return String(dateString);
     }
   };
 
   // Formater la monnaie en FCFA
-  const formatCurrency = (amount) => {
+  const formatCurrency = (
+    amount: string | number | bigint | null | undefined
+  ) => {
     if (amount === undefined || amount === null) return "0 FCFA";
+
+    const numericAmount = typeof amount === "string" ? Number(amount) : amount;
+
+    if (isNaN(Number(numericAmount))) return "0 FCFA";
 
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
       currency: "XOF",
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(numericAmount as number | bigint);
   };
 
-  // Gérer le succès de la mise à jour
-  const handleUpdateSuccess = (updatedCeb) => {
+  // Gérer le succès de la mise à jour avec le bon type
+  const handleUpdateSuccess = (updatedCeb: Ceb) => {
     // Mettre à jour les données locales
     setCeb(updatedCeb);
     toast.success("CEB mise à jour avec succès", {
       description: `Les informations de "${updatedCeb.nom}" ont été mises à jour.`,
     });
+  };
+
+  // Gérer le succès de la nomination du président
+  const handleNominationSuccess = (updatedCeb: any) => {
+    // Transformer les données pour correspondre au type Ceb
+    const transformedCeb: Ceb = {
+      ...ceb!,
+      president_id: updatedCeb.president_id,
+      president: updatedCeb.president,
+    };
+
+    setCeb(transformedCeb);
+    // toast.success("Président nommé avec succès", {
+    //   description: `${updatedCeb.president?.nom} ${updatedCeb.president?.prenoms} a été nommé président.`,
+    // });
   };
 
   // Rendu du contenu en fonction de l'état
@@ -243,6 +338,9 @@ export default function CebDetailsPage() {
             <div className="flex justify-between items-start">
               <div>
                 <CardTitle className="text-xl font-bold">{ceb.nom}</CardTitle>
+                <p className="text-sm text-slate-500 mt-1">
+                  Identifiant: {ceb.identifiant}
+                </p>
               </div>
               <Button
                 variant="outline"
@@ -279,7 +377,21 @@ export default function CebDetailsPage() {
                   <p className="text-sm font-medium text-slate-500">
                     Total Membres
                   </p>
-                  <p className="text-sm font-semibold">{ceb.membres?.length}</p>
+                  <p className="text-sm font-semibold">
+                    {ceb.membres?.length || 0}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-green-100 flex items-center justify-center">
+                  <Wallet className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500">Solde</p>
+                  <p className="text-sm font-semibold">
+                    {formatCurrency(ceb.solde)}
+                  </p>
                 </div>
               </div>
 
@@ -289,10 +401,10 @@ export default function CebDetailsPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-500">
-                    Total Evenements
+                    Total Événements
                   </p>
                   <p className="text-sm font-semibold">
-                    {ceb?.evenements?.length}
+                    {ceb?.evenements?.length || 0}
                   </p>
                 </div>
               </div>
@@ -402,28 +514,13 @@ export default function CebDetailsPage() {
                     </div>
                   </div>
                 ) : (
-                  // <div className="p-4 bg-amber-50 rounded-md border border-amber-100">
-                  //   <p className="text-sm text-center text-amber-600">
-                  //   </p>
-                  //   <div className="flex justify-center mt-2">
-                  //     <Button
-                  //       size="sm"
-                  //       variant="outline"
-                  //       className="text-amber-600 border-amber-300 hover:bg-amber-100"
-                  //       onClick={() => setShowNominerPresidentDialog(true)}
-                  //     >
-                  //       <UserPlus className="h-3.5 w-3.5 mr-2" />
-                  //       Nommer un président
-                  //     </Button>
-                  //   </div>
-                  // </div>
                   <div className="p-8 text-center">
                     <User className="h-12 w-12 text-slate-300 mx-auto mb-3" />
                     <h3 className="text-lg font-medium text-slate-900 mb-2">
                       Aucun président
                     </h3>
                     <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
-                      Cette CEB n'a pas encore de président enregistrés.
+                      Cette CEB n'a pas encore de président enregistré.
                     </p>
 
                     <Button
@@ -546,7 +643,7 @@ export default function CebDetailsPage() {
                               <td className="py-3 px-4">
                                 <div className="flex items-center text-sm text-slate-600">
                                   <Calendar className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
-                                  {formatDate(evenement.date)}
+                                  {formatDate(evenement?.date)}
                                 </div>
                               </td>
                               <td className="py-3 px-4">
@@ -601,7 +698,6 @@ export default function CebDetailsPage() {
   return (
     <div className="space-y-6 ">
       {/* Fil d'Ariane */}
-
       <div className="flex items-center mb-4 text-sm text-slate-500">
         <Button
           variant="outline"
@@ -639,7 +735,18 @@ export default function CebDetailsPage() {
           {ceb && (
             <ModifierCebForm
               onClose={() => setShowEditDialog(false)}
-              cebData={ceb}
+              cebData={{
+                ...ceb,
+                president:
+                  ceb.president && ceb.president !== null
+                    ? {
+                        id: ceb.president.id,
+                        nom: ceb.president.nom,
+                        prenoms: ceb.president.prenoms,
+                        num_de_telephone: ceb.president.num_de_telephone,
+                      }
+                    : undefined,
+              }}
               onSuccess={handleUpdateSuccess}
             />
           )}
@@ -661,9 +768,9 @@ export default function CebDetailsPage() {
 
           {ceb && (
             <NominerPresidentForm
-              cebId={ceb.id}
+              cebId={String(ceb.id)}
               onClose={() => setShowNominerPresidentDialog(false)}
-              onSuccess={handleUpdateSuccess}
+              onSuccess={handleNominationSuccess}
             />
           )}
         </DialogContent>

@@ -25,7 +25,26 @@ import {
   NotFoundError,
 } from "@/services/api";
 
-const ModifierNonParoissienForm = ({ nonParoissien, onClose, onSuccess }) => {
+interface NonParoissien {
+  id: number;
+  created_at: string; // ← Ajouté
+  nom: string;
+  prenom: string;
+  genre: "M" | "F"; // ← Type précisé
+  num_de_telephone: string;
+}
+
+interface ModifierNonParoissienFormProps {
+  nonParoissien: NonParoissien;
+  onClose: () => void;
+  onSuccess: (updatedNonParoissien: NonParoissien) => void;
+}
+
+const ModifierNonParoissienForm = ({
+  nonParoissien,
+  onClose,
+  onSuccess,
+}: ModifierNonParoissienFormProps) => {
   const router = useRouter();
   const [formLoading, setFormLoading] = useState(false);
 
@@ -38,7 +57,9 @@ const ModifierNonParoissienForm = ({ nonParoissien, onClose, onSuccess }) => {
     num_de_telephone: "",
   });
 
-  const [formErrors, setFormErrors] = useState({});
+  const [formErrors, setFormErrors] = useState<{
+    [key: string]: string | null;
+  }>({});
 
   // Initialiser le formulaire avec les données existantes
   useEffect(() => {
@@ -54,7 +75,7 @@ const ModifierNonParoissienForm = ({ nonParoissien, onClose, onSuccess }) => {
   }, [nonParoissien]);
 
   // Gestion des changements dans le formulaire
-  const handleChange = (e) => {
+  const handleChange = (e: { target: { name: any; value: any } }) => {
     const { name, value } = e.target;
 
     // Pour le champ téléphone, n'accepter que les chiffres
@@ -80,7 +101,7 @@ const ModifierNonParoissienForm = ({ nonParoissien, onClose, onSuccess }) => {
     }
   };
 
-  const handleSelectChange = (name, value) => {
+  const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -96,7 +117,7 @@ const ModifierNonParoissienForm = ({ nonParoissien, onClose, onSuccess }) => {
   };
 
   // Formater le numéro pour l'affichage (XX XX XX XX XX)
-  const formatPhoneDisplay = (phone) => {
+  const formatPhoneDisplay = (phone: string | any[]) => {
     if (!phone) return "";
     const groups = [];
     for (let i = 0; i < phone.length; i += 2) {
@@ -107,7 +128,7 @@ const ModifierNonParoissienForm = ({ nonParoissien, onClose, onSuccess }) => {
 
   // Validation du formulaire
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors: { [key: string]: string | null } = {};
 
     // Validation du nom et prénom (non vide)
     if (!formData.nom.trim()) {
@@ -129,7 +150,7 @@ const ModifierNonParoissienForm = ({ nonParoissien, onClose, onSuccess }) => {
   };
 
   // Soumission du formulaire
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
 
     // Valider le formulaire avant soumission
@@ -191,7 +212,20 @@ const ModifierNonParoissienForm = ({ nonParoissien, onClose, onSuccess }) => {
         }
       }
 
-      const updatedNonParoissien = await response.json();
+      const updatedData = await response.json();
+
+      // const updatedNonParoissien = await response.json();
+
+      const updatedNonParoissien: NonParoissien = {
+        id: formData.nonparoissien_id,
+        created_at: nonParoissien.created_at, // Conserver la date originale
+        nom: formData.nom,
+        prenom: formData.prenom,
+        genre: formData.genre as "M" | "F",
+        num_de_telephone: formData.num_de_telephone,
+        // Ou utiliser les données retournées par l'API si elles incluent created_at
+        ...updatedData,
+      };
 
       toast.success("Non-paroissien modifié avec succès", {
         description: `${formData.prenom} ${formData.nom} a été mis à jour.`,
@@ -274,7 +308,7 @@ const ModifierNonParoissienForm = ({ nonParoissien, onClose, onSuccess }) => {
             >
               Genre <span className="text-red-500">*</span>
             </label>
-            
+
             <Select
               value={formData.genre}
               onValueChange={(value) => handleSelectChange("genre", value)}

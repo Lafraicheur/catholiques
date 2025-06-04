@@ -77,6 +77,10 @@ import {
 
 // Importer le formulaire de modification des paroissiens
 import ModifierParoissienForm from "@/components/forms/ModifierParoissienForm";
+import { FileSpreadsheet, FileDown } from "lucide-react";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // Types
 interface Paroissien {
@@ -91,7 +95,7 @@ interface Paroissien {
   email: string;
   date_de_naissance: string;
   pays: string;
-  nationalite: string;
+  nationalite: string; // ✅ Ajouté
   ville: string;
   commune: string;
   quartier: string;
@@ -105,6 +109,9 @@ interface Paroissien {
   mouvementassociation_id: number | null;
   user_id: number | null;
   abonnement_id: number | null;
+  abonnement?: {
+    intitule: string;
+  };
 }
 
 export default function ParoissiensPage() {
@@ -123,6 +130,7 @@ export default function ParoissiensPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [exporting, setExporting] = useState(false);
 
   // États pour les dialogues
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -173,6 +181,259 @@ export default function ParoissiensPage() {
     setCurrentPage(1);
     setTotalPages(Math.ceil(results.length / itemsPerPage));
   }, [searchQuery, statutFilter, paroissiens, itemsPerPage]);
+
+  const getParoisseName = (): string => {
+    try {
+      const userProfileStr = localStorage.getItem("user_profile");
+      if (userProfileStr) {
+        const userProfile = JSON.parse(userProfileStr);
+        return userProfile.paroisse_nom || "Paroisse";
+      }
+    } catch (err) {
+      console.error(
+        "Erreur lors de la récupération du nom de la paroisse:",
+        err
+      );
+    }
+    return "Paroisse";
+  };
+
+  const formatExportDate = (): string => {
+    return new Intl.DateTimeFormat("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date());
+  };
+
+  const calculateAge = (birthDate: string): number => {
+    if (!birthDate) return 0;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birth.getDate())
+    ) {
+      age--;
+    }
+    return age;
+  };
+
+  // Exportation Excel
+  const exportToExcel = async () => {
+    try {
+      setExporting(true);
+
+      const exportDate = formatExportDate();
+      const paroisseName = getParoisseName();
+
+      const exportData = filteredParoissiens.map((paroissien, index) => ({
+        "N°": index + 1,
+        "Date d'inscription": formatDate(paroissien.created_at),
+        Nom: paroissien.nom,
+        Prénoms: paroissien.prenoms,
+        Genre: paroissien.genre,
+        "Date de naissance": formatDate(paroissien.date_de_naissance),
+        Téléphone: formatPhoneNumber(paroissien.num_de_telephone),
+        Email: paroissien.email || "N/A",
+        Pays: paroissien.pays || "N/A",
+        Nationalité: paroissien.nationalite || "N/A",
+        Ville: paroissien.ville || "N/A",
+        Commune: paroissien.commune || "N/A",
+        Quartier: paroissien.quartier || "N/A",
+        "Statut religieux": paroissien.statut || "Aucun",
+        Abonné: paroissien.est_abonne ? "Oui" : "Non",
+        "Type d'abonnement": paroissien.abonnement?.intitule || "N/A",
+      }));
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportData);
+
+      // En-tête informatif
+      XLSX.utils.sheet_add_aoa(
+        ws,
+        [
+          [`Liste des Paroissiens`],
+          [`${paroisseName}`],
+          [`Date d'exportation: ${exportDate}`],
+          [`Nombre total: ${filteredParoissiens.length}`],
+          [
+            `Abonnés: ${filteredParoissiens.filter((p) => p.est_abonne).length}`,
+          ],
+          [
+            `Non abonnés: ${filteredParoissiens.filter((p) => !p.est_abonne).length}`,
+          ],
+          [],
+        ],
+        { origin: "A1" }
+      );
+
+      // Largeurs des colonnes
+      const colWidths = [
+        { wch: 5 }, // N°
+        { wch: 15 }, // Date inscription
+        { wch: 20 }, // Nom
+        { wch: 20 }, // Prénoms
+        { wch: 8 }, // Genre
+        { wch: 15 }, // Date naissance
+        { wch: 15 }, // Téléphone
+        { wch: 25 }, // Email
+        { wch: 15 }, // Pays
+        { wch: 15 }, // Nationalité
+        { wch: 15 }, // Ville
+        { wch: 15 }, // Commune
+        { wch: 15 }, // Quartier
+        { wch: 15 }, // Statut
+        { wch: 8 }, // Abonné
+        { wch: 20 }, // Type abonnement
+      ];
+      ws["!cols"] = colWidths;
+
+      XLSX.utils.book_append_sheet(wb, ws, "Paroissiens");
+
+      const fileName = `Paroissiens_${paroisseName.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+
+      toast.success("Exportation Excel réussie", {
+        description: `Le fichier ${fileName} a été téléchargé.`,
+      });
+    } catch (error) {
+      console.error("Erreur lors de l'exportation Excel:", error);
+      toast.error("Erreur lors de l'exportation Excel");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Exportation PDF
+  const exportToPDF = async () => {
+    try {
+      setExporting(true);
+
+      const exportDate = formatExportDate();
+      const paroisseName = getParoisseName();
+
+      const doc = new jsPDF("l"); // Format paysage
+
+      const primaryColor: [number, number, number] = [59, 130, 246];
+      const secondaryColor: [number, number, number] = [148, 163, 184];
+      const textColor: [number, number, number] = [15, 23, 42];
+
+      // En-tête stylé
+      doc.setFillColor(...primaryColor);
+      doc.rect(0, 0, 297, 35, "F"); // Format paysage
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.setFont("helvetica", "bold");
+      doc.text("LISTE DES PAROISSIENS", 148.5, 15, { align: "center" });
+
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      doc.text(paroisseName, 148.5, 25, { align: "center" });
+
+      // Informations
+      doc.setTextColor(...textColor);
+      doc.setFontSize(10);
+      doc.text(`Date d'exportation: ${exportDate}`, 20, 45);
+      doc.text(`Nombre total: ${filteredParoissiens.length}`, 20, 52);
+
+      // Ligne de séparation
+      doc.setDrawColor(...secondaryColor);
+      doc.setLineWidth(0.5);
+      doc.line(20, 58, 277, 58);
+
+      // Données du tableau (colonnes essentielles)
+      const tableData = filteredParoissiens.map((paroissien, index) => [
+        (index + 1).toString(),
+        `${paroissien.nom} ${paroissien.prenoms}`.length > 25
+          ? `${paroissien.nom} ${paroissien.prenoms}`
+          : `${paroissien.nom} ${paroissien.prenoms}`,
+        paroissien.genre,
+        formatPhoneNumber(paroissien.num_de_telephone),
+        paroissien.statut || "Aucun",
+        paroissien.est_abonne ? "Oui" : "Non",
+        `${paroissien.commune || ""} ${paroissien.quartier || ""}`.trim() ||
+          "N/A",
+      ]);
+
+      autoTable(doc, {
+        startY: 65,
+        head: [
+          [
+            "N°",
+            "Nom Complet",
+            "Genre",
+            "Téléphone",
+            "Statut",
+            "Abonné",
+            "Localisation",
+          ],
+        ],
+        body: tableData,
+        theme: "grid",
+        styles: {
+          fontSize: 9,
+          cellPadding: 4,
+          textColor: textColor,
+        },
+        headStyles: {
+          fillColor: primaryColor,
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+          fontSize: 10,
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252],
+        },
+        columnStyles: {
+          0: { cellWidth: 15, halign: "center" },
+          1: { cellWidth: 60 },
+          2: { cellWidth: 20, halign: "center" },
+          3: { cellWidth: 35, halign: "center" },
+          4: { cellWidth: 35, halign: "center" },
+          5: { cellWidth: 25 },
+          6: { cellWidth: 45 },
+        },
+        margin: { left: 20, right: 20 },
+      });
+
+      // Pied de page professionnel
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        const pageHeight = doc.internal.pageSize.height;
+        doc.setDrawColor(...secondaryColor);
+        doc.line(20, pageHeight - 20, 277, pageHeight - 20);
+
+        doc.setFontSize(8);
+        doc.setTextColor(...secondaryColor);
+        doc.text(`Page ${i} sur ${pageCount}`, 148.5, pageHeight - 12, {
+          align: "center",
+        });
+        doc.text(`Généré le ${exportDate}`, 20, pageHeight - 12);
+        doc.text("Système de Gestion Paroissiale", 277, pageHeight - 12, {
+          align: "right",
+        });
+      }
+
+      const fileName = `Paroissiens_${paroisseName.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.pdf`;
+      doc.save(fileName);
+
+      toast.success("Exportation PDF réussie", {
+        description: `Le fichier ${fileName} a été téléchargé.`,
+      });
+    } catch (error) {
+      console.error("Erreur lors de l'exportation PDF:", error);
+      toast.error("Erreur lors de l'exportation PDF");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // Charger les paroissiens au montage du composant
   useEffect(() => {
@@ -241,7 +502,7 @@ export default function ParoissiensPage() {
   const getParoissiensNonAbonnes = () =>
     paroissiens.filter((p) => !p.est_abonne).length;
 
-  const getParoissiensStatut = (statut) => {
+  const getParoissiensStatut = (statut: string) => {
     return paroissiens.filter((p) => p.statut === statut).length;
   };
 
@@ -494,15 +755,6 @@ export default function ParoissiensPage() {
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
-        {/* <div className="relative w-full sm:w-96">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-              <Input
-                placeholder="Rechercher par nom, prénom, email, téléphone..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div> */}
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
           <Input
@@ -513,27 +765,55 @@ export default function ParoissiensPage() {
           />
         </div>
         {/* Filtre par statut */}
-        <div className="w-full sm:w-64">
-          <Select value={statutFilter} onValueChange={setStatutFilter}>
-            <SelectTrigger>
-              <div className="flex items-center">
-                <Filter className="h-4 w-4 mr-2 text-slate-400" />
-                <SelectValue placeholder="Filtrer par statut" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              {getUniqueStatuts().map((statut) => (
-                <SelectItem key={statut} value={statut}>
-                  {statut === "TOUS" ? "Tous les statuts" : statut}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="icon" title="Exporter">
-            <Download className="h-4 w-4" />
-          </Button>
+          {/* Filtre par statut existant */}
+          <div className="w-full sm:w-64">
+            <Select value={statutFilter} onValueChange={setStatutFilter}>
+              <SelectTrigger>
+                <div className="flex items-center">
+                  <Filter className="h-4 w-4 mr-2 text-slate-400" />
+                  <SelectValue placeholder="Filtrer par statut" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {getUniqueStatuts().map((statut) => (
+                  <SelectItem key={statut} value={statut}>
+                    {statut === "TOUS" ? "Tous les statuts" : statut}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Nouveau bouton d'exportation */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="cursor-pointer"
+                disabled={exporting || filteredParoissiens.length === 0}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {exporting ? "Export..." : "Exporter"}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={exportToExcel}
+                className="cursor-pointer"
+              >
+                <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
+                Exporter en Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={exportToPDF}
+                className="cursor-pointer"
+              >
+                <FileDown className="h-4 w-4 mr-2 text-red-600" />
+                Exporter en PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -674,88 +954,6 @@ export default function ParoissiensPage() {
             </div>
           )}
         </div>
-
-        // <div className="overflow-x-auto">
-        //   <table className="w-full border-collapse">
-        //     <thead>
-        //       <tr className="border-b border-slate-200">
-        //         <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-        //           Date d'ajout
-        //         </th>
-        //         <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-        //           Nom
-        //         </th>
-        //         <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-        //           Téléphone
-        //         </th>
-        //         <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-        //           Statut
-        //         </th>
-        //         <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-        //           Abonnement
-        //         </th>
-        //         <th className="py-3 px-4 text-right text-sm font-medium text-slate-500">
-        //           Actions
-        //         </th>
-        //       </tr>
-        //     </thead>
-        //     <tbody>
-        //       {getCurrentPageItems().map((paroissien) => (
-        //         <tr
-        //           key={paroissien.id}
-        //           className="border-b border-slate-100 hover:bg-slate-100 cursor-pointer"
-        //           onClick={() => navigateToDetails(paroissien.id)}
-        //         >
-        //           <td className="py-3 px-4">
-        //             <div className="text-sm text-slate-700">
-        //               {formatDate(paroissien.created_at)}
-        //             </div>
-        //           </td>
-
-        //           <td className="py-3 px-4">
-        //             <div className="font-medium text-xs text-slate-900">
-        //               {paroissien.nom} {paroissien.prenoms}
-        //             </div>
-        //             <div className="text-xs text-slate-500">
-        //               Né(e) le {formatDate(paroissien.date_de_naissance)}
-        //             </div>
-        //           </td>
-
-        //           <td className="py-3 px-4 text-xs text-slate-700">
-        //             {formatPhoneNumber(paroissien.num_de_telephone)}
-        //           </td>
-
-        //           <td className="py-3 px-4">
-        //             {getStatusBadge(paroissien.statut)}
-        //           </td>
-
-        //           <td className="py-3 px-4">
-        //             {paroissien.est_abonne ? (
-        //               <Badge variant="success" className="bg-green-800">
-        //                 {paroissien.abonnement?.intitule || "Abonné"}
-        //               </Badge>
-        //             ) : (
-        //               <Badge variant="outline" className="text-slate-500">
-        //                 Aucun
-        //               </Badge>
-        //             )}
-        //           </td>
-
-        //           <td className="py-3 px-4 text-right">
-        //             <Button
-        //               variant="outline"
-        //               size="icon"
-        //               className="h-8 w-8 cursor-pointer"
-        //               onClick={() => navigateToDetails(paroissien.id)}
-        //             >
-        //               <Eye className="h-4 w-4 text-slate-500" />
-        //             </Button>
-        //           </td>
-        //         </tr>
-        //       ))}
-        //     </tbody>
-        //   </table>
-        // </div>
       )}
 
       {/* Dialog de modification de paroissien */}
@@ -776,15 +974,97 @@ export default function ParoissiensPage() {
             </DialogTitle>
           </DialogHeader>
 
-          {selectedParoissien && (
+          {/* {selectedParoissien && (
             <ModifierParoissienForm
               onClose={() => setShowEditDialog(false)}
               paroissienData={selectedParoissien}
               onSuccess={handleUpdateSuccess}
             />
-          )}
+          )} */}
         </DialogContent>
       </Dialog>
     </div>
   );
 }
+
+// <div className="overflow-x-auto">
+//   <table className="w-full border-collapse">
+//     <thead>
+//       <tr className="border-b border-slate-200">
+//         <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+//           Date d'ajout
+//         </th>
+//         <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+//           Nom
+//         </th>
+//         <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+//           Téléphone
+//         </th>
+//         <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+//           Statut
+//         </th>
+//         <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+//           Abonnement
+//         </th>
+//         <th className="py-3 px-4 text-right text-sm font-medium text-slate-500">
+//           Actions
+//         </th>
+//       </tr>
+//     </thead>
+//     <tbody>
+//       {getCurrentPageItems().map((paroissien) => (
+//         <tr
+//           key={paroissien.id}
+//           className="border-b border-slate-100 hover:bg-slate-100 cursor-pointer"
+//           onClick={() => navigateToDetails(paroissien.id)}
+//         >
+//           <td className="py-3 px-4">
+//             <div className="text-sm text-slate-700">
+//               {formatDate(paroissien.created_at)}
+//             </div>
+//           </td>
+
+//           <td className="py-3 px-4">
+//             <div className="font-medium text-xs text-slate-900">
+//               {paroissien.nom} {paroissien.prenoms}
+//             </div>
+//             <div className="text-xs text-slate-500">
+//               Né(e) le {formatDate(paroissien.date_de_naissance)}
+//             </div>
+//           </td>
+
+//           <td className="py-3 px-4 text-xs text-slate-700">
+//             {formatPhoneNumber(paroissien.num_de_telephone)}
+//           </td>
+
+//           <td className="py-3 px-4">
+//             {getStatusBadge(paroissien.statut)}
+//           </td>
+
+//           <td className="py-3 px-4">
+//             {paroissien.est_abonne ? (
+//               <Badge variant="success" className="bg-green-800">
+//                 {paroissien.abonnement?.intitule || "Abonné"}
+//               </Badge>
+//             ) : (
+//               <Badge variant="outline" className="text-slate-500">
+//                 Aucun
+//               </Badge>
+//             )}
+//           </td>
+
+//           <td className="py-3 px-4 text-right">
+//             <Button
+//               variant="outline"
+//               size="icon"
+//               className="h-8 w-8 cursor-pointer"
+//               onClick={() => navigateToDetails(paroissien.id)}
+//             >
+//               <Eye className="h-4 w-4 text-slate-500" />
+//             </Button>
+//           </td>
+//         </tr>
+//       ))}
+//     </tbody>
+//   </table>
+// </div>

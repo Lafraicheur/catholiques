@@ -82,11 +82,13 @@ export default function DemandeMesseDetailsPage() {
   // Types d'intention possibles pour les badges
   const intentionTypes = {
     "PRIÈRE DE REMERCIEMENT": "success",
-    "PRIÈRE D'INTERCESSION": "blue",
+    "PRIÈRE D'INTERCESSION": "secondary",
     "PRIÈRE POUR LES DÉFUNTS": "destructive",
-    "PRIÈRE DE DÉLIVRANCE": "warning",
-    "PRIÈRE DE GUÉRISON": "purple",
-  };
+    "PRIÈRE DE DÉLIVRANCE": "outline",
+    "PRIÈRE DE GUÉRISON": "default",
+  } as const;
+
+  type IntentionType = keyof typeof intentionTypes;
 
   // Charger les détails de la demande de messe
   useEffect(() => {
@@ -180,11 +182,19 @@ export default function DemandeMesseDetailsPage() {
   ) => {
     if (amount === undefined || amount === null) return "0 FCFA";
 
+    let numericAmount: number | bigint = 0;
+    if (typeof amount === "string") {
+      numericAmount = Number(amount);
+      if (isNaN(numericAmount)) numericAmount = 0;
+    } else {
+      numericAmount = amount;
+    }
+
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
       currency: "XOF",
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(numericAmount);
   };
 
   // Rendu du contenu en fonction de l'état
@@ -270,11 +280,9 @@ export default function DemandeMesseDetailsPage() {
       ? "success"
       : "destructive";
     const paymentStatusText = demandeMesse.est_payee ? "Payée" : "Non payée";
-
-    // Déterminer la couleur du badge pour l'intention
     const intentionStyle =
-      demandeMesse.intention && intentionTypes[demandeMesse.intention]
-        ? intentionTypes[demandeMesse.intention]
+      demandeMesse.intention && intentionTypes[demandeMesse.intention as IntentionType]
+        ? intentionTypes[demandeMesse.intention as IntentionType]
         : "default";
 
     // Afficher les détails de la demande de messe
@@ -287,7 +295,7 @@ export default function DemandeMesseDetailsPage() {
               <div>
                 <CardDescription>
                   <span className="font-medium">Créée le:</span>{" "}
-                  {formatDate(demandeMesse.created_at)}
+                  {formatDate(demandeMesse.created_at ?? "")}
                 </CardDescription>
               </div>
             </div>
@@ -304,7 +312,17 @@ export default function DemandeMesseDetailsPage() {
                   </p>
                   <div className="flex items-center mt-1">
                     <Badge variant={intentionStyle} className="font-medium">
-                      {demandeMesse.intention}
+                      {(() => {
+                        const intentionLabels: { [key: string]: string } = {
+                          "1": "PRIÈRE DE REMERCIEMENT",
+                          "2": "PRIÈRE D'INTERCESSION",
+                          "3": "MESSE DE REQUIEM",
+                        };
+                        return (
+                          (demandeMesse.intention && intentionLabels[demandeMesse.intention as string]) ||
+                          demandeMesse.intention
+                        );
+                      })()}
                     </Badge>
                   </div>
                 </div>
@@ -376,7 +394,7 @@ export default function DemandeMesseDetailsPage() {
                     </p>
                     <p className="text-sm font-semibold">
                       {formatPhoneNumber(
-                        demandeMesse.initiateur?.num_de_telephone
+                        demandeMesse.initiateur?.num_de_telephone ?? ""
                       )}{" "}
                     </p>
                   </div>
@@ -468,7 +486,7 @@ export default function DemandeMesseDetailsPage() {
                       Date de la messe
                     </p>
                     <p className="text-sm font-semibold">
-                      {formatDate(demandeMesse.messe?.date_de_debut)}
+                      {formatDate(demandeMesse.messe?.date_de_debut ?? "")}
                     </p>
                   </div>
                 </div>
@@ -482,8 +500,8 @@ export default function DemandeMesseDetailsPage() {
                       Horaire
                     </p>
                     <p className="text-sm font-semibold">
-                      {formatTime(demandeMesse.messe?.extras?.heure_de_debut)} -{" "}
-                      {formatTime(demandeMesse.messe?.extras?.heure_de_fin)}
+                      {formatTime(demandeMesse.messe?.extras?.heure_de_debut ?? "")} -{" "}
+                      {formatTime(demandeMesse.messe?.extras?.heure_de_fin ?? "")}
                     </p>
                   </div>
                 </div>

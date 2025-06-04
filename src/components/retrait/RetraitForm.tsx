@@ -1,3 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-html-link-for-pages */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 // components/retrait/RetraitForm.tsx
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -31,10 +36,12 @@ import { Loader2, Smartphone, CreditCard } from "lucide-react";
 import { useRetrait } from "@/hooks/useRetrait";
 import {
   OPERATEURS,
+  OPERATEUR_LOGOS,
   SOUS_COMPTES,
   type Operateur,
   type SousCompteId,
 } from "@/types/retrait";
+
 import { SuccessAnimationModal } from "./SuccessAnimationModal";
 
 const retraitSchema = z.object({
@@ -152,7 +159,15 @@ export default function RetraitForm({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog
+        open={open}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            form.reset(); // Réinitialise quand on ferme
+          }
+          onOpenChange(isOpen);
+        }}
+      >
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -225,7 +240,6 @@ export default function RetraitForm({
                       <FormControl>
                         <div className="relative">
                           <Input
-                            type="number"
                             placeholder="Entrez le montant"
                             {...field}
                             onChange={(e) =>
@@ -265,7 +279,20 @@ export default function RetraitForm({
                           {OPERATEURS.map((operateur) => (
                             <SelectItem key={operateur} value={operateur}>
                               <div className="flex items-center gap-2">
-                                <Smartphone className="h-4 w-4" />
+                                <img
+                                  src={OPERATEUR_LOGOS[operateur]}
+                                  alt={`Logo ${operateur}`}
+                                  className="h-4 w-4 object-contain"
+                                  onError={(e) => {
+                                    // Fallback vers l'icône si l'image ne charge pas
+                                    e.currentTarget.style.display = "none";
+                                    e.currentTarget.nextElementSibling?.classList.remove(
+                                      "hidden"
+                                    );
+                                  }}
+                                />
+                                <Smartphone className="h-4 w-4 hidden" />{" "}
+                                {/* Fallback caché */}
                                 {operateur}
                               </div>
                             </SelectItem>
@@ -371,7 +398,10 @@ export default function RetraitForm({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => onOpenChange(false)}
+                  onClick={() => {
+                    form.reset(); // Réinitialise le formulaire
+                    onOpenChange(false); // Ferme le modal
+                  }}
                   className="flex-1"
                   disabled={loading}
                 >
@@ -380,7 +410,7 @@ export default function RetraitForm({
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  className="flex-1 bg-green-600 hover:bg-green-700 cursor-pointer"
                 >
                   {loading ? (
                     <>

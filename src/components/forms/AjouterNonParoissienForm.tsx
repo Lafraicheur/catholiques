@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // AjouterNonParoissienForm.jsx
 "use client";
 
@@ -23,7 +25,12 @@ import {
   NotFoundError,
 } from "@/services/api";
 
-const AjouterNonParoissienForm = ({ onClose, onSuccess }) => {
+type AjouterNonParoissienFormProps = {
+  onClose: () => void;
+  onSuccess: (newNonParoissien: any) => void;
+};
+
+const AjouterNonParoissienForm = ({ onClose, onSuccess }: AjouterNonParoissienFormProps) => {
   const router = useRouter();
   const [formLoading, setFormLoading] = useState(false);
   
@@ -35,10 +42,17 @@ const AjouterNonParoissienForm = ({ onClose, onSuccess }) => {
     num_de_telephone: "",
   });
   
-  const [formErrors, setFormErrors] = useState({});
+  type FormErrors = {
+    nom?: string | null;
+    prenom?: string | null;
+    num_de_telephone?: string | null;
+    [key: string]: string | null | undefined;
+  };
+
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
 
   // Gestion des changements dans le formulaire
-  const handleChange = (e) => {
+  const handleChange = (e: { target: { name: any; value: any; }; }) => {
     const { name, value } = e.target;
 
     // Pour le champ téléphone, n'accepter que les chiffres
@@ -64,7 +78,7 @@ const AjouterNonParoissienForm = ({ onClose, onSuccess }) => {
     }
   };
 
-  const handleSelectChange = (name, value) => {
+  const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -80,7 +94,7 @@ const AjouterNonParoissienForm = ({ onClose, onSuccess }) => {
   };
 
   // Formater le numéro pour l'affichage (XX XX XX XX XX)
-  const formatPhoneDisplay = (phone) => {
+  const formatPhoneDisplay = (phone: string | any[]) => {
     if (!phone) return "";
     const groups = [];
     for (let i = 0; i < phone.length; i += 2) {
@@ -91,7 +105,7 @@ const AjouterNonParoissienForm = ({ onClose, onSuccess }) => {
 
   // Validation du formulaire
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors: FormErrors = {};
 
     // Validation du nom et prénom (non vide)
     if (!formData.nom.trim()) {
@@ -112,7 +126,7 @@ const AjouterNonParoissienForm = ({ onClose, onSuccess }) => {
   };
 
   // Soumission du formulaire
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
 
     // Valider le formulaire avant soumission

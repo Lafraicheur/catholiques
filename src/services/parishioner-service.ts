@@ -7,7 +7,7 @@ import { ApiError, AuthenticationError, ForbiddenError, NotFoundError } from "./
  * @param {number} paroisseId - ID de la paroisse
  * @returns {Promise<Array>} Les paroissiens de la paroisse
  */
-export const fetchParoissiens = async (paroisseId) => {
+export const fetchParoissiens = async (paroisseId: number) => {
   try {
     // Récupérer le token depuis localStorage
     const token = localStorage.getItem("auth_token");
@@ -60,7 +60,7 @@ export const fetchParoissiens = async (paroisseId) => {
  * @param {number} paroissienId - ID du paroissien
  * @returns {Promise<Object>} Les détails du paroissien
  */
-export const fetchParoissienDetails = async (paroissienId) => {
+export const fetchParoissienDetails = async (paroissienId: number) => {
   try {
     // Récupérer le token depuis localStorage
     const token = localStorage.getItem("auth_token");
@@ -113,7 +113,7 @@ export const fetchParoissienDetails = async (paroissienId) => {
  * @param {Object} paroissienData - Les données du paroissien à modifier
  * @returns {Promise<Object>} Le paroissien modifié
  */
-export const updateParoissien = async (paroissienData) => {
+export const updateParoissien = async (paroissienData: { paroissien_id: number; nom: string; prenoms: string; genre: string; num_de_telephone: string; email: string; date_de_naissance: string; pays: string; nationalite: string; ville: string; commune: string; quartier: string; est_abonne: boolean; date_de_fin_abonnement: number; statut: string; abonnement_id: number; }) => {
   try {
     // Récupérer le token depuis localStorage
     const token = localStorage.getItem("auth_token");

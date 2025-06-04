@@ -1,5 +1,10 @@
-import { useState } from "react";
-import { Loader2, Plus } from "lucide-react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-html-link-for-pages */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+import { useState, useEffect } from "react";
+import { Loader2, Plus, Trash2, Copy, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -38,11 +43,20 @@ interface BaseEventForm {
   description: string;
 }
 
-interface MesseEventForm extends BaseEventForm {
-  type: "MESSE";
+// Interface pour une messe individuelle
+interface SingleMesseForm {
+  id: string; // ID unique pour React keys
+  libelle: string;
+  description: string;
   type_messe: "ORDINAIRE" | "SPECIALE";
   heure_de_debut: number;
   heure_de_fin: number;
+}
+
+// Interface pour le formulaire de messes multiples
+interface MesseEventForm extends BaseEventForm {
+  type: "MESSE";
+  messes: SingleMesseForm[];
 }
 
 interface DonEventForm extends BaseEventForm {
@@ -128,6 +142,16 @@ const MESSE_TYPES = [
   { value: "SPECIALE", label: "Spéciale" },
 ] as const;
 
+// Fonction pour créer une nouvelle messe vide
+const createNewMesse = (): SingleMesseForm => ({
+  id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+  libelle: "",
+  description: "",
+  type_messe: "ORDINAIRE",
+  heure_de_debut: 420, // 7h00 par défaut
+  heure_de_fin: 480, // 8h00 par défaut
+});
+
 // Formulaires par défaut selon le type
 const getDefaultFormData = (eventType: EventType): NewEventForm => {
   const baseData = {
@@ -142,9 +166,7 @@ const getDefaultFormData = (eventType: EventType): NewEventForm => {
       return {
         ...baseData,
         type: "MESSE",
-        type_messe: "ORDINAIRE",
-        heure_de_debut: 630, // 10h30
-        heure_de_fin: 720, // 12h00
+        messes: [createNewMesse()],
       };
 
     case "DON":
@@ -213,20 +235,163 @@ export default function CreateEventModal({
     setFormData(getDefaultFormData(newType));
   };
 
+  // Fonctions pour gérer les messes multiples
+  const addMesse = () => {
+    if (formData.type === "MESSE") {
+      setFormData((prev) => {
+        if (prev.type === "MESSE") {
+          return {
+            ...prev,
+            messes: [...prev.messes, createNewMesse()],
+          };
+        }
+        return prev;
+      });
+    }
+  };
+
+  const removeMesse = (messeId: string) => {
+    if (formData.type === "MESSE" && formData.messes.length > 1) {
+      setFormData((prev) => {
+        if (prev.type === "MESSE" && prev.messes.length > 1) {
+          return {
+            ...prev,
+            messes: prev.messes.filter((m) => m.id !== messeId),
+          };
+        }
+        return prev;
+      });
+    }
+  };
+
+  const duplicateMesse = (messeId: string) => {
+    if (formData.type === "MESSE" && "messes" in formData) {
+      const messeToDuplicate = formData.messes.find((m) => m.id === messeId);
+      if (messeToDuplicate) {
+        const duplicatedMesse = {
+          ...messeToDuplicate,
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        };
+        setFormData((prev) => {
+          if (prev.type === "MESSE" && "messes" in prev) {
+            return {
+              ...prev,
+              messes: [...prev.messes, duplicatedMesse],
+            };
+          }
+          return prev;
+        });
+      }
+    }
+  };
+
+  const updateMesse = (
+    messeId: string,
+    field: keyof SingleMesseForm,
+    value: any
+  ) => {
+    if (formData.type === "MESSE") {
+      setFormData((prev) => {
+        if (prev.type === "MESSE") {
+          return {
+            ...prev,
+            messes: prev.messes.map((messe) =>
+              messe.id === messeId ? { ...messe, [field]: value } : messe
+            ),
+          };
+        }
+        return prev;
+      });
+    }
+  };
+
+  // Ajouter des modèles rapides pour les messes courantes
+  const ajouterMesseRapide = (type: "matin" | "soir" | "midi") => {
+    if (formData.type === "MESSE") {
+      let nouvelleMesse: SingleMesseForm;
+
+      switch (type) {
+        case "matin":
+          nouvelleMesse = {
+            ...createNewMesse(),
+            libelle: "Messe du matin",
+            description: "Messe matinale",
+            heure_de_debut: 420, // 7h00
+            heure_de_fin: 480, // 8h00
+          };
+          break;
+        case "midi":
+          nouvelleMesse = {
+            ...createNewMesse(),
+            libelle: "Messe de midi",
+            description: "Messe de milieu de journée",
+            heure_de_debut: 720, // 12h00
+            heure_de_fin: 780, // 13h00
+          };
+          break;
+        case "soir":
+          nouvelleMesse = {
+            ...createNewMesse(),
+            libelle: "Messe du soir",
+            description: "Messe vespérale",
+            heure_de_debut: 1140, // 19h00
+            heure_de_fin: 1200, // 20h00
+          };
+          break;
+      }
+
+      setFormData((prev) => {
+        if (prev.type === "MESSE" && "messes" in prev) {
+          return {
+            ...prev,
+            messes: [...prev.messes, nouvelleMesse],
+          };
+        }
+        return prev;
+      });
+    }
+  };
+
   // Validation du formulaire
   const validateForm = (): string | null => {
+    // Validation spécifique pour les messes
+    if (formData.type === "MESSE") {
+      if (formData.messes.length === 0) {
+        return "Au moins une messe est requise";
+      }
+
+      for (const messe of formData.messes) {
+        if (!messe.libelle.trim()) {
+          return "Tous les titres de messe sont obligatoires";
+        }
+        if (messe.heure_de_debut >= messe.heure_de_fin) {
+          return `L'heure de fin doit être après l'heure de début pour "${messe.libelle}"`;
+        }
+      }
+
+      // Vérifier les chevauchements d'heures
+      const sortedMesses = [...formData.messes].sort(
+        (a, b) => a.heure_de_debut - b.heure_de_debut
+      );
+      for (let i = 0; i < sortedMesses.length - 1; i++) {
+        if (sortedMesses[i].heure_de_fin > sortedMesses[i + 1].heure_de_debut) {
+          return `Chevauchement d'horaires entre "${sortedMesses[i].libelle}" et "${sortedMesses[i + 1].libelle}"`;
+        }
+      }
+
+      // Vérifier qu'au moins une date est sélectionnée
+      if (selectedDates.length === 0) {
+        return "Aucune date sélectionnée";
+      }
+
+      return null;
+    }
+
+    // Validation pour les autres types (code existant)
     if (!formData.libelle.trim()) {
       return "Le titre de l'événement est obligatoire";
     }
 
-    // Validation spécifique pour les messes
-    if (formData.type === "MESSE") {
-      if (formData.heure_de_debut >= formData.heure_de_fin) {
-        return "L'heure de fin doit être après l'heure de début";
-      }
-    }
-
-    // Validation pour les montants
     if (
       "montant_par_paroissien" in formData &&
       formData.montant_par_paroissien < 0
@@ -234,7 +399,6 @@ export default function CreateEventModal({
       return "Le montant par paroissien ne peut pas être négatif";
     }
 
-    // Validation pour les soldes cibles
     if ("solde_cible" in formData && formData.solde_cible < 0) {
       return "Le solde cible ne peut pas être négatif";
     }
@@ -266,93 +430,116 @@ export default function CreateEventModal({
         throw new Error("Token d'authentification non trouvé");
       }
 
-      // Préparer les données selon le type d'événement
-      const requestData: any = {
-        type: formData.type,
-        dates: selectedDates,
-        libelle: formData.libelle.trim(),
-        description: formData.description.trim(),
-        paroisse_id: paroisseId,
-      };
+      let totalEventsCreated = 0;
 
-      // Ajouter les champs spécifiques selon le type
-      switch (formData.type) {
-        case "MESSE":
-          requestData.type_messe = formData.type_messe;
+      // Pour les messes, créer chaque messe individuellement pour chaque date
+      if (formData.type === "MESSE") {
+        // Créer les messes pour toutes les dates sélectionnées
+        for (const date of selectedDates) {
+          for (const messe of formData.messes) {
+            const requestData = {
+              type: "MESSE",
+              dates: [date],
+              libelle: messe.libelle.trim(),
+              description: messe.description.trim(),
+              paroisse_id: paroisseId,
+              type_messe: messe.type_messe,
+              heure_de_debut: new Date(
+                new Date(date).getFullYear(),
+                new Date(date).getMonth(),
+                new Date(date).getDate(),
+                Math.floor(messe.heure_de_debut / 60),
+                messe.heure_de_debut % 60
+              ).getTime(),
+              heure_de_fin: new Date(
+                new Date(date).getFullYear(),
+                new Date(date).getMonth(),
+                new Date(date).getDate(),
+                Math.floor(messe.heure_de_fin / 60),
+                messe.heure_de_fin % 60
+              ).getTime(),
+            };
 
-          // Convertir les minutes en timestamps pour les heures
-          const today = new Date();
-          requestData.heure_de_debut = new Date(
-            today.getFullYear(),
-            today.getMonth(),
-            today.getDate(),
-            Math.floor(formData.heure_de_debut / 60),
-            formData.heure_de_debut % 60
-          ).getTime();
+            const response = await axios.post(
+              `${API_URL_STATISTIQUE}/evenements/creer`,
+              requestData,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  Accept: "application/json",
+                  "Content-Type": "application/json",
+                },
+              }
+            );
 
-          requestData.heure_de_fin = new Date(
-            today.getFullYear(),
-            today.getMonth(),
-            today.getDate(),
-            Math.floor(formData.heure_de_fin / 60),
-            formData.heure_de_fin % 60
-          ).getTime();
-          break;
+            totalEventsCreated++;
+          }
+        }
+      } else {
+        // Pour les autres types d'événements (code existant)
+        const requestData: any = {
+          type: formData.type,
+          dates: selectedDates,
+          libelle: formData.libelle.trim(),
+          description: formData.description.trim(),
+          paroisse_id: paroisseId,
+        };
 
-        case "DON":
-          requestData.est_actif = formData.est_actif;
-          requestData.date_de_fin = formData.date_de_fin;
-          requestData.solde_cible = formData.solde_cible;
-          requestData.montant_par_paroissien = formData.montant_par_paroissien;
-          requestData.est_limite_par_echeance =
-            formData.est_limite_par_echeance;
-          break;
+        // Ajouter les champs spécifiques selon le type
+        switch (formData.type) {
+          case "DON":
+            requestData.est_actif = formData.est_actif;
+            requestData.date_de_fin = formData.date_de_fin;
+            requestData.solde_cible = formData.solde_cible;
+            requestData.montant_par_paroissien =
+              formData.montant_par_paroissien;
+            requestData.est_limite_par_echeance =
+              formData.est_limite_par_echeance;
+            break;
 
-        case "ACTIVITÉ":
-          requestData.est_actif = formData.est_actif;
-          requestData.montant_par_paroissien = formData.montant_par_paroissien;
-          break;
+          case "ACTIVITÉ":
+            requestData.est_actif = formData.est_actif;
+            requestData.montant_par_paroissien =
+              formData.montant_par_paroissien;
+            break;
 
-        case "COTISATION":
-          requestData.est_actif = formData.est_actif;
-          requestData.date_de_fin = formData.date_de_fin;
-          requestData.solde_cible = formData.solde_cible;
-          requestData.montant_par_paroissien = formData.montant_par_paroissien;
-          requestData.est_limite_par_echeance =
-            formData.est_limite_par_echeance;
-          break;
+          case "COTISATION":
+            requestData.est_actif = formData.est_actif;
+            requestData.date_de_fin = formData.date_de_fin;
+            requestData.solde_cible = formData.solde_cible;
+            requestData.montant_par_paroissien =
+              formData.montant_par_paroissien;
+            requestData.est_limite_par_echeance =
+              formData.est_limite_par_echeance;
+            break;
 
-        case "INSCRIPTION":
-          requestData.date_de_fin = formData.date_de_fin;
-          requestData.montant_par_paroissien = formData.montant_par_paroissien;
-          requestData.est_limite_par_echeance =
-            formData.est_limite_par_echeance;
-          break;
+          case "INSCRIPTION":
+            requestData.date_de_fin = formData.date_de_fin;
+            requestData.montant_par_paroissien =
+              formData.montant_par_paroissien;
+            requestData.est_limite_par_echeance =
+              formData.est_limite_par_echeance;
+            break;
+        }
+
+        const response = await axios.post(
+          `${API_URL_STATISTIQUE}/evenements/creer`,
+          requestData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        totalEventsCreated = selectedDates.length;
       }
 
-      console.log(
-        "Données envoyées à l'API:",
-        JSON.stringify(requestData, null, 2)
-      );
-
-      const response = await axios.post(
-        `${API_URL_STATISTIQUE}/evenements/creer`,
-        requestData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      console.log("Réponse de l'API:", response.data);
-
       // Succès
-      const eventCount = selectedDates.length;
       toast.success(
-        `${eventCount} événement${eventCount > 1 ? "s" : ""} créé${eventCount > 1 ? "s" : ""} avec succès`
+        `${totalEventsCreated} événement${totalEventsCreated > 1 ? "s" : ""} créé${totalEventsCreated > 1 ? "s" : ""} avec succès`
       );
 
       // Fermer la modal et réinitialiser
@@ -362,7 +549,6 @@ export default function CreateEventModal({
     } catch (error: any) {
       console.error("Erreur lors de la création des événements:", error);
 
-      // Gestion des erreurs détaillée
       if (axios.isAxiosError(error)) {
         const errorMessage =
           error.response?.data?.message ||
@@ -395,22 +581,38 @@ export default function CreateEventModal({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Calculer le nombre total d'événements qui seront créés
+  const getTotalEventCount = () => {
+    if (formData.type === "MESSE") {
+      return selectedDates.length * formData.messes.length;
+    }
+    return selectedDates.length;
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5" />
             Créer des événements multiples
           </DialogTitle>
           <DialogDescription>
-            Vous allez créer{" "}
-            <span className="font-medium text-slate-900">
-              {selectedDates.length}
-            </span>{" "}
-            événement
-            {selectedDates.length > 1 ? "s" : ""} identique
-            {selectedDates.length > 1 ? "s" : ""} aux dates sélectionnées.
+            {formData.type === "MESSE" ? (
+              <>
+                Configurez votre programmation de messes pour{" "}
+                {selectedDates.length} date{selectedDates.length > 1 ? "s" : ""}
+              </>
+            ) : (
+              <>
+                Vous allez créer{" "}
+                <span className="font-medium text-slate-900">
+                  {getTotalEventCount()}
+                </span>{" "}
+                événement
+                {getTotalEventCount() > 1 ? "s" : ""} aux dates sélectionnées.
+              </>
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -432,229 +634,347 @@ export default function CreateEventModal({
             </Select>
           </div>
 
-          {/* Titre */}
-          <div className="space-y-2">
-            <Label htmlFor="libelle">Titre de l'événement *</Label>
-            <Input
-              id="libelle"
-              value={formData.libelle}
-              onChange={(e) => updateFormField("libelle", e.target.value)}
-              placeholder="Ex: Messe dominicale, Catéchisme..."
-              required
-            />
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => updateFormField("description", e.target.value)}
-              placeholder="Description de l'événement (optionnel)"
-              rows={3}
-            />
-          </div>
-
-          {/* Champs spécifiques selon le type */}
+          {/* Formulaire spécifique pour les messes */}
           {formData.type === "MESSE" && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="type_messe">Type de messe *</Label>
-                <Select
-                  value={formData.type_messe}
-                  onValueChange={(value) =>
-                    updateFormField("type_messe", value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Type de messe" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MESSE_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="heure_debut">Heure de début *</Label>
-                  <Input
-                    id="heure_debut"
-                    type="time"
-                    value={formatMinutesToTime(formData.heure_de_debut)}
-                    onChange={(e) =>
-                      updateFormField(
-                        "heure_de_debut",
-                        convertTimeToMinutes(e.target.value)
-                      )
-                    }
-                    required
-                  />
+            <div className="space-y-6">
+              {/* Configuration des messes */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-lg font-medium">
+                    Configuration des messes ({formData.messes.length})
+                  </Label>
+                  <div className="flex gap-2 flex-wrap">
+                    {/* <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => ajouterMesseRapide("matin")}
+                    >
+                      + Messe matin
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => ajouterMesseRapide("midi")}
+                    >
+                      + Messe midi
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => ajouterMesseRapide("soir")}
+                    >
+                      + Messe soir
+                    </Button> */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addMesse}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Messe vide
+                    </Button>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="heure_fin">Heure de fin *</Label>
-                  <Input
-                    id="heure_fin"
-                    type="time"
-                    value={formatMinutesToTime(formData.heure_de_fin)}
-                    onChange={(e) =>
-                      updateFormField(
-                        "heure_de_fin",
-                        convertTimeToMinutes(e.target.value)
-                      )
-                    }
-                    required
-                  />
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {formData.messes.map((messe, index) => (
+                    <div
+                      key={messe.id}
+                      className="border rounded-lg p-4 bg-slate-50 space-y-4"
+                    >
+                      <div className="flex items-center justify-between">
+                        <Label className="font-medium">
+                          Messe #{index + 1}
+                        </Label>
+                        <div className="flex gap-1">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => duplicateMesse(messe.id)}
+                            title="Dupliquer cette messe"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                          {formData.messes.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeMesse(messe.id)}
+                              title="Supprimer cette messe"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Titre de la messe *</Label>
+                          <Input
+                            value={messe.libelle}
+                            onChange={(e) =>
+                              updateMesse(messe.id, "libelle", e.target.value)
+                            }
+                            placeholder="Ex: Messe du matin, Messe dominicale..."
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Type de messe</Label>
+                          <Select
+                            value={messe.type_messe}
+                            onValueChange={(value) =>
+                              updateMesse(messe.id, "type_messe", value)
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {MESSE_TYPES.map((type) => (
+                                <SelectItem key={type.value} value={type.value}>
+                                  {type.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Heure de début *</Label>
+                          <Input
+                            type="time"
+                            value={formatMinutesToTime(messe.heure_de_debut)}
+                            onChange={(e) =>
+                              updateMesse(
+                                messe.id,
+                                "heure_de_debut",
+                                convertTimeToMinutes(e.target.value)
+                              )
+                            }
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Heure de fin *</Label>
+                          <Input
+                            type="time"
+                            value={formatMinutesToTime(messe.heure_de_fin)}
+                            onChange={(e) =>
+                              updateMesse(
+                                messe.id,
+                                "heure_de_fin",
+                                convertTimeToMinutes(e.target.value)
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Description</Label>
+                        <Textarea
+                          value={messe.description}
+                          onChange={(e) =>
+                            updateMesse(messe.id, "description", e.target.value)
+                          }
+                          placeholder="Description de cette messe..."
+                          rows={2}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </>
+            </div>
           )}
 
-          {(formData.type === "DON" ||
-            formData.type === "COTISATION" ||
-            formData.type === "ACTIVITÉ") && (
+          {/* Formulaires pour les autres types d'événements (code existant) */}
+          {formData.type !== "MESSE" && (
             <>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="est_actif"
-                  checked={"est_actif" in formData ? formData.est_actif : false}
-                  onCheckedChange={(checked) =>
-                    updateFormField("est_actif", checked)
-                  }
-                />
-                <Label htmlFor="est_actif">Événement actif</Label>
-              </div>
-
+              {/* Titre */}
               <div className="space-y-2">
-                <Label htmlFor="montant_par_paroissien">
-                  Montant par paroissien (FCFA)
-                </Label>
+                <Label htmlFor="libelle">Titre de l'événement *</Label>
                 <Input
-                  id="montant_par_paroissien"
-                  type="number"
-                  min="0"
-                  value={
-                    "montant_par_paroissien" in formData
-                      ? formData.montant_par_paroissien
-                      : 0
-                  }
-                  onChange={(e) =>
-                    updateFormField(
-                      "montant_par_paroissien",
-                      Number(e.target.value)
-                    )
-                  }
+                  id="libelle"
+                  value={formData.libelle}
+                  onChange={(e) => updateFormField("libelle", e.target.value)}
+                  placeholder="Ex: Catéchisme, Collecte..."
+                  required
                 />
               </div>
-            </>
-          )}
 
-          {(formData.type === "DON" || formData.type === "COTISATION") && (
-            <>
+              {/* Description */}
               <div className="space-y-2">
-                <Label htmlFor="solde_cible">Solde cible (FCFA)</Label>
-                <Input
-                  id="solde_cible"
-                  type="number"
-                  min="0"
-                  value={"solde_cible" in formData ? formData.solde_cible : 0}
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
                   onChange={(e) =>
-                    updateFormField("solde_cible", Number(e.target.value))
+                    updateFormField("description", e.target.value)
                   }
+                  placeholder="Description de l'événement (optionnel)"
+                  rows={3}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="date_de_fin">Date de fin</Label>
-                <Input
-                  id="date_de_fin"
-                  type="date"
-                  value={
-                    "date_de_fin" in formData
-                      ? formatDateForInput(formData.date_de_fin)
-                      : ""
-                  }
-                  onChange={(e) =>
-                    updateFormField(
-                      "date_de_fin",
-                      convertDateInputToTimestamp(e.target.value)
-                    )
-                  }
-                />
-              </div>
+              {/* Autres champs selon le type (code existant) */}
+              {(formData.type === "DON" ||
+                formData.type === "COTISATION" ||
+                formData.type === "ACTIVITÉ") && (
+                <>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="est_actif"
+                      checked={
+                        "est_actif" in formData ? formData.est_actif : false
+                      }
+                      onCheckedChange={(checked) =>
+                        updateFormField("est_actif", checked)
+                      }
+                    />
+                    <Label htmlFor="est_actif">Événement actif</Label>
+                  </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="est_limite_par_echeance"
-                  checked={
-                    "est_limite_par_echeance" in formData
-                      ? formData.est_limite_par_echeance
-                      : false
-                  }
-                  onCheckedChange={(checked) =>
-                    updateFormField("est_limite_par_echeance", checked)
-                  }
-                />
-                <Label htmlFor="est_limite_par_echeance">
-                  Limité par échéance
-                </Label>
-              </div>
-            </>
-          )}
+                  <div className="space-y-2">
+                    <Label htmlFor="montant_par_paroissien">
+                      Montant par paroissien (FCFA)
+                    </Label>
+                    <Input
+                      id="montant_par_paroissien"
+                      type="number"
+                      min="0"
+                      value={
+                        "montant_par_paroissien" in formData
+                          ? formData.montant_par_paroissien
+                          : 0
+                      }
+                      onChange={(e) =>
+                        updateFormField(
+                          "montant_par_paroissien",
+                          Number(e.target.value)
+                        )
+                      }
+                    />
+                  </div>
+                </>
+              )}
 
-          {formData.type === "INSCRIPTION" && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="montant_par_paroissien">
-                  Montant par paroissien (FCFA)
-                </Label>
-                <Input
-                  id="montant_par_paroissien"
-                  type="number"
-                  min="0"
-                  value={formData.montant_par_paroissien}
-                  onChange={(e) =>
-                    updateFormField(
-                      "montant_par_paroissien",
-                      Number(e.target.value)
-                    )
-                  }
-                />
-              </div>
+              {/* Autres champs spécifiques */}
+              {(formData.type === "DON" || formData.type === "COTISATION") && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="solde_cible">Solde cible (FCFA)</Label>
+                    <Input
+                      id="solde_cible"
+                      type="number"
+                      min="0"
+                      value={
+                        "solde_cible" in formData ? formData.solde_cible : 0
+                      }
+                      onChange={(e) =>
+                        updateFormField("solde_cible", Number(e.target.value))
+                      }
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="date_de_fin">Date de fin</Label>
-                <Input
-                  id="date_de_fin"
-                  type="date"
-                  value={formatDateForInput(formData.date_de_fin)}
-                  onChange={(e) =>
-                    updateFormField(
-                      "date_de_fin",
-                      convertDateInputToTimestamp(e.target.value)
-                    )
-                  }
-                />
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="date_de_fin">Date de fin</Label>
+                    <Input
+                      id="date_de_fin"
+                      type="date"
+                      value={
+                        "date_de_fin" in formData
+                          ? formatDateForInput(formData.date_de_fin)
+                          : ""
+                      }
+                      onChange={(e) =>
+                        updateFormField(
+                          "date_de_fin",
+                          convertDateInputToTimestamp(e.target.value)
+                        )
+                      }
+                    />
+                  </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="est_limite_par_echeance"
-                  checked={formData.est_limite_par_echeance}
-                  onCheckedChange={(checked) =>
-                    updateFormField("est_limite_par_echeance", checked)
-                  }
-                />
-                <Label htmlFor="est_limite_par_echeance">
-                  Limité par échéance
-                </Label>
-              </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="est_limite_par_echeance"
+                      checked={
+                        "est_limite_par_echeance" in formData
+                          ? formData.est_limite_par_echeance
+                          : false
+                      }
+                      onCheckedChange={(checked) =>
+                        updateFormField("est_limite_par_echeance", checked)
+                      }
+                    />
+                    <Label htmlFor="est_limite_par_echeance">
+                      Limité par échéance
+                    </Label>
+                  </div>
+                </>
+              )}
+
+              {formData.type === "INSCRIPTION" && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="montant_par_paroissien">
+                      Montant par paroissien (FCFA)
+                    </Label>
+                    <Input
+                      id="montant_par_paroissien"
+                      type="number"
+                      min="0"
+                      value={formData.montant_par_paroissien}
+                      onChange={(e) =>
+                        updateFormField(
+                          "montant_par_paroissien",
+                          Number(e.target.value)
+                        )
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="date_de_fin">Date de fin</Label>
+                    <Input
+                      id="date_de_fin"
+                      type="date"
+                      value={formatDateForInput(formData.date_de_fin)}
+                      onChange={(e) =>
+                        updateFormField(
+                          "date_de_fin",
+                          convertDateInputToTimestamp(e.target.value)
+                        )
+                      }
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="est_limite_par_echeance"
+                      checked={formData.est_limite_par_echeance}
+                      onCheckedChange={(checked) =>
+                        updateFormField("est_limite_par_echeance", checked)
+                      }
+                    />
+                    <Label htmlFor="est_limite_par_echeance">
+                      Limité par échéance
+                    </Label>
+                  </div>
+                </>
+              )}
             </>
           )}
 
@@ -689,7 +1009,11 @@ export default function CreateEventModal({
           </Button>
           <Button
             onClick={handleCreateEvents}
-            disabled={creating || selectedDates.length === 0}
+            disabled={
+              creating ||
+              (formData.type === "MESSE" && formData.messes.length === 0) ||
+              selectedDates.length === 0
+            }
           >
             {creating ? (
               <>
@@ -699,7 +1023,7 @@ export default function CreateEventModal({
             ) : (
               <>
                 <Plus className="h-4 w-4 mr-2" />
-                Créer {selectedDates.length > 0 && `(${selectedDates.length})`}
+                Créer {getTotalEventCount() > 0 && `(${getTotalEventCount()})`}
               </>
             )}
           </Button>

@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // NominerPresidentForm.jsx
 "use client";
 
@@ -17,14 +19,20 @@ import {
 } from "@/services/api";
 import { nominatePresident } from "@/services/ceb-services";
 
-const NominerPresidentForm = ({ cebId, onClose, onSuccess }) => {
+interface NominerPresidentFormProps {
+  cebId: string;
+  onClose: () => void;
+  onSuccess: (updatedCeb: any) => void;
+}
+
+const NominerPresidentForm: React.FC<NominerPresidentFormProps> = ({ cebId, onClose, onSuccess }) => {
   const router = useRouter();
   const [telephone, setTelephone] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Nettoyage et formatage du numéro de téléphone
-  const formatPhoneNumber = (phone) => {
+  const formatPhoneNumber = (phone: string) => {
     // Supprimer tous les caractères non numériques
     return phone.replace(/\D/g, "");
   };
@@ -44,7 +52,7 @@ const NominerPresidentForm = ({ cebId, onClose, onSuccess }) => {
   };
 
   // Soumission du formulaire
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
 
     // Valider et formater le numéro de téléphone

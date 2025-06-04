@@ -5,20 +5,31 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  ArrowLeft, Edit, Trash, Calendar, Heart, 
-  FileText, User, Loader2, XCircle, 
-  MapPin, Clock, Mail, Phone 
+import {
+  ArrowLeft,
+  Edit,
+  Trash,
+  Calendar,
+  Heart,
+  FileText,
+  User,
+  Loader2,
+  XCircle,
+  MapPin,
+  Clock,
+  Mail,
+  Phone,
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
+// Interface mise à jour pour Next.js 15+
 interface SacrementDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 // Interface pour les données du sacrement
@@ -52,7 +63,7 @@ const formatDate = (dateString: string) => {
 const extractHeure = (description: string) => {
   const heureMatch = description.match(/\b(\d{1,2})[hH:](\d{2})?\b/);
   if (heureMatch) {
-    const heure = heureMatch[1].padStart(2, '0');
+    const heure = heureMatch[1].padStart(2, "0");
     const minutes = heureMatch[2] ? heureMatch[2] : "00";
     return `${heure}:${minutes}`;
   }
@@ -61,7 +72,9 @@ const extractHeure = (description: string) => {
 
 // Extraction du lieu depuis la description
 const extractLieu = (description: string) => {
-  const lieuMatch = description.match(/(?:à|au|dans|en|église|chapelle|cathédrale)\s+([^.,;]+)/i);
+  const lieuMatch = description.match(
+    /(?:à|au|dans|en|église|chapelle|cathédrale)\s+([^.,;]+)/i
+  );
   if (lieuMatch) {
     return lieuMatch[1].trim();
   }
@@ -71,28 +84,30 @@ const extractLieu = (description: string) => {
 // Extraction des personnes concernées par le sacrement
 const extractPersonnes = (description: string, type: string) => {
   const typeLC = type.toLowerCase();
-  
+
   // Pour les sacrements d'union (comme le mariage)
   if (typeLC.includes("mariage")) {
     // Rechercher un modèle comme "Mariage de X et Y" ou "X & Y" dans la description
-    const unionMatch = description.match(/(?:mariage|union)(?:\s+de)?\s+([^&]+)\s+(?:et|&)\s+([^.,;]+)/i);
+    const unionMatch = description.match(
+      /(?:mariage|union)(?:\s+de)?\s+([^&]+)\s+(?:et|&)\s+([^.,;]+)/i
+    );
     if (unionMatch) {
       return {
         primary: unionMatch[1].trim(),
         secondary: unionMatch[2].trim(),
         display: `${unionMatch[1].trim()} & ${unionMatch[2].trim()}`,
-        isCouple: true
+        isCouple: true,
       };
     }
-    
+
     // Si aucun match, retourner un placeholder
     return {
       primary: "Premier époux",
       secondary: "Second époux",
       display: "Couple",
-      isCouple: true
+      isCouple: true,
     };
-  } 
+  }
   // Pour les sacrements individuels
   else {
     // Chercher un nom dans la description
@@ -102,16 +117,16 @@ const extractPersonnes = (description: string, type: string) => {
         primary: personneMatch[1].trim(),
         secondary: "",
         display: personneMatch[1].trim(),
-        isCouple: false
+        isCouple: false,
       };
     }
-    
+
     // Si aucun match, retourner un placeholder selon le type
     return {
       primary: `Participant(e)`,
       secondary: "",
       display: `Participant(e)`,
-      isCouple: false
+      isCouple: false,
     };
   }
 };
@@ -120,58 +135,60 @@ const extractPersonnes = (description: string, type: string) => {
 const extractStatut = (date: string) => {
   const dateObj = new Date(date);
   const now = new Date();
-  
+
   if (dateObj < now) return "terminé";
-  if (dateObj.getTime() - now.getTime() < 7 * 24 * 60 * 60 * 1000) return "confirmé";
-  if (dateObj.getTime() - now.getTime() < 30 * 24 * 60 * 60 * 1000) return "en préparation";
+  if (dateObj.getTime() - now.getTime() < 7 * 24 * 60 * 60 * 1000)
+    return "confirmé";
+  if (dateObj.getTime() - now.getTime() < 30 * 24 * 60 * 60 * 1000)
+    return "en préparation";
   return "demande reçue";
 };
 
 // Formater type de sacrement pour Badge
 const getSacrementTypeDetails = (type: string) => {
   const typeLC = type.toLowerCase();
-  
+
   if (typeLC.includes("baptême") || typeLC === "bapteme") {
-    return { 
-      label: "Baptême", 
-      variant: "default" as const, 
+    return {
+      label: "Baptême",
+      variant: "default" as const,
       icon: <Heart className="h-4 w-4 mr-1" />,
-      isUnion: false
+      isUnion: false,
     };
   } else if (typeLC.includes("communion")) {
-    return { 
-      label: "Communion", 
-      variant: "success" as const, 
+    return {
+      label: "Communion",
+      variant: "success" as const,
       icon: <Heart className="h-4 w-4 mr-1" />,
-      isUnion: false
+      isUnion: false,
     };
   } else if (typeLC.includes("confirmation")) {
-    return { 
-      label: "Confirmation", 
-      variant: "secondary" as const, 
+    return {
+      label: "Confirmation",
+      variant: "secondary" as const,
       icon: <Heart className="h-4 w-4 mr-1" />,
-      isUnion: false
+      isUnion: false,
     };
   } else if (typeLC.includes("mariage")) {
-    return { 
-      label: "Mariage", 
-      variant: "destructive" as const, 
+    return {
+      label: "Mariage",
+      variant: "destructive" as const,
       icon: <Heart className="h-4 w-4 mr-1" />,
-      isUnion: true
+      isUnion: true,
     };
   } else if (typeLC.includes("onction") || typeLC.includes("malade")) {
-    return { 
-      label: "Onction des malades", 
-      variant: "outline" as const, 
+    return {
+      label: "Onction des malades",
+      variant: "outline" as const,
       icon: <Heart className="h-4 w-4 mr-1" />,
-      isUnion: false
+      isUnion: false,
     };
   } else {
-    return { 
-      label: type, 
-      variant: "default" as const, 
+    return {
+      label: type,
+      variant: "default" as const,
       icon: <Heart className="h-4 w-4 mr-1" />,
-      isUnion: false
+      isUnion: false,
     };
   }
 };
@@ -192,26 +209,49 @@ const getStatusDetails = (statut: string) => {
   }
 };
 
-export default function SacrementDetailPage({ params }: SacrementDetailPageProps) {
+export default function SacrementDetailPage({
+  params,
+}: SacrementDetailPageProps) {
   const router = useRouter();
   const [sacrement, setSacrement] = useState<Sacrement | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(
+    null
+  );
+
+  // Résoudre les params asynchrones
+  useEffect(() => {
+    const resolveParams = async () => {
+      try {
+        const resolved = await params;
+        setResolvedParams(resolved);
+      } catch (err) {
+        console.error("Erreur lors de la résolution des paramètres:", err);
+        setError("Erreur lors du chargement des paramètres");
+        setLoading(false);
+      }
+    };
+
+    resolveParams();
+  }, [params]);
 
   useEffect(() => {
+    if (!resolvedParams) return;
+
     const fetchSacrement = async () => {
       setLoading(true);
       try {
         // Récupérer le token depuis localStorage
         const token = localStorage.getItem("auth_token");
-        
+
         if (!token) {
           throw new Error("Token d'authentification non trouvé");
         }
-        
+
         // Appel à l'API
         const response = await fetch(
-          `https://api.cathoconnect.ci/api:HzF8fFua/sacrement/${params.id}`,
+          `https://api.cathoconnect.ci/api:HzF8fFua/sacrement/${resolvedParams.id}`,
           {
             method: "GET",
             headers: {
@@ -220,7 +260,7 @@ export default function SacrementDetailPage({ params }: SacrementDetailPageProps
             },
           }
         );
-        
+
         if (!response.ok) {
           if (response.status === 404) {
             throw new Error("Sacrement non trouvé");
@@ -228,12 +268,15 @@ export default function SacrementDetailPage({ params }: SacrementDetailPageProps
             throw new Error(`Erreur HTTP: ${response.status}`);
           }
         }
-        
+
         const data = await response.json();
         setSacrement(data);
       } catch (err) {
         console.error("Erreur lors du chargement du sacrement:", err);
-        setError(err.message || "Une erreur est survenue lors du chargement des données.");
+        setError(
+          (err as Error).message ||
+            "Une erreur est survenue lors du chargement des données."
+        );
         toast.error("Erreur", {
           description: "Impossible de charger les détails du sacrement.",
         });
@@ -241,9 +284,9 @@ export default function SacrementDetailPage({ params }: SacrementDetailPageProps
         setLoading(false);
       }
     };
-    
+
     fetchSacrement();
-  }, [params.id]);
+  }, [resolvedParams]);
 
   // Affichage du chargement
   if (loading) {
@@ -260,8 +303,12 @@ export default function SacrementDetailPage({ params }: SacrementDetailPageProps
     return (
       <div className="text-center py-12">
         <XCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-slate-900 mb-4">Sacrement non trouvé</h1>
-        <p className="text-slate-600 mb-6">{error || "Le sacrement que vous recherchez n'existe pas."}</p>
+        <h1 className="text-2xl font-bold text-slate-900 mb-4">
+          Sacrement non trouvé
+        </h1>
+        <p className="text-slate-600 mb-6">
+          {error || "Le sacrement que vous recherchez n'existe pas."}
+        </p>
         <Link href="/dashboard/paroisse/sacrements" passHref>
           <Button>
             <ArrowLeft className="mr-2 h-4 w-4" /> Retour à la liste
@@ -277,8 +324,14 @@ export default function SacrementDetailPage({ params }: SacrementDetailPageProps
   const personnes = extractPersonnes(sacrement.description, sacrement.type);
   const statut = extractStatut(sacrement.date);
 
-  const { label: typeLabel, variant: typeVariant, icon: typeIcon, isUnion } = getSacrementTypeDetails(sacrement.type);
-  const { label: statusLabel, variant: statusVariant } = getStatusDetails(statut);
+  const {
+    label: typeLabel,
+    variant: typeVariant,
+    icon: typeIcon,
+    isUnion,
+  } = getSacrementTypeDetails(sacrement.type);
+  const { label: statusLabel, variant: statusVariant } =
+    getStatusDetails(statut);
 
   return (
     <div className="space-y-6">
@@ -290,7 +343,9 @@ export default function SacrementDetailPage({ params }: SacrementDetailPageProps
             </Button>
           </Link>
           <h1 className="text-2xl font-bold text-slate-900">
-            {isUnion ? `${typeLabel} : ${personnes.display}` : `${typeLabel} : ${personnes.display}`}
+            {isUnion
+              ? `${typeLabel} : ${personnes.display}`
+              : `${typeLabel} : ${personnes.display}`}
           </h1>
           <Badge variant={typeVariant} className="flex items-center">
             {typeIcon} {typeLabel}
@@ -337,14 +392,18 @@ export default function SacrementDetailPage({ params }: SacrementDetailPageProps
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-slate-500">ID Célébrant</p>
+                  <p className="text-sm font-medium text-slate-500">
+                    ID Célébrant
+                  </p>
                   <p className="flex items-center">
                     <User className="h-4 w-4 mr-2 text-slate-400" />
                     {sacrement.celebrant_id}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-slate-500">Paroisse ID</p>
+                  <p className="text-sm font-medium text-slate-500">
+                    Paroisse ID
+                  </p>
                   <p className="flex items-center">
                     <MapPin className="h-4 w-4 mr-2 text-slate-400" />
                     {sacrement.paroisse_id}
@@ -352,7 +411,9 @@ export default function SacrementDetailPage({ params }: SacrementDetailPageProps
                 </div>
                 {sacrement.chapelle_id && (
                   <div className="space-y-1">
-                    <p className="text-sm font-medium text-slate-500">Chapelle ID</p>
+                    <p className="text-sm font-medium text-slate-500">
+                      Chapelle ID
+                    </p>
                     <p className="flex items-center">
                       <MapPin className="h-4 w-4 mr-2 text-slate-400" />
                       {sacrement.chapelle_id}
@@ -361,7 +422,9 @@ export default function SacrementDetailPage({ params }: SacrementDetailPageProps
                 )}
                 {sacrement.certificateur_id && (
                   <div className="space-y-1">
-                    <p className="text-sm font-medium text-slate-500">Certificateur ID</p>
+                    <p className="text-sm font-medium text-slate-500">
+                      Certificateur ID
+                    </p>
                     <p className="flex items-center">
                       <User className="h-4 w-4 mr-2 text-slate-400" />
                       {sacrement.certificateur_id}
@@ -376,24 +439,32 @@ export default function SacrementDetailPage({ params }: SacrementDetailPageProps
           <Card>
             <CardHeader>
               <CardTitle>
-                {isUnion ? "Informations sur les époux" : "Informations sur la personne"}
+                {isUnion
+                  ? "Informations sur les époux"
+                  : "Informations sur la personne"}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {isUnion ? (
                 <div className="space-y-4">
                   <div className="p-4 border border-slate-200 rounded-md">
-                    <h3 className="font-medium text-slate-900 mb-2">Premier époux</h3>
+                    <h3 className="font-medium text-slate-900 mb-2">
+                      Premier époux
+                    </h3>
                     <p className="text-slate-700">{personnes.primary}</p>
                   </div>
                   <div className="p-4 border border-slate-200 rounded-md">
-                    <h3 className="font-medium text-slate-900 mb-2">Second époux</h3>
+                    <h3 className="font-medium text-slate-900 mb-2">
+                      Second époux
+                    </h3>
                     <p className="text-slate-700">{personnes.secondary}</p>
                   </div>
                 </div>
               ) : (
                 <div className="p-4 border border-slate-200 rounded-md">
-                  <h3 className="font-medium text-slate-900 mb-2">Personne concernée</h3>
+                  <h3 className="font-medium text-slate-900 mb-2">
+                    Personne concernée
+                  </h3>
                   <p className="text-slate-700">{personnes.display}</p>
                 </div>
               )}
@@ -405,7 +476,9 @@ export default function SacrementDetailPage({ params }: SacrementDetailPageProps
               <CardTitle>Description</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-slate-700 whitespace-pre-line">{sacrement.description}</p>
+              <p className="text-slate-700 whitespace-pre-line">
+                {sacrement.description}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -437,12 +510,20 @@ export default function SacrementDetailPage({ params }: SacrementDetailPageProps
             <CardContent>
               <div className="space-y-3">
                 <div className="p-3 border border-slate-200 rounded-md">
-                  <p className="text-sm font-medium text-slate-700">ID du sacrement</p>
+                  <p className="text-sm font-medium text-slate-700">
+                    ID du sacrement
+                  </p>
                   <p className="text-slate-900">{sacrement.id}</p>
                 </div>
                 <div className="p-3 border border-slate-200 rounded-md">
-                  <p className="text-sm font-medium text-slate-700">Date de création</p>
-                  <p className="text-slate-900">{sacrement.created_at === "now" ? "Récemment" : formatDate(sacrement.created_at)}</p>
+                  <p className="text-sm font-medium text-slate-700">
+                    Date de création
+                  </p>
+                  <p className="text-slate-900">
+                    {sacrement.created_at === "now"
+                      ? "Récemment"
+                      : formatDate(sacrement.created_at)}
+                  </p>
                 </div>
                 <div className="p-3 border border-slate-200 rounded-md">
                   <p className="text-sm font-medium text-slate-700">Statut</p>
@@ -472,8 +553,8 @@ export default function SacrementDetailPage({ params }: SacrementDetailPageProps
                   </div>
                 </div>
                 <p className="text-sm text-slate-600 mt-2">
-                  {isUnion 
-                    ? "Ce sacrement concerne l'union de deux personnes." 
+                  {isUnion
+                    ? "Ce sacrement concerne l'union de deux personnes."
                     : "Ce sacrement concerne une personne individuelle."}
                 </p>
               </div>

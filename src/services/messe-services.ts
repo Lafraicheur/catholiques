@@ -53,7 +53,7 @@ export class ValidationError extends ApiError {
  * @param {number} id - ID de la demande de messe
  * @returns {Promise<Object>} - Les données de la demande de messe
  */
-export const fetchDemandeMesseDetails = async (id) => {
+export const fetchDemandeMesseDetails = async (id: number) => {
   const token = localStorage.getItem('auth_token');
   
   if (!token) {
@@ -78,7 +78,7 @@ export const fetchDemandeMesseDetails = async (id) => {
   }
 };
 
-function handleApiError(error) {
+function handleApiError(error: unknown) {
   // Vérifier si c'est une erreur Axios
   if (axios.isAxiosError(error)) {
     const axiosError = error;

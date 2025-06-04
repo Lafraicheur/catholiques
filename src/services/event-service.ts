@@ -1,6 +1,6 @@
 // Fichier: services/api.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react/no-unescaped-entities */
+    /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // Service d'API pour gérer les appels à l'API CathoConnect
 
@@ -120,7 +120,11 @@ const debugApiResponse = (data: any) => {
                 const date = new Date(item.date_de_debut * 1000);
                 console.log(`- Conversion date_de_debut: ${date.toISOString()}`);
             } catch (e) {
-                console.error(`- Impossible de convertir date_de_debut: ${e.message}`);
+                if (e instanceof Error) {
+                    console.error(`- Impossible de convertir date_de_debut: ${e.message}`);
+                } else {
+                    console.error(`- Impossible de convertir date_de_debut:`, e);
+                }
             }
         });
     }

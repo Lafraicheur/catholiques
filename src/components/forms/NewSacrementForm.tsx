@@ -1,5 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Importez tous les composants de la même bibliothèque
 import { Calendar, Loader2, Plus } from "lucide-react";
 import { useState } from "react";
@@ -65,7 +66,7 @@ export default function NewSacrementForm() {
   });
 
   // Gestion des changements de champs
-  const handleChange = (e) => {
+  const handleChange = (e: { target: { name: any; value: any; }; }) => {
     const { name, value } = e.target;
     
     setFormData((prev) => ({
@@ -84,7 +85,7 @@ export default function NewSacrementForm() {
 
   // Validation du formulaire
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors: Record<string, string | null> = {};
     
     // Validation du type (requis)
     if (!formData.type) {
@@ -134,7 +135,7 @@ export default function NewSacrementForm() {
   };
 
   // Soumission du formulaire
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
     
     // Valider le formulaire
@@ -207,7 +208,9 @@ export default function NewSacrementForm() {
     } catch (err) {
       console.error("Erreur lors de la création du sacrement:", err);
       toast.error("Échec de la création", {
-        description: err.message || "Une erreur est survenue lors de la création du sacrement.",
+        description: err instanceof Error
+          ? err.message
+          : "Une erreur est survenue lors de la création du sacrement.",
       });
     } finally {
       setFormLoading(false);

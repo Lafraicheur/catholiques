@@ -303,7 +303,7 @@ export default function NewSacrementUnionForm({
       }}
     >
       <DialogTrigger asChild>
-        <Button className="bg-green-600 hover:bg-green-700 text-white">
+        <Button className=" text-white cursor-pointer">
           <Plus className="h-4 w-4 mr-2" />
           Nouveau Mariage
         </Button>

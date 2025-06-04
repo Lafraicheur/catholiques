@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, SetStateAction } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -195,11 +195,13 @@ const fetchMouvementDetails = async (id: number): Promise<Mouvement> => {
 export default function MouvementDetailsPage() {
   const router = useRouter();
   const params = useParams();
-  const mouvementId = params?.id ? parseInt(params.id, 10) : null;
+  const mouvementId = params?.id
+    ? parseInt(Array.isArray(params.id) ? params.id[0] : params.id, 10)
+    : null;
 
-  const [mouvement, setMouvement] = useState(null);
+  const [mouvement, setMouvement] = useState<Mouvement | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [aumonierModalOpen, setAumonierModalOpen] = useState(false);
   const [responsableModalOpen, setResponsableModalOpen] = useState(false);
@@ -249,7 +251,7 @@ export default function MouvementDetailsPage() {
   }, [mouvementId, router]);
 
   // Formatage d'un numéro de téléphone: 0101020304 -> 01 01 02 03 04
-  const formatPhoneNumber = (phone) => {
+  const formatPhoneNumber = (phone: string) => {
     if (!phone) return "Non renseigné";
 
     const cleaned = phone.replace(/\D/g, "");
@@ -263,42 +265,63 @@ export default function MouvementDetailsPage() {
   };
 
   // Formatage de la date: 2023-05-15 -> 15/05/2023
-  const formatDate = (dateString) => {
-    if (!dateString) return "Non renseignée";
+  const formatDate = (
+    dateInput: string | Date | number | undefined | null
+  ): string => {
+    if (!dateInput) return "Date non renseignée";
 
-    try {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat("fr-FR").format(date);
-    } catch (err) {
-      console.error("Erreur lors du formatage de la date:", err);
-      return dateString;
+    let date: Date;
+
+    if (dateInput instanceof Date) {
+      date = dateInput;
+    } else if (typeof dateInput === "string" || typeof dateInput === "number") {
+      date = new Date(dateInput);
+    } else {
+      return "Date invalide";
     }
+
+    if (isNaN(date.getTime())) {
+      return "Date invalide";
+    }
+
+    return date.toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
   };
 
   // Formatage de la monnaie en FCFA
-  const formatCurrency = (amount) => {
+  const formatCurrency = (
+    amount: string | number | bigint | null | undefined
+  ) => {
     if (amount === undefined || amount === null) return "0 FCFA";
+
+    const numericAmount = typeof amount === "string" ? Number(amount) : amount;
+
+    if (isNaN(Number(numericAmount))) return "0 FCFA";
 
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
       currency: "XOF",
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(numericAmount as number | bigint);
   };
 
   // Gérer le succès de la mise à jour
-  const handleUpdateSuccess = (updatedMouvement) => {
-    // Mettre à jour les données locales
+  const handleUpdateSuccess = (
+    updatedMouvement: SetStateAction<Mouvement | null>
+  ) => {
     setMouvement(updatedMouvement);
     toast.success("Mouvement mis à jour avec succès", {
-      description: `Les informations de "${updatedMouvement.nom}" ont été mises à jour.`,
+      description: `Les informations de "${updatedMouvement && "nom" in updatedMouvement && updatedMouvement.nom ? updatedMouvement.nom : ""}" ont été mises à jour.`,
     });
   };
 
   // Gérer l'assignation d'un rôle
   const handleRoleAssigned = async () => {
     try {
-      if (isNaN(mouvementId)) {
+      if (mouvementId === null || isNaN(mouvementId)) {
         throw new Error("ID du mouvement invalide");
       }
 
@@ -569,8 +592,7 @@ export default function MouvementDetailsPage() {
                           </Button>
                         </div>
                       ) : (
-
-                         <div className="p-8 text-center">
+                        <div className="p-8 text-center">
                           <User className="h-12 w-12 text-slate-300 mx-auto mb-3" />
                           <h3 className="text-lg font-medium text-slate-900 mb-2">
                             Aucun responsable
@@ -1021,26 +1043,30 @@ export default function MouvementDetailsPage() {
       </Dialog>
 
       {/* Modaux pour assigner des responsables */}
-      <AumonierModal
-        isOpen={aumonierModalOpen}
-        onClose={() => setAumonierModalOpen(false)}
-        mouvementId={mouvementId}
-        onAssigned={handleRoleAssigned}
-      />
+      {typeof mouvementId === "number" && (
+        <>
+          <AumonierModal
+            isOpen={aumonierModalOpen}
+            onClose={() => setAumonierModalOpen(false)}
+            mouvementId={mouvementId}
+            onAssigned={handleRoleAssigned}
+          />
 
-      <ResponsableModal
-        isOpen={responsableModalOpen}
-        onClose={() => setResponsableModalOpen(false)}
-        mouvementId={mouvementId}
-        onAssigned={handleRoleAssigned}
-      />
+          <ResponsableModal
+            isOpen={responsableModalOpen}
+            onClose={() => setResponsableModalOpen(false)}
+            mouvementId={mouvementId}
+            onAssigned={handleRoleAssigned}
+          />
 
-      <ParrainModal
-        isOpen={parrainModalOpen}
-        onClose={() => setParrainModalOpen(false)}
-        mouvementId={mouvementId}
-        onAssigned={handleRoleAssigned}
-      />
+          <ParrainModal
+            isOpen={parrainModalOpen}
+            onClose={() => setParrainModalOpen(false)}
+            mouvementId={mouvementId}
+            onAssigned={handleRoleAssigned}
+          />
+        </>
+      )}
     </div>
   );
 }

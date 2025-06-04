@@ -155,7 +155,7 @@ export default function Header({
   }, [user, userData]);
 
   // Obtenir les initiales pour l'avatar fallback
-  const getInitials = (name) => {
+  const getInitials = (name: string) => {
     return name
       .split(' ')
       .map(part => part[0])
@@ -167,7 +167,7 @@ export default function Header({
   const userInitials = useMemo(() => getInitials(displayName), [displayName]);
   
   // Obtenir une couleur basée sur le nom d'utilisateur (pour l'avatar)
-  const getAvatarColor = (name) => {
+  const getAvatarColor = (name: string) => {
     const colors = [
       "bg-blue-500", "bg-green-500", "bg-purple-500", 
       "bg-amber-500", "bg-pink-500", "bg-indigo-500"

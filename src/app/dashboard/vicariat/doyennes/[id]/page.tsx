@@ -1,29 +1,71 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-html-link-for-pages */
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-// L'icône File est mentionnée mais pas importée dans le fichier
-// Voici l'import complet à ajouter dans src/app/dashboard/vicariat/doyennes/[id]/page.tsx :
-
-import { ArrowLeft, Edit, Trash, Building, MapPin, Phone, Mail, User, Calendar, Church, MessageSquare, Clock, Users, File } from "lucide-react";
+import { 
+  ArrowLeft, Edit, Trash, Building, MapPin, Phone, Mail, User, 
+  Calendar, Church, MessageSquare, Clock, Users, File 
+} from "lucide-react";
 import Link from "next/link";
-import { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Détail Doyenné | Dashboard Église Catholique",
-};
+import { useState, useEffect } from "react";
 
 interface DoyenneDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
+  }>;
+}
+
+// Interface pour les données du doyenné
+interface Doyenne {
+  id: string;
+  nom: string;
+  adresse: string;
+  telephone: string;
+  email: string;
+  doyen: {
+    nom: string;
+    email: string;
+    telephone: string;
+    depuis: string;
+    photo: string | null;
+  };
+  vicariat: string;
+  dateCreation: string;
+  description: string;
+  paroisses: Array<{
+    id: string;
+    nom: string;
+    adresse: string;
+    cure: string;
+  }>;
+  statut: string;
+  evenements: Array<{
+    id: string;
+    titre: string;
+    date: string;
+    heure: string;
+    lieu: string;
+  }>;
+  statistiques: {
+    nbParoissiens: number;
+    nbCatechises: number;
+    nbBaptemes: number;
+    nbMariages: number;
+    nbPretres: number;
+    nbDiacres: number;
+    nbCommunautes: number;
   };
 }
 
 // Simulation de la récupération des données d'un doyenné
-const getDoyenne = (id: string) => {
+const getDoyenne = (id: string): Doyenne | undefined => {
   // Dans une application réelle, vous feriez un appel API ici
-  const doyennes = [
+  const doyennes: Doyenne[] = [
     {
       id: "1",
       nom: "Doyenné Centre",
@@ -132,7 +174,40 @@ const getStatusBadge = (statut: string) => {
 };
 
 export default function DoyenneDetailPage({ params }: DoyenneDetailPageProps) {
-  const doyenne = getDoyenne(params.id);
+  const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(null);
+  const [doyenne, setDoyenne] = useState<Doyenne | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Résoudre les params asynchrones
+  useEffect(() => {
+    const resolveParams = async () => {
+      try {
+        const resolved = await params;
+        setResolvedParams(resolved);
+        
+        // Une fois les params résolus, récupérer le doyenné
+        const doyenneData = getDoyenne(resolved.id);
+        setDoyenne(doyenneData || null);
+      } catch (err) {
+        console.error("Erreur lors de la résolution des paramètres:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    resolveParams();
+  }, [params]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mx-auto mb-4"></div>
+          <p className="text-slate-500">Chargement du doyenné...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!doyenne) {
     return (

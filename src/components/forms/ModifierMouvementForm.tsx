@@ -1,4 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 // ModifierMouvementForm.jsx
 "use client";
 
@@ -24,7 +27,19 @@ import {
 } from "@/services/api";
 import { TYPES_MOUVEMENT } from "@/lib/constants";
 
-const ModifierMouvementForm = ({ onClose, mouvementData, onSuccess }) => {
+interface ModifierMouvementFormProps {
+  onClose: () => void;
+  mouvementData: {
+    id: string | number;
+    nom: string;
+    type: string;
+    paroisse_id: string | number;
+    [key: string]: any;
+  };
+  onSuccess: (item: any) => void;
+}
+
+const ModifierMouvementForm: React.FC<ModifierMouvementFormProps> = ({ onClose, mouvementData, onSuccess }) => {
   const router = useRouter();
 
   // État pour le formulaire
@@ -33,7 +48,7 @@ const ModifierMouvementForm = ({ onClose, mouvementData, onSuccess }) => {
     type: "PASTORALE DE LA SANTE",
   });
 
-  const [formErrors, setFormErrors] = useState({});
+  const [formErrors, setFormErrors] = useState<Record<string, string | null>>({});
   const [formLoading, setFormLoading] = useState(false);
 
   // Initialiser le formulaire avec les données existantes
@@ -50,7 +65,7 @@ const ModifierMouvementForm = ({ onClose, mouvementData, onSuccess }) => {
   }, [mouvementData]);
 
   // Gestion des changements dans le formulaire
-  const handleChange = (e) => {
+  const handleChange = (e: { target: { name: any; value: any; }; }) => {
     const { name, value } = e.target;
 
     setFormData((prev) => ({
@@ -67,7 +82,7 @@ const ModifierMouvementForm = ({ onClose, mouvementData, onSuccess }) => {
     }
   };
 
-  const handleSelectChange = (name, value) => {
+  const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -76,7 +91,7 @@ const ModifierMouvementForm = ({ onClose, mouvementData, onSuccess }) => {
 
   // Validation du formulaire
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors: { nom?: string } = {};
 
     // Validation du nom (ne doit pas être vide)
     if (!formData.nom.trim()) {
@@ -88,7 +103,7 @@ const ModifierMouvementForm = ({ onClose, mouvementData, onSuccess }) => {
   };
 
   // Soumission du formulaire
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
 
     // Valider le formulaire avant soumission

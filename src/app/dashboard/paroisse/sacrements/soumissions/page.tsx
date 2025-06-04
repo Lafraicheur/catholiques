@@ -134,8 +134,11 @@ function handleApiError(error: unknown): never {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError;
     const statusCode = axiosError.response?.status || 500;
+    const data = axiosError.response?.data;
     const errorMessage =
-      axiosError.response?.data?.message ||
+      (data && typeof data === "object" && "message" in data
+        ? (data as { message?: string }).message
+        : undefined) ||
       axiosError.message ||
       "Une erreur est survenue";
 

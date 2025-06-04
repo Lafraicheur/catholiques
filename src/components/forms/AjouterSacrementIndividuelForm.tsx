@@ -84,7 +84,13 @@ const AjouterSacrementIndividuelForm = ({
     celebrant: "",
   });
 
-  const [formErrors, setFormErrors] = useState({});
+  type FormErrors = {
+    soustype?: string | null;
+    date?: string | null;
+    paroisse_id?: string | null;
+    [key: string]: string | null | undefined;
+  };
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [formLoading, setFormLoading] = useState(false);
 
   // Réinitialiser le formulaire à l'ouverture
@@ -110,7 +116,7 @@ const AjouterSacrementIndividuelForm = ({
   }, []);
 
   // Gestion des changements dans le formulaire pour les champs texte
-  const handleChange = (e) => {
+  const handleChange = (e: { target: { name: any; value: any; }; }) => {
     const { name, value } = e.target;
 
     setFormData((prev) => ({
@@ -128,7 +134,7 @@ const AjouterSacrementIndividuelForm = ({
   };
 
   // Gestion du changement pour le select (type de sacrement)
-  const handleSelectChange = (value) => {
+  const handleSelectChange = (value: any) => {
     setFormData((prev) => ({
       ...prev,
       soustype: value,
@@ -159,7 +165,7 @@ const AjouterSacrementIndividuelForm = ({
 
   // Validation du formulaire
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors: FormErrors = {};
 
     // Validation du type de sacrement (requis)
     if (!formData.soustype) {
@@ -185,7 +191,7 @@ const AjouterSacrementIndividuelForm = ({
   };
 
   // Soumission du formulaire
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
 
     // Valider le formulaire avant soumission
@@ -201,12 +207,12 @@ const AjouterSacrementIndividuelForm = ({
     // Essayons différentes approches pour soumettre les données
     try {
       // Première tentative : format standard
-      const result = await handleCreate();
-      if (result) return; // Si réussi, terminé
+      await handleCreate();
+      return; // Si réussi, terminé
 
       // Deuxième tentative : format alternatif
-      const result2 = await handleCreateAlternative();
-      if (result2) return; // Si réussi, terminé
+      // const result2 = await handleCreateAlternative();
+      // if (result2) return; // Si réussi, terminé
 
       // Si aucune approche n'a fonctionné
       toast.error("Échec de la création", {

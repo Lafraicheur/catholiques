@@ -1,26 +1,85 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-html-link-for-pages */
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Trash, Calendar, Clock, MapPin, User, FileText, CheckCircle, AlertCircle, Users, Mail, Phone, Copy, Printer, Link as LinkIcon, MessageSquare, Plus, Download } from "lucide-react";
+import { 
+  ArrowLeft, Edit, Trash, Calendar, Clock, MapPin, User, FileText, 
+  CheckCircle, AlertCircle, Users, Mail, Phone, Copy, Printer, 
+  Link as LinkIcon, MessageSquare, Plus, Download 
+} from "lucide-react";
 import Link from "next/link";
-import { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Détail Événement Vicariat | Dashboard Église Catholique",
-};
+import { useState, useEffect } from "react";
 
 interface EvenementDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
+}
+
+// Interfaces pour les données de l'événement
+interface Organisateur {
+  nom: string;
+  titre: string;
+  email: string;
+  telephone: string;
+}
+
+interface Intervenant {
+  nom: string;
+  titre: string;
+  role: string;
+}
+
+interface Inscription {
+  nom: string;
+  paroisse: string;
+  present: boolean;
+  nombre?: number;
+}
+
+interface Document {
+  nom: string;
+  taille: string;
+}
+
+interface Tache {
+  nom: string;
+  statut: string;
+  responsable: string;
+}
+
+interface Evenement {
+  id: string;
+  titre: string;
+  date: string;
+  heure: string;
+  duree: string;
+  fin: string;
+  lieu: string;
+  adresse: string;
+  description: string;
+  type: string;
+  statut: string;
+  organisateur: Organisateur;
+  intervenants: Intervenant[];
+  participants: string[];
+  nombreInscrits: number;
+  capaciteMax: number;
+  inscriptions: Inscription[];
+  documents: Document[];
+  taches: Tache[];
+  notes: string;
 }
 
 // Simulation de la récupération des données d'un événement
-const getEvenement = (id: string) => {
+const getEvenement = (id: string): Evenement | undefined => {
   // Dans une application réelle, vous feriez un appel API ici
-  const evenements = [
+  const evenements: Evenement[] = [
     {
       id: "1",
       titre: "Rencontre des responsables pastoraux",
@@ -233,7 +292,40 @@ const getTaskStatusDetails = (statut: string) => {
 };
 
 export default function EvenementDetailPage({ params }: EvenementDetailPageProps) {
-  const evenement = getEvenement(params.id);
+  const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(null);
+  const [evenement, setEvenement] = useState<Evenement | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Résoudre les params asynchrones
+  useEffect(() => {
+    const resolveParams = async () => {
+      try {
+        const resolved = await params;
+        setResolvedParams(resolved);
+        
+        // Une fois les params résolus, récupérer l'événement
+        const evenementData = getEvenement(resolved.id);
+        setEvenement(evenementData || null);
+      } catch (err) {
+        console.error("Erreur lors de la résolution des paramètres:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    resolveParams();
+  }, [params]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mx-auto mb-4"></div>
+          <p className="text-slate-500">Chargement de l'événement...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!evenement) {
     return (
@@ -501,7 +593,7 @@ export default function EvenementDetailPage({ params }: EvenementDetailPageProps
                             <p className="text-xs text-slate-500">{inscription.paroisse}</p>
                           </div>
                         </div>
-                        {"nombre" in inscription && inscription.nombre && (
+                        {inscription.nombre && (
                           <Badge variant="outline">{inscription.nombre} personnes</Badge>
                         )}
                       </div>

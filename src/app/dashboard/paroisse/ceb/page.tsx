@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import {
   Church,
@@ -20,6 +20,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
+  Download,
+  FileSpreadsheet,
+  FileDown,
 } from "lucide-react";
 import {
   Card,
@@ -55,6 +58,9 @@ import {
   NotFoundError,
 } from "@/services/api";
 import { fetchCebs } from "@/services/ceb-services";
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // Importer les composants de formulaire
 import AjouterCebForm from "@/components/forms/AjouterCebForm";
@@ -95,6 +101,7 @@ export default function CebsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [exporting, setExporting] = useState(false);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -119,6 +126,220 @@ export default function CebsPage() {
       console.error("Erreur lors de la récupération du profil:", err);
     }
     return 0;
+  };
+
+  // Fonction pour obtenir le nom de la paroisse
+  const getParoisseName = (): string => {
+    try {
+      const userProfileStr = localStorage.getItem("user_profile");
+      if (userProfileStr) {
+        const userProfile = JSON.parse(userProfileStr);
+        return userProfile.paroisse_nom || "Paroisse";
+      }
+    } catch (err) {
+      console.error("Erreur lors de la récupération du nom de la paroisse:", err);
+    }
+    return "Paroisse";
+  };
+
+  // Fonction utilitaire pour formater la date
+  const formatExportDate = (): string => {
+    return new Intl.DateTimeFormat('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(new Date());
+  };
+
+  // Exportation vers Excel
+  const exportToExcel = async () => {
+    try {
+      setExporting(true);
+      
+      const exportDate = formatExportDate();
+      const paroisseName = getParoisseName();
+      
+      // Préparer les données pour l'exportation
+      const exportData = filteredCebs.map((ceb, index) => ({
+        'N°': index + 1,
+        'Date d\'ajout': formatDate(ceb.created_at),
+        'Nom de la CEB': ceb.nom,
+        'Identifiant': ceb.identifiant || 'N/A',
+        'Président': ceb.president 
+          ? `${ceb.president.nom} ${ceb.president.prenoms}` 
+          : 'Aucun',
+        'Téléphone Président': ceb.president?.num_de_telephone || 'N/A',
+        'Solde (FCFA)': ceb.solde || 0,
+        'Nombre de Membres': 0, // À remplacer par la vraie valeur
+      }));
+
+      // Créer le workbook
+      const wb = XLSX.utils.book_new();
+      
+      // Créer la feuille principale avec les données
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      
+      // Ajouter des informations d'en-tête
+      XLSX.utils.sheet_add_aoa(ws, [
+        [`Liste des Communautés Ecclésiales de Base`],
+        [`${paroisseName}`],
+        [`Date d'exportation: ${exportDate}`],
+        [`Nombre total de CEB: ${filteredCebs.length}`],
+        [], // Ligne vide
+      ], { origin: 'A1' });
+      
+      // Ajuster les largeurs des colonnes
+      const colWidths = [
+        { wch: 5 },  // N°
+        { wch: 15 }, // Date
+        { wch: 25 }, // Nom CEB
+        { wch: 15 }, // Identifiant
+        { wch: 20 }, // Président
+        { wch: 15 }, // Téléphone
+        { wch: 12 }, // Solde
+        { wch: 10 }, // Membres
+      ];
+      ws['!cols'] = colWidths;
+      
+      // Ajouter la feuille au workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'CEB');
+      
+      // Sauvegarder le fichier
+      const fileName = `CEB_${paroisseName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      
+      toast.success('Exportation Excel réussie', {
+        description: `Le fichier ${fileName} a été téléchargé.`
+      });
+      
+    } catch (error) {
+      console.error('Erreur lors de l\'exportation Excel:', error);
+      toast.error('Erreur lors de l\'exportation Excel');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Exportation vers PDF
+  const exportToPDF = async () => {
+    try {
+      setExporting(true);
+      
+      const exportDate = formatExportDate();
+      const paroisseName = getParoisseName();
+      
+      // Créer le document PDF
+      const doc = new jsPDF();
+      
+      // Configuration des couleurs
+      const primaryColor: [number, number, number] = [59, 130, 246]; // Blue-500
+      const secondaryColor: [number, number, number] = [148, 163, 184]; // Slate-400
+      const textColor: [number, number, number] = [15, 23, 42]; // Slate-900
+      
+      // En-tête du document avec design moderne
+      doc.setFillColor(...primaryColor);
+      doc.rect(0, 0, 210, 35, 'F');
+      
+      // Titre principal
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('COMMUNAUTÉS ECCLÉSIALES DE BASE', 105, 15, { align: 'center' });
+      
+      // Sous-titre
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text(paroisseName, 105, 25, { align: 'center' });
+      
+      // Informations d'exportation
+      doc.setTextColor(...textColor);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Date d'exportation: ${exportDate}`, 20, 45);
+      doc.text(`Nombre total de CEB: ${filteredCebs.length}`, 20, 52);
+      
+      // Ligne de séparation
+      doc.setDrawColor(...secondaryColor);
+      doc.setLineWidth(0.5);
+      doc.line(20, 58, 190, 58);
+      
+      // Préparer les données pour le tableau
+      const tableData = filteredCebs.map((ceb, index) => [
+        (index + 1).toString(),
+        formatDate(ceb.created_at),
+        ceb.nom,
+        ceb.president 
+          ? `${ceb.president.nom} ${ceb.president.prenoms}` 
+          : 'Aucun',
+        ceb.president?.num_de_telephone || 'N/A',
+        '0', // Nombre de membres
+      ]);
+      
+      // Créer le tableau avec autoTable
+      autoTable(doc, {
+        startY: 65,
+        head: [['N°', 'Date d\'ajout', 'Nom de la CEB', 'Président', 'Téléphone', 'Membres']],
+        body: tableData,
+        theme: 'grid',
+        styles: {
+          fontSize: 9,
+          cellPadding: 4,
+          textColor: textColor,
+        },
+        headStyles: {
+          fillColor: primaryColor,
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 10,
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252], // Slate-50
+        },
+        columnStyles: {
+          0: { cellWidth: 15, halign: 'center' }, // N°
+          1: { cellWidth: 25 }, // Date
+          2: { cellWidth: 45 }, // Nom
+          3: { cellWidth: 40 }, // Président
+          4: { cellWidth: 30 }, // Téléphone
+          5: { cellWidth: 20, halign: 'center' }, // Membres
+        },
+        margin: { left: 20, right: 20         },
+      });
+      
+      // Pied de page
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        
+        // Ligne de séparation du pied de page
+        const pageHeight = doc.internal.pageSize.height;
+        doc.setDrawColor(...secondaryColor);
+        doc.line(20, pageHeight - 20, 190, pageHeight - 20);
+        
+        // Informations du pied de page
+        doc.setFontSize(8);
+        doc.setTextColor(...secondaryColor);
+        doc.text(`Page ${i} sur ${pageCount}`, 105, pageHeight - 12, { align: 'center' });
+        doc.text(`Généré le ${exportDate}`, 20, pageHeight - 12);
+        doc.text('Système de Gestion Paroissiale', 190, pageHeight - 12, { align: 'right' });
+      }
+      
+      // Sauvegarder le fichier
+      const fileName = `CEB_${paroisseName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+      
+      toast.success('Exportation PDF réussie', {
+        description: `Le fichier ${fileName} a été téléchargé.`
+      });
+      
+    } catch (error) {
+      console.error('Erreur lors de l\'exportation PDF:', error);
+      toast.error('Erreur lors de l\'exportation PDF');
+    } finally {
+      setExporting(false);
+    }
   };
 
   // Charger les CEB au montage du composant
@@ -210,13 +431,13 @@ export default function CebsPage() {
   };
 
   // Gérer le succès de la création
-  const handleCreateSuccess = (newCeb) => {
+  const handleCreateSuccess = (newCeb: Ceb) => {
     // Ajouter la nouvelle CEB à la liste
     setCebs((prevCebs) => [newCeb, ...prevCebs]);
   };
 
   // Gérer le succès de la mise à jour
-  const handleUpdateSuccess = (updatedCeb) => {
+  const handleUpdateSuccess = (updatedCeb: Ceb) => {
     // Remplacer la CEB existante dans la liste
     setCebs((prevCebs) =>
       prevCebs.map((c) => (c.id === updatedCeb.id ? updatedCeb : c))
@@ -226,7 +447,7 @@ export default function CebsPage() {
   };
 
   // Gérer le succès de la suppression
-  const handleDeleteSuccess = (deletedId) => {
+  const handleDeleteSuccess = (deletedId: number) => {
     // Filtrer la CEB supprimée de la liste
     const updatedList = cebs.filter((c) => c.id !== deletedId);
     setCebs(updatedList);
@@ -236,13 +457,13 @@ export default function CebsPage() {
   };
 
   // Ouvrir le modal en mode édition
-  const openEditModal = (ceb) => {
+  const openEditModal = (ceb: SetStateAction<Ceb | null>) => {
     setSelectedCeb(ceb);
     setShowEditDialog(true);
   };
 
   // Ouvrir le modal en mode suppression
-  const openDeleteModal = (ceb) => {
+  const openDeleteModal = (ceb: SetStateAction<Ceb | null>) => {
     setSelectedCeb(ceb);
     setShowDeleteDialog(true);
   };
@@ -301,7 +522,7 @@ export default function CebsPage() {
         </Card>
       </div>
 
-      {/* Barre de recherche + bouton */}
+      {/* Barre de recherche + boutons */}
       <div className="mb-6 flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -312,10 +533,36 @@ export default function CebsPage() {
             className="pl-9"
           />
         </div>
-        <Button onClick={openAddModal} className="cursor-pointer">
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvelle CEB
-        </Button>
+        <div className="flex gap-2">
+          {/* Bouton d'exportation */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="cursor-pointer"
+                disabled={exporting || filteredCebs.length === 0}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {exporting ? 'Exportation...' : 'Exporter'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={exportToExcel} className="cursor-pointer">
+                <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
+                Exporter en Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportToPDF} className="cursor-pointer">
+                <FileDown className="h-4 w-4 mr-2 text-red-600" />
+                Exporter en PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <Button onClick={openAddModal} className="cursor-pointer">
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle CEB
+          </Button>
+        </div>
       </div>
 
       {/* Affichage conditionnel */}

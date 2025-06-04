@@ -35,6 +35,7 @@ import {
   ForbiddenError,
   NotFoundError,
 } from "@/services/api";
+import SacrementUnionDetailsSkeleton from "@/components/unions/SacrementUnionDetailsSkeleton";
 
 // Types pour les fichiers d'images
 interface ImageFile {
@@ -58,12 +59,12 @@ interface SacrementUnion {
   est_une_soumission?: boolean;
   motif_de_rejet?: string;
   marie_ou_mariee?: string;
-  premier_temoin?:string;
-  second_temoin?:string;
-  pere_celebrant?:string;
+  premier_temoin?: string;
+  second_temoin?: string;
+  pere_celebrant?: string;
   statut: string;
   images?: ImageFile[];
-  paroissien?:ParoissienTrouve;
+  paroissien?: ParoissienTrouve;
 }
 
 interface ParoissienTrouve {
@@ -75,7 +76,6 @@ interface ParoissienTrouve {
   paroisse_id: number;
   statut: string;
 }
-
 
 // Fonctions utilitaires
 const formatDate = (dateString: string) => {
@@ -116,7 +116,6 @@ const getStatusDetails = (statut: string) => {
 
   return { label: statut, variant: "outline" as const };
 };
-
 
 // Composant pour la galerie d'images
 const ImageGallery = ({ images }: { images: ImageFile[] | undefined }) => {
@@ -436,11 +435,7 @@ export default function SacrementUnionDetailsPage() {
 
   // Si chargement en cours
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-800"></div>
-      </div>
-    );
+    return <SacrementUnionDetailsSkeleton />;
   }
 
   // Si erreur
@@ -496,7 +491,6 @@ export default function SacrementUnionDetailsPage() {
   const {
     label: statusLabel,
     variant: statusVariant,
-    color: statusColor,
   } = getStatusDetails(sacrement.statut);
 
   // Déterminer si la date est passée
@@ -538,10 +532,11 @@ export default function SacrementUnionDetailsPage() {
             <Badge variant="secondary" className="flex items-center">
               <Heart className="h-3 w-3 mr-1" /> {sacrement.type}
             </Badge>
-            <Badge className={badgeClass}>{label}</Badge>
+            {" "}
           </div>
           <CardTitle className="text-2xl flex items-center">
-            {sacrement?.paroissien?.nom} {sacrement?.paroissien?.prenoms} & {sacrement?.marie_ou_mariee}{" "}
+            {sacrement?.paroissien?.nom} {sacrement?.paroissien?.prenoms} &{" "}
+            {sacrement?.marie_ou_mariee}{" "}
           </CardTitle>
           <CardDescription className="flex items-center text-base">
             <Calendar className="h-4 w-4 mr-1.5" />

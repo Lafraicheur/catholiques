@@ -1,3 +1,6 @@
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // DeleteConfirmationDialog.jsx
 "use client";
 
@@ -13,7 +16,17 @@ import {
 import { toast } from "sonner";
 import { AuthenticationError, ApiError, ForbiddenError, NotFoundError } from "@/services/api";
 
-const DeleteConfirmationDialog = ({ mouvement, onClose, onSuccess }) => {
+interface DeleteConfirmationDialogProps {
+  mouvement: {
+    id: string | number;
+    nom: string;
+    [key: string]: any;
+  };
+  onClose: () => void;
+  onSuccess: (id: string | number) => void;
+}
+
+const DeleteConfirmationDialog = ({ mouvement, onClose, onSuccess }: DeleteConfirmationDialogProps) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   

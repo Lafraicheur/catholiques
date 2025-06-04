@@ -1,4 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-html-link-for-pages */
 /* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,16 +25,12 @@ import {
   Printer,
 } from "lucide-react";
 import Link from "next/link";
-import { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Détail Communication | Dashboard Église Catholique",
-};
+import { useState, useEffect } from "react";
 
 interface CommunicationDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 // Simulation de la récupération des données d'une communication
@@ -179,7 +180,40 @@ const getStatusDetails = (statut: string) => {
 export default function CommunicationDetailPage({
   params,
 }: CommunicationDetailPageProps) {
-  const communication = getCommunication(params.id);
+  const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(null);
+  const [communication, setCommunication] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Résoudre les params asynchrones
+  useEffect(() => {
+    const resolveParams = async () => {
+      try {
+        const resolved = await params;
+        setResolvedParams(resolved);
+        
+        // Une fois les params résolus, récupérer la communication
+        const comm = getCommunication(resolved.id);
+        setCommunication(comm);
+      } catch (err) {
+        console.error("Erreur lors de la résolution des paramètres:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    resolveParams();
+  }, [params]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mx-auto mb-4"></div>
+          <p className="text-slate-500">Chargement de la communication...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!communication) {
     return (
@@ -287,7 +321,7 @@ export default function CommunicationDetailPage({
                       Pièces jointes
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {communication.piecesJointes.map((piece, index) => (
+                      {communication.piecesJointes.map((piece: any, index: number) => (
                         <div
                           key={index}
                           className="flex items-center p-2 pl-3 pr-4 border border-slate-200 rounded-md text-sm bg-slate-50"
@@ -366,7 +400,7 @@ export default function CommunicationDetailPage({
                     Détail des lectures
                   </h3>
                   <div className="space-y-3">
-                    {communication.lecteurs.map((lecteur, index) => (
+                    {communication.lecteurs.map((lecteur: any, index: number) => (
                       <div
                         key={index}
                         className="flex items-center justify-between p-2 border border-slate-200 rounded-md text-sm"

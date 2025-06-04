@@ -41,10 +41,15 @@ const getUserParoisseId = () => {
   return 0;
 };
 
+interface AjouterMouvementFormProps {
+  onClose: () => void;
+  onSuccess: (item: any) => void;
+}
+
 const AjouterMouvementForm = ({ 
   onClose, 
   onSuccess 
-}) => {
+}: AjouterMouvementFormProps) => {
   const router = useRouter();
   
   // État pour le formulaire
@@ -56,7 +61,14 @@ const AjouterMouvementForm = ({
     aumonier: "",
   });
   
-  const [formErrors, setFormErrors] = useState({});
+  interface FormErrors {
+    nom?: string | null;
+    responsable?: string | null;
+    parrain?: string | null;
+    aumonier?: string | null;
+  }
+  
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [formLoading, setFormLoading] = useState(false);
   
   // Réinitialiser le formulaire à l'ouverture
@@ -74,9 +86,10 @@ const AjouterMouvementForm = ({
   }, []);
   
   // Gestion des changements dans le formulaire
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.name as string;
+    const value = e.target.value;
+
     // Pour les champs téléphone, n'accepter que les chiffres
     if (["responsable", "parrain", "aumonier"].includes(name)) {
       const onlyNumbers = value.replace(/[^\d]/g, "").slice(0, 10);
@@ -90,9 +103,9 @@ const AjouterMouvementForm = ({
         [name]: value,
       }));
     }
-    
+
     // Effacer l'erreur lorsque l'utilisateur modifie le champ
-    if (formErrors[name]) {
+    if (formErrors[name as keyof typeof formErrors]) {
       setFormErrors((prev) => ({
         ...prev,
         [name]: null,
@@ -100,7 +113,7 @@ const AjouterMouvementForm = ({
     }
   };
   
-  const handleSelectChange = (name, value) => {
+  const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -108,7 +121,7 @@ const AjouterMouvementForm = ({
   };
   
   // Formater le numéro pour l'affichage (XX XX XX XX XX)
-  const formatPhoneDisplay = (phone) => {
+  const formatPhoneDisplay = (phone: string | any[]) => {
     if (!phone) return "";
     const groups = [];
     for (let i = 0; i < phone.length; i += 2) {
@@ -119,7 +132,7 @@ const AjouterMouvementForm = ({
   
   // Validation du formulaire
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors: FormErrors = {};
     
     // Validation du nom (minimum 10 caractères)
      if (!formData.nom.trim()) {
@@ -144,7 +157,7 @@ const AjouterMouvementForm = ({
   };
   
   // Soumission du formulaire
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
     
     // Valider le formulaire avant soumission

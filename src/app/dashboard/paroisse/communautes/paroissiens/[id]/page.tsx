@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, SetStateAction } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -69,7 +69,34 @@ export default function ParoissienDetailPage() {
     ? parseInt(Array.isArray(params.id) ? params.id[0] : params.id, 10)
     : null;
 
-  const [paroissien, setParoissien] = useState(null);
+  type Paroissien = {
+    id: number;
+    prenoms: string;
+    nom: string;
+    date_de_naissance?: string;
+    genre?: string;
+    email?: string;
+    num_de_telephone?: string;
+    quartier?: string;
+    commune?: string;
+    ville?: string;
+    pays?: string;
+    statut?: string;
+    est_abonne?: boolean;
+    abonnement?: { intitule?: string };
+    date_de_fin_abonnement?: string | number | null;
+    paroisse?: { nom?: string };
+    paroisse_id?: number | null;
+    chapelle?: { nom?: string };
+    chapelle_id?: number | null;
+    ceb?: { nom?: string };
+    ceb_id?: number | null;
+    mouvementassociation?: { nom?: string };
+    mouvementassociation_id?: number | null;
+    [key: string]: any;
+  };
+
+  const [paroissien, setParoissien] = useState<Paroissien | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -118,7 +145,7 @@ export default function ParoissienDetailPage() {
   }, [paroissienId, router]);
 
   // Formater un numéro de téléphone: 0101020304 -> 01 01 02 03 04
-  const formatPhoneNumber = (phone) => {
+  const formatPhoneNumber = (phone: string) => {
     if (!phone) return "Non renseigné";
 
     const cleaned = phone.replace(/\D/g, "");
@@ -132,43 +159,81 @@ export default function ParoissienDetailPage() {
   };
 
   // Formater la date: 2023-05-15 -> 15/05/2023
-  const formatDate = (dateString) => {
-    if (!dateString) return "Non renseignée";
+  const formatDate = (
+    dateInput: string | Date | number | undefined | null
+  ): string => {
+    if (!dateInput) return "Date non renseignée";
 
-    try {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat("fr-FR").format(date);
-    } catch (err) {
-      console.error("Erreur lors du formatage de la date:", err);
-      return dateString;
+    let date: Date;
+
+    if (dateInput instanceof Date) {
+      date = dateInput;
+    } else if (typeof dateInput === "string" || typeof dateInput === "number") {
+      date = new Date(dateInput);
+    } else {
+      return "Date invalide";
     }
+
+    if (isNaN(date.getTime())) {
+      return "Date invalide";
+    }
+
+    return date.toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
   };
 
   // Obtenir le badge de statut pour un paroissien
-  const getStatusBadge = (statut) => {
-    const statusMap = {
-      Baptisé: { variant: "default", label: "Baptisé" },
-      Confirmé: { variant: "default", label: "Confirmé" },
-      Marié: { variant: "default", label: "Marié à l'église" },
-      Aucun: { variant: "outline", label: "Aucun" },
-    };
+  const getStatusBadge = (statut: string | undefined) => {
+    const allowedVariants = [
+      "default",
+      "outline",
+      "secondary",
+      "destructive",
+      "success",
+    ] as const;
+    type BadgeVariant = (typeof allowedVariants)[number];
 
-    const status = statusMap[statut] || {
-      variant: "outline",
-      label: statut || "Aucun",
-    };
+    const statusMap: Record<string, { variant: BadgeVariant; label: string }> =
+      {
+        Baptisé: { variant: "default", label: "Baptisé" },
+        Confirmé: { variant: "default", label: "Confirmé" },
+        Marié: { variant: "default", label: "Marié à l'église" },
+        Aucun: { variant: "outline", label: "Aucun" },
+      };
+
+    let status;
+    if (typeof statut === "string" && statut in statusMap) {
+      status = statusMap[statut];
+    } else {
+      status = {
+        variant: "outline" as BadgeVariant,
+        label: statut || "Aucun",
+      };
+    }
 
     return <Badge variant={status.variant}>{status.label}</Badge>;
   };
 
   // Gérer le succès de la mise à jour
-  const handleUpdateSuccess = (updatedParoissien) => {
+  const handleUpdateSuccess = (updatedParoissien: Paroissien) => {
     // Mettre à jour les données locales
     setParoissien(updatedParoissien);
 
-    toast.success("Paroissien mis à jour avec succès", {
-      description: `Les informations de "${updatedParoissien.prenoms} ${updatedParoissien.nom}" ont été mises à jour.`,
-    });
+    if (
+      updatedParoissien &&
+      typeof updatedParoissien === "object" &&
+      "prenoms" in updatedParoissien &&
+      "nom" in updatedParoissien
+    ) {
+      toast.success("Paroissien mis à jour avec succès", {
+        description: `Les informations de "${updatedParoissien.prenoms} ${updatedParoissien.nom}" ont été mises à jour.`,
+      });
+    } else {
+      toast.success("Paroissien mis à jour avec succès");
+    }
   };
 
   // Rendu du contenu en fonction de l'état
@@ -276,7 +341,7 @@ export default function ParoissienDetailPage() {
                   </p>
                   <p className="flex items-center">
                     <Calendar className="h-4 w-4 mr-2 text-slate-400" />
-                    {formatDate(paroissien.date_de_naissance)}
+                    {formatDate(paroissien?.date_de_naissance)}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -466,11 +531,11 @@ export default function ParoissienDetailPage() {
                     Fin d'abonnement
                   </p>
                   <p className="text-sm font-semibold">
-                    {paroissien.date_de_fin_abonnement &&
-                    paroissien.date_de_fin_abonnement !== 0
+                    {paroissien?.date_de_fin_abonnement &&
+                    paroissien?.date_de_fin_abonnement !== 0
                       ? formatDate(
                           new Date(
-                            paroissien.date_de_fin_abonnement
+                            paroissien?.date_de_fin_abonnement
                           ).toISOString()
                         )
                       : "Non applicable"}
@@ -587,22 +652,6 @@ export default function ParoissienDetailPage() {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Retour
         </Button>
-        {/* <Link href="/dashboard" className="hover:text-slate-700">
-          Dashboard
-        </Link>
-        <ChevronRight className="h-4 w-4 mx-1" />
-        <Link href="/dashboard/paroisse" className="hover:text-slate-700">
-          Paroisse
-        </Link>
-        <ChevronRight className="h-4 w-4 mx-1" />
-        <Link
-          href="/dashboard/paroisse/paroissiens"
-          className="hover:text-slate-700"
-        >
-          Paroissiens
-        </Link>
-        <ChevronRight className="h-4 w-4 mx-1" />
-        <span className="text-slate-800 font-medium">Détails</span> */}
       </div>
 
       {/* En-tête avec nom et actions */}
@@ -611,7 +660,7 @@ export default function ParoissienDetailPage() {
           <h1 className="text-2xl font-bold text-slate-900">
             {paroissien?.prenoms} {paroissien?.nom}
           </h1>
-          {paroissien && getStatusBadge(paroissien.statut)}
+          {paroissien && getStatusBadge(paroissien?.statut)}
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setShowEditDialog(true)}>
@@ -633,13 +682,13 @@ export default function ParoissienDetailPage() {
             </DialogTitle>
           </DialogHeader>
 
-          {paroissien && (
+          {/* {paroissien && (
             <ModifierParoissienForm
               onClose={() => setShowEditDialog(false)}
               paroissienData={paroissien}
               onSuccess={handleUpdateSuccess}
             />
-          )}
+          )} */}
         </DialogContent>
       </Dialog>
     </div>

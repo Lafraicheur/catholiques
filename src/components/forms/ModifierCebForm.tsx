@@ -1,4 +1,4 @@
-// ModifierCebForm.jsx
+// ModifierCebForm.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -18,7 +18,35 @@ import {
   NotFoundError,
 } from "@/services/api";
 
-const ModifierCebForm = ({ onClose, cebData, onSuccess }) => {
+// Interface Ceb complète (copiée depuis le fichier principal)
+interface Ceb {
+  id: number;
+  created_at: string;
+  identifiant: string;
+  nom: string;
+  solde: number;
+  paroisse_id: number;
+  chapelle_id: number | null;
+  president_id: number | null;
+  president?: {
+    id: number;
+    nom: string;
+    prenoms: string;
+    num_de_telephone: string;
+  };
+}
+
+interface ModifierCebFormProps {
+  onClose: () => void;
+  cebData: Ceb; // Utilisation du type Ceb complet
+  onSuccess: (item: Ceb) => void; // Type plus précis pour le retour
+}
+
+const ModifierCebForm: React.FC<ModifierCebFormProps> = ({ 
+  onClose, 
+  cebData, 
+  onSuccess 
+}) => {
   const router = useRouter();
 
   // État pour le formulaire
@@ -26,7 +54,7 @@ const ModifierCebForm = ({ onClose, cebData, onSuccess }) => {
     nom: "",
   });
 
-  const [formErrors, setFormErrors] = useState({});
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string | null }>({});
   const [formLoading, setFormLoading] = useState(false);
 
   // Initialiser le formulaire avec les données existantes
@@ -42,7 +70,7 @@ const ModifierCebForm = ({ onClose, cebData, onSuccess }) => {
   }, [cebData]);
 
   // Gestion des changements dans le formulaire
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
     setFormData((prev) => ({
@@ -60,12 +88,22 @@ const ModifierCebForm = ({ onClose, cebData, onSuccess }) => {
   };
 
   // Validation du formulaire
-  const validateForm = () => {
-    const newErrors = {};
+  const validateForm = (): boolean => {
+    const newErrors: { nom?: string } = {};
 
     // Validation du nom (ne doit pas être vide)
     if (!formData.nom.trim()) {
       newErrors.nom = "Le nom ne peut pas être vide";
+    }
+
+    // Validation de longueur minimale
+    if (formData.nom.trim().length < 3) {
+      newErrors.nom = "Le nom doit contenir au moins 3 caractères";
+    }
+
+    // Validation de longueur maximale
+    if (formData.nom.trim().length > 100) {
+      newErrors.nom = "Le nom ne peut pas dépasser 100 caractères";
     }
 
     setFormErrors(newErrors);
@@ -73,7 +111,7 @@ const ModifierCebForm = ({ onClose, cebData, onSuccess }) => {
   };
 
   // Soumission du formulaire
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     // Valider le formulaire avant soumission
@@ -100,8 +138,8 @@ const ModifierCebForm = ({ onClose, cebData, onSuccess }) => {
 
       // Préparation des données pour l'API
       const apiData = {
-        ceb_id: cebData.id,
-        nom: formData.nom,
+        ceb_id: cebData.id, // Maintenant c'est un number, comme attendu
+        nom: formData.nom.trim(),
       };
 
       // Appel à l'API pour modifier la CEB
@@ -121,35 +159,45 @@ const ModifierCebForm = ({ onClose, cebData, onSuccess }) => {
         const errorData = await response.json().catch(() => ({}));
 
         // Gérer les différents codes d'erreur
-        if (response.status === 401) {
-          throw new AuthenticationError("Session expirée");
-        } else if (response.status === 403) {
-          throw new ForbiddenError("Accès refusé");
-        } else if (response.status === 404) {
-          throw new NotFoundError("Ressource non trouvée");
-        } else if (response.status === 400) {
-          // Erreur de validation
-          const errorMessage =
-            errorData.message || "Le formulaire contient des erreurs.";
-          throw new ApiError(errorMessage, 400);
-        } else if (response.status === 429) {
-          throw new ApiError(
-            "Trop de requêtes, veuillez réessayer plus tard",
-            429
-          );
-        } else {
-          throw new ApiError(
-            errorData.message || "Erreur lors de la modification de la CEB",
-            response.status
-          );
+        switch (response.status) {
+          case 401:
+            throw new AuthenticationError("Session expirée");
+          case 403:
+            throw new ForbiddenError("Accès refusé");
+          case 404:
+            throw new NotFoundError("CEB non trouvée");
+          case 400:
+            const errorMessage = errorData.message || "Le formulaire contient des erreurs.";
+            throw new ApiError(errorMessage, 400);
+          case 429:
+            throw new ApiError("Trop de requêtes, veuillez réessayer plus tard", 429);
+          default:
+            throw new ApiError(
+              errorData.message || "Erreur lors de la modification de la CEB",
+              response.status
+            );
         }
       }
 
       const data = await response.json();
 
+      // Créer l'objet CEB mis à jour avec toutes les propriétés
+      const updatedCeb: Ceb = {
+        ...cebData,
+        nom: formData.nom.trim(),
+        // Autres propriétés peuvent être mises à jour ici si l'API les retourne
+        ...data.item
+      };
+
+      // Notification de succès
+      toast.success("CEB modifiée", {
+        description: `La CEB "${formData.nom}" a été mise à jour avec succès.`,
+      });
+
       // Fermer le formulaire et notifier le parent du succès
       onClose();
-      onSuccess(data.item);
+      onSuccess(updatedCeb);
+
     } catch (err) {
       console.error("Erreur lors de la modification de la CEB:", err);
 
@@ -158,12 +206,19 @@ const ModifierCebForm = ({ onClose, cebData, onSuccess }) => {
           description: "Veuillez vous reconnecter pour continuer.",
         });
         router.push("/login");
+      } else if (err instanceof ForbiddenError) {
+        toast.error("Accès refusé", {
+          description: "Vous n'avez pas les droits pour modifier cette CEB.",
+        });
+      } else if (err instanceof NotFoundError) {
+        toast.error("CEB non trouvée", {
+          description: "La CEB que vous tentez de modifier n'existe plus.",
+        });
       } else {
         toast.error("Échec de la modification", {
-          description:
-            err instanceof ApiError
-              ? err.message
-              : "Une erreur est survenue lors de la modification de la CEB.",
+          description: err instanceof ApiError
+            ? err.message
+            : "Une erreur est survenue lors de la modification de la CEB.",
         });
       }
     } finally {
@@ -190,6 +245,7 @@ const ModifierCebForm = ({ onClose, cebData, onSuccess }) => {
             onChange={handleChange}
             placeholder="Nom de la communauté"
             required
+            maxLength={100}
             className={`${
               formErrors.nom ? "border-red-500" : "border-green-200"
             } focus:border-green-500 focus:ring-green-500`}
@@ -197,16 +253,34 @@ const ModifierCebForm = ({ onClose, cebData, onSuccess }) => {
           {formErrors.nom && (
             <p className="text-xs text-red-500">{formErrors.nom}</p>
           )}
+          <p className="text-xs text-slate-500">
+            {formData.nom.length}/100 caractères
+          </p>
         </div>
 
-        {/* Informations additionnelles (non modifiables) */}
+        {/* Informations de la CEB */}
+        <div className="mt-4 p-3 bg-slate-50 rounded-md border border-slate-200">
+          <h4 className="text-sm font-medium text-slate-800 mb-2">
+            Informations de la CEB
+          </h4>
+          <div className="space-y-1 text-xs text-slate-600">
+            <p><strong>ID:</strong> {cebData.id}</p>
+            <p><strong>Identifiant:</strong> {cebData.identifiant || 'Non défini'}</p>
+            <p><strong>Date de création:</strong> {new Date(cebData.created_at).toLocaleDateString('fr-FR')}</p>
+            {cebData.president && (
+              <p><strong>Président:</strong> {cebData.president.nom} {cebData.president.prenoms}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Informations additionnelles */}
         <div className="mt-4 p-3 bg-blue-50 rounded-md border border-blue-100">
           <h4 className="text-sm font-medium text-blue-800 mb-2">
             Informations non modifiables
           </h4>
           <p className="text-xs text-slate-600">
-            Le numéro de téléphone du président ne peut pas être modifié
-            via ce formulaire. Pour mettre à jour cette information, veuillez
+            L'identifiant, le président et les autres informations ne peuvent pas être modifiés
+            via ce formulaire. Pour mettre à jour ces informations, veuillez
             contacter l'administrateur.
           </p>
         </div>
@@ -222,11 +296,10 @@ const ModifierCebForm = ({ onClose, cebData, onSuccess }) => {
         >
           Annuler
         </Button>
-        &nbsp;&nbsp;
         <Button
           type="submit"
-          disabled={formLoading}
-          className="text-white font-medium transition-colors w-full sm:w-auto cursor-pointer"
+          disabled={formLoading || !formData.nom.trim()}
+          className="text-white font-medium transition-colors w-full sm:w-auto cursor-pointer disabled:opacity-50"
         >
           {formLoading ? (
             <>

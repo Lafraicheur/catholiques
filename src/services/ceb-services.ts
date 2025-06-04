@@ -124,3 +124,60 @@ export const fetchCebDetails = async (cebId: number): Promise<object> => {
     throw err;
   }
 };
+
+/**
+ * Nomme un paroissien comme président d'une CEB
+ * @param {number | string} cebId - ID de la CEB
+ * @param {string} telephone - Numéro de téléphone du paroissien (président)
+ * @returns {Promise<Object>} La CEB mise à jour
+ */
+export const nominatePresident = async (
+  cebId: number | string,
+  telephone: string
+): Promise<object> => {
+  const API_URL_STATISTIQUE = process.env.NEXT_PUBLIC_API_URL_STATISTIQUE || "https://api.cathoconnect.ci/api:HzF8fFua";
+
+  try {
+    const token = localStorage.getItem("auth_token");
+
+    if (!token) {
+      throw new AuthenticationError("Token d'authentification non trouvé");
+    }
+
+    const response = await fetch(`${API_URL_STATISTIQUE}/ceb/nommer-president`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ceb_id: cebId,
+        president: telephone,
+      }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new AuthenticationError("Session expirée");
+      } else if (response.status === 403) {
+        throw new ForbiddenError("Accès refusé");
+      } else if (response.status === 404) {
+        throw new NotFoundError("CEB ou paroissien non trouvé");
+      } else if (response.status === 429) {
+        throw new ApiError("Trop de requêtes, veuillez réessayer plus tard", 429);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        throw new ApiError(
+          errorData.message || "Erreur lors de la nomination du président",
+          response.status
+        );
+      }
+    }
+
+    const data = await response.json();
+    return data.item || {};
+  } catch (err) {
+    console.error("Erreur API nominatePresident:", err);
+    throw err;
+  }
+};

@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -50,6 +50,7 @@ import {
   Download,
 } from "lucide-react";
 import { toast } from "sonner";
+import SacrementUnionDetailsSkeleton from "@/components/unions/SacrementUnionDetailsSkeleton";
 
 // Types pour les fichiers d'images
 interface ImageFile {
@@ -84,6 +85,12 @@ interface Personne {
 
 // Type pour un sacrement d'union
 interface SacrementUnion {
+  motif_de_rejet: any;
+  pere_celebrant: any;
+  second_temoin: string;
+  premier_temoin: string;
+  marie_ou_mariee: ReactNode;
+  paroissien: any;
   id: number;
   created_at: string;
   type: string;
@@ -114,49 +121,34 @@ const formatDate = (dateString: string) => {
   }
 };
 
-// Obtenir les détails du statut pour l'affichage
-const getStatusDetails = (statut: string) => {
-  const normalizedStatus = statut.toUpperCase();
+const variantClasses: Record<string, string> = {
+  success: "bg-green-500 text-white",
+  warning: "bg-yellow-400 text-black",
+  danger: "bg-red-500 text-white",
+  info: "bg-blue-400 text-white",
+  default: "bg-gray-300 text-gray-800",
+  secondary: "bg-gray-500 text-white",
+  primary: "bg-blue-600 text-white",
+  outline: "border border-gray-400 text-gray-700",
+};
 
-  switch (normalizedStatus) {
-    case "CONFIRMÉ":
-    case "CONFIRME":
-    case "VALIDÉ":
-    case "VALIDE":
-      return {
-        label: "Confirmé",
-        variant: "success" as const,
-        color: "text-green-600",
-      };
-    case "EN PRÉPARATION":
-    case "EN PREPARATION":
-    case "PREPARATION":
-      return {
-        label: "En préparation",
-        variant: "secondary" as const,
-        color: "text-blue-600",
-      };
-    case "EN ATTENTE":
-    case "ATTENTE":
-      return {
-        label: "En attente",
-        variant: "warning" as const,
-        color: "text-amber-600",
-      };
-    case "TERMINÉ":
-    case "TERMINE":
-      return {
-        label: "Terminé",
-        variant: "default" as const,
-        color: "text-slate-600",
-      };
-    default:
-      return {
-        label: statut,
-        variant: "outline" as const,
-        color: "text-slate-600",
-      };
+// Obtenir les détails du statut
+const getStatusDetails = (statut: string) => {
+  const normalized = statut.toUpperCase();
+
+  if (["CONFIRMÉ", "CONFIRME", "VALIDÉ", "VALIDE"].includes(normalized)) {
+    return { label: "Validé", variant: "success" as const };
   }
+
+  if (["EN ATTENTE", "ATTENTE"].includes(normalized)) {
+    return { label: "En attente", variant: "warning" as const };
+  }
+
+  if (["REJETÉ", "REJETE"].includes(normalized)) {
+    return { label: "Rejeté", variant: "danger" as const };
+  }
+
+  return { label: statut, variant: "outline" as const };
 };
 
 // Composant InfoCard pour afficher des informations sur une personne
@@ -409,11 +401,7 @@ export default function SacrementUnionDetailsPage() {
 
   // Si chargement en cours
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-800"></div>
-      </div>
-    );
+    return <SacrementUnionDetailsSkeleton />;
   }
 
   // Si erreur
@@ -464,10 +452,12 @@ export default function SacrementUnionDetailsPage() {
   }
 
   // Obtenir les détails du statut pour l'affichage
+  const { label, variant } = getStatusDetails(sacrement.statut);
+  const badgeClass = `${variantClasses[variant]} text-xs px-2 py-0.5 rounded`;
+
   const {
     label: statusLabel,
     variant: statusVariant,
-    color: statusColor,
   } = getStatusDetails(sacrement.statut);
 
   // Déterminer si la date est passée
@@ -489,7 +479,7 @@ export default function SacrementUnionDetailsPage() {
           </Button>
           &nbsp; &nbsp;
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-            Détails du Sacrement d'Union #{sacrement.id}
+            Détails du Sacrement d'Union
           </h1>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -510,17 +500,11 @@ export default function SacrementUnionDetailsPage() {
             <Badge variant="secondary" className="flex items-center">
               <Heart className="h-3 w-3 mr-1" /> {sacrement.type}
             </Badge>
-            <Badge variant={statusVariant}>{statusLabel}</Badge>
-            {isDatePassed && <Badge variant="outline">Passé</Badge>}
-            {sacrement.est_une_soumission && (
-              <Badge variant="outline" className="bg-blue-50">
-                Soumission externe
-              </Badge>
-            )}
+            <Badge className={badgeClass}>{label}</Badge>
           </div>
           <CardTitle className="text-2xl flex items-center">
-            {sacrement.marie?.prenoms} {sacrement.marie?.nom} &{" "}
-            {sacrement.mariee?.prenoms} {sacrement.mariee?.nom}
+            {sacrement?.paroissien?.nom} {sacrement?.paroissien?.prenoms} &{" "}
+            {sacrement?.marie_ou_mariee}{" "}
           </CardTitle>
           <CardDescription className="flex items-center text-base">
             <Calendar className="h-4 w-4 mr-1.5" />
@@ -531,7 +515,6 @@ export default function SacrementUnionDetailsPage() {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-4">
               <TabsTrigger value="informations">Informations</TabsTrigger>
-              <TabsTrigger value="participants">Participants</TabsTrigger>
               {sacrement.images && sacrement.images.length > 0 && (
                 <TabsTrigger value="images">
                   Images ({sacrement.images.length})
@@ -571,7 +554,7 @@ export default function SacrementUnionDetailsPage() {
                     </div>
                     <div className="flex justify-between px-4 py-2 bg-slate-50 rounded-md">
                       <span className="text-slate-600">Statut:</span>
-                      <span className={`font-medium ${statusColor}`}>
+                      <span className={`font-medium ${variantClasses}`}>
                         {statusLabel}
                       </span>
                     </div>
@@ -580,7 +563,7 @@ export default function SacrementUnionDetailsPage() {
                     <div className="flex justify-between px-4 py-2 bg-slate-50 rounded-md">
                       <span className="text-slate-600">Témoin du marié:</span>
                       <span className="font-medium">
-                        {sacrement.temoin_marie || "Non spécifié"}
+                        {sacrement?.premier_temoin || "Non spécifié"}
                       </span>
                     </div>
                     <div className="flex justify-between px-4 py-2 bg-slate-50 rounded-md">
@@ -588,43 +571,34 @@ export default function SacrementUnionDetailsPage() {
                         Témoin de la mariée:
                       </span>
                       <span className="font-medium">
-                        {sacrement.temoin_mariee || "Non spécifié"}
+                        {sacrement?.second_temoin || "Non spécifié"}
                       </span>
                     </div>
                     <div className="flex justify-between px-4 py-2 bg-slate-50 rounded-md">
-                      <span className="text-slate-600">Célébrant:</span>
+                      <span className="text-slate-600">Père Célébrant:</span>
                       <span className="font-medium">
-                        {sacrement.celebrant
-                          ? `${sacrement.celebrant.prenoms} ${sacrement.celebrant.nom}`
+                        {sacrement?.pere_celebrant
+                          ? `${sacrement?.pere_celebrant}`
                           : "Non spécifié"}
                       </span>
                     </div>
                   </div>
+                  {sacrement?.motif_de_rejet && (
+                    <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+                      <div className="flex items-start">
+                        <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
+                        <div>
+                          <h4 className="font-medium text-red-700">
+                            Motif de rejet:
+                          </h4>
+                          <p className="mt-1 text-red-600">
+                            {sacrement?.motif_de_rejet}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="participants">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <InfoCard
-                  title="Le Marié"
-                  person={sacrement.marie}
-                  icon={<User className="h-5 w-5 text-blue-600" />}
-                />
-                <InfoCard
-                  title="La Mariée"
-                  person={sacrement.mariee}
-                  icon={<User className="h-5 w-5 text-pink-600" />}
-                />
-                {sacrement.celebrant && (
-                  <div className="md:col-span-2">
-                    <InfoCard
-                      title="Le Célébrant"
-                      person={sacrement.celebrant}
-                      icon={<User className="h-5 w-5 text-slate-600" />}
-                    />
-                  </div>
-                )}
               </div>
             </TabsContent>
 
@@ -635,11 +609,6 @@ export default function SacrementUnionDetailsPage() {
             )}
           </Tabs>
         </CardContent>
-        <CardFooter className="flex justify-end border-t pt-6">
-          <div className="text-sm text-slate-500">
-            • Dernière mise à jour: {formatDate(sacrement.created_at)}
-          </div>
-        </CardFooter>
       </Card>
 
       {/* Dialog de confirmation de suppression */}

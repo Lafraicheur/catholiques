@@ -174,10 +174,10 @@ export default function RetraitForm({
               <CreditCard className="h-5 w-5 text-green-600" />
               Effectuer un Retrait
             </DialogTitle>
-            <DialogDescription>
+            {/* <DialogDescription>
               Remplissez les informations ci-dessous pour effectuer un retrait
               depuis votre compte.
-            </DialogDescription>
+            </DialogDescription> */}
             {watchedValues.id_sous_compte && !loadingSoldes && (
               <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-center justify-between">
@@ -212,7 +212,7 @@ export default function RetraitForm({
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Sélectionnez le sous-compte" />
+                            <SelectValue placeholder="Sélectionnez sous-compte" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>

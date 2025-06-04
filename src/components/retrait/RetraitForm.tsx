@@ -198,7 +198,7 @@ export default function RetraitForm({
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {/* Sélection du sous-compte */}
                 <FormField
                   control={form.control}
@@ -230,42 +230,13 @@ export default function RetraitForm({
                   )}
                 />
 
-                {/* Montant */}
-                <FormField
-                  control={form.control}
-                  name="montant"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Montant du retrait</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            placeholder="Entrez le montant"
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(Number(e.target.value))
-                            }
-                            className="pr-16"
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                            FCFA
-                          </span>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Opérateur */}
                 <FormField
                   control={form.control}
                   name="operateur"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Opérateur Mobile Money</FormLabel>
+                      <FormLabel>Opérateurs</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
@@ -299,6 +270,35 @@ export default function RetraitForm({
                           ))}
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Montant */}
+                <FormField
+                  control={form.control}
+                  name="montant"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Montant du retrait</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            placeholder="Entrez le montant"
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(Number(e.target.value))
+                            }
+                            className="pr-16"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                            FCFA
+                          </span>
+                        </div>
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

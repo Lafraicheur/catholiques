@@ -4,14 +4,14 @@
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 import React from "react";
 import { XCircle, Hand } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface LoadingStateProps {}
 
-export const LoadingState: React.FC<LoadingStateProps> = () => {
+export const LoadingState: React.FC = () => {
   return (
     <div className="space-y-4">
       {Array(6)

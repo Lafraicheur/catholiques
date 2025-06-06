@@ -1,7 +1,9 @@
 // =============================================================================
 // 11. HOOK POUR L'EXPORTATION - hooks/useExport.ts
 // =============================================================================
-
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";

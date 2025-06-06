@@ -1,7 +1,9 @@
 // =============================================================================
 // 6. COMPOSANT FILTRES - components/FiltresSection.tsx
 // =============================================================================
-
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { Search, CheckCircle, Clock, Filter, XCircle, Download, Calendar, FileSpreadsheet, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";

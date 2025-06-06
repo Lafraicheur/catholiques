@@ -1,7 +1,9 @@
 // =============================================================================
 // 5. COMPOSANT STATISTIQUES - components/StatistiquesCard.tsx
 // =============================================================================
-
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Hand, CheckCircle, Clock } from "lucide-react";

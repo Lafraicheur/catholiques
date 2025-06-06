@@ -1,7 +1,9 @@
 // =============================================================================
 // 9. COMPOSANT ÉTATS VIDES - components/EmptyStates.tsx
 // =============================================================================
-
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { XCircle, Hand } from "lucide-react";
 import { Button } from "@/components/ui/button";

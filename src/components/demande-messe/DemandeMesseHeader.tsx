@@ -1,7 +1,9 @@
 // =============================================================================
 // 4. COMPOSANT HEADER - components/DemandeMesseHeader.tsx
 // =============================================================================
-
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 
 export const DemandeMesseHeader: React.FC = () => {

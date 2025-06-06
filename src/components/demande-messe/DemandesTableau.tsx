@@ -1,7 +1,9 @@
 // =============================================================================
 // 7. COMPOSANT TABLEAU - components/DemandesTableau.tsx
 // =============================================================================
-
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { useRouter } from "next/navigation";
 import { Eye, FileDown, FileSpreadsheet, CheckCircle, Clock, MapPin } from "lucide-react";

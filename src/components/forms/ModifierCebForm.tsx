@@ -264,8 +264,6 @@ const ModifierCebForm: React.FC<ModifierCebFormProps> = ({
             Informations de la CEB
           </h4>
           <div className="space-y-1 text-xs text-slate-600">
-            <p><strong>ID:</strong> {cebData.id}</p>
-            <p><strong>Identifiant:</strong> {cebData.identifiant || 'Non défini'}</p>
             <p><strong>Date de création:</strong> {new Date(cebData.created_at).toLocaleDateString('fr-FR')}</p>
             {cebData.president && (
               <p><strong>Président:</strong> {cebData.president.nom} {cebData.president.prenoms}</p>
@@ -296,6 +294,7 @@ const ModifierCebForm: React.FC<ModifierCebFormProps> = ({
         >
           Annuler
         </Button>
+        &nbsp;
         <Button
           type="submit"
           disabled={formLoading || !formData.nom.trim()}

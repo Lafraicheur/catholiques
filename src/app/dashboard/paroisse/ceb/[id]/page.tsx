@@ -338,9 +338,9 @@ export default function CebDetailsPage() {
             <div className="flex justify-between items-start">
               <div>
                 <CardTitle className="text-xl font-bold">{ceb.nom}</CardTitle>
-                <p className="text-sm text-slate-500 mt-1">
+                {/* <p className="text-sm text-slate-500 mt-1">
                   Identifiant: {ceb.identifiant}
-                </p>
+                </p> */}
               </div>
               <Button
                 variant="outline"

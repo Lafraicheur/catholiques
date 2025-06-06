@@ -126,16 +126,16 @@ export default function FluxFinancierTable({
               <TableCell className="text-slate-500 py-3 px-4">
                 <div className="flex items-center">
                   <div className="h-2 w-2 rounded-full mr-2"></div>
-                  {formatDate(flux.created_at)}
+                  {formatDate(flux?.created_at)}
                 </div>
               </TableCell>
               <TableCell className="py-3 px-4 font-medium text-slate-900">
-                {flux.reference}
+                {flux?.reference}
               </TableCell>
               <TableCell className="py-3 px-4">
                 <div className="flex items-center">
                   <span className="font-medium">
-                    {flux.initiateur.nom} {flux.initiateur.prenoms}
+                    {flux?.initiateur?.nom} {flux?.initiateur?.prenoms}
                   </span>
                 </div>
               </TableCell>
@@ -145,13 +145,13 @@ export default function FluxFinancierTable({
                 </Badge>
               </TableCell>
               <TableCell className="py-3 px-4 font-medium text-slate-900">
-                {formatMontant(flux.montant_avec_frais)}
+                {formatMontant(flux?.montant_avec_frais)}
               </TableCell>
               <TableCell className="py-3 px-4">
                 <Badge
-                  className={`px-2 py-1 font-normal text-xs ${getStatusBadgeVariant(flux.statut)}`}
+                  className={`px-2 py-1 font-normal text-xs ${getStatusBadgeVariant(flux?.statut)}`}
                 >
-                  {flux.statut}
+                  {flux?.statut}
                 </Badge>
               </TableCell>
               <TableCell className="text-right py-2 px-4">

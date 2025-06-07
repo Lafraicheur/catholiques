@@ -23,13 +23,24 @@ interface FluxFinancierStatsProps {
 
 export default function FluxFinancierStats({ stats }: FluxFinancierStatsProps) {
   const formatMontant = (montant: number): string => {
-    return new Intl.NumberFormat("fr-FR", {
+    if (isNaN(montant) || montant === null || montant === undefined) {
+      return "0 F CFA";
+    }
+    const formatted = new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "XOF",
+      useGrouping: true,
+      minimumFractionDigits: 0,
     }).format(montant);
+    const withoutCurrency = formatted
+      .replace(/XOF\s?/, "")
+      .replace(/F\s?CFA\s?/, "")
+      .replace(/CFA\s?/, "")
+      .trim();
+    return `${withoutCurrency} F CFA`;
   };
 
-  const totalMontant = 
+  const totalMontant =
     stats.abonnement +
     stats.demande_de_messe +
     stats.denier_de_culte +
@@ -88,7 +99,9 @@ export default function FluxFinancierStats({ stats }: FluxFinancierStatsProps) {
                   </p>
                   <h3 className="text-xl font-bold">{stat.value}</h3>
                 </div>
-                <div className={`h-10 w-10 rounded-full ${stat.bgColor} flex items-center justify-center`}>
+                <div
+                  className={`h-10 w-10 rounded-full ${stat.bgColor} flex items-center justify-center`}
+                >
                   <IconComponent className={`h-5 w-5 ${stat.iconColor}`} />
                 </div>
               </div>

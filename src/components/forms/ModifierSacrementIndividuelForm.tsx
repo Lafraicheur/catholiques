@@ -216,6 +216,10 @@ export default function ModifierSacrementIndividuelForm({
     }
   };
 
+  function setFormErrors(arg0: (prev: any) => any) {
+    throw new Error("Function not implemented.");
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -242,8 +246,12 @@ export default function ModifierSacrementIndividuelForm({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Baptême">Baptême</SelectItem>
-                <SelectItem value="Première Communion">Première Communion</SelectItem>
-                <SelectItem value="Profession De Foi">Profession de Foi</SelectItem>
+                <SelectItem value="Première Communion">
+                  Première Communion
+                </SelectItem>
+                <SelectItem value="Profession De Foi">
+                  Profession de Foi
+                </SelectItem>
                 <SelectItem value="Sacrement De Malade">
                   Sacrement de Malade
                 </SelectItem>
@@ -252,7 +260,7 @@ export default function ModifierSacrementIndividuelForm({
           </div>
 
           {/* Date */}
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="date">Date du sacrement</Label>
             <Popover>
               <PopoverTrigger asChild>
@@ -281,6 +289,26 @@ export default function ModifierSacrementIndividuelForm({
                 />
               </PopoverContent>
             </Popover>
+          </div> */}
+
+          <div className="space-y-1">
+            <label className="flex items-center text-sm font-medium text-slate-700">
+              <CalendarIcon className="h-4 w-4 mr-2 text-blue-600" />
+              Date du sacrement <span className="text-red-500 ml-1">*</span>
+            </label>
+
+            {/* Date picker HTML natif pour test */}
+            <Input
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={(e) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  date: e.target.value,
+                }));
+              }}
+            />
           </div>
 
           {/* Description */}

@@ -360,9 +360,9 @@ export default function SacrementDetailPage() {
         >
           {typeIcon} {typeLabel}
         </Badge>
-        <Badge variant={statusVariant} className="text-sm px-2.5 py-0.5">
+        {/* <Badge variant={statusVariant} className="text-sm px-2.5 py-0.5">
           {statusLabel}
-        </Badge>
+        </Badge> */}
       </div>
 
       {/* Carte principale d'informations */}

@@ -62,10 +62,21 @@ export default function FluxFinancierTable({
   };
 
   const formatMontant = (montant: number): string => {
-    return new Intl.NumberFormat("fr-FR", {
+    if (isNaN(montant) || montant === null || montant === undefined) {
+      return "0 F CFA";
+    }
+    const formatted = new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "XOF",
+      useGrouping: true,
+      minimumFractionDigits: 0,
     }).format(montant);
+    const withoutCurrency = formatted
+      .replace(/XOF\s?/, "")
+      .replace(/F\s?CFA\s?/, "")
+      .replace(/CFA\s?/, "")
+      .trim();
+    return `${withoutCurrency} F CFA`;
   };
 
   const getStatusBadgeVariant = (statut: string) => {
@@ -104,7 +115,7 @@ export default function FluxFinancierTable({
             <TableHead className="font-semibold text-slate-600 py-3 px-4">
               Type
             </TableHead>
-            <TableHead className="font-semibold text-slate-600 py-3 px-4">
+            <TableHead className="font-semibold text-center text-slate-600 py-3 px-4">
               Montant
             </TableHead>
             <TableHead className="font-semibold text-slate-600 py-3 px-4">
@@ -144,7 +155,7 @@ export default function FluxFinancierTable({
                   {flux.type}
                 </Badge>
               </TableCell>
-              <TableCell className="py-3 px-4 font-medium text-slate-900">
+              <TableCell className="py-3 px-4 text-right font-medium text-slate-900">
                 {formatMontant(flux?.montant_avec_frais)}
               </TableCell>
               <TableCell className="py-3 px-4">

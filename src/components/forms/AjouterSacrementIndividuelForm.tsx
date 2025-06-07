@@ -34,6 +34,15 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
+interface Sacrement {
+  id: number;
+  soustype: string;
+  date: string;
+  description?: string;
+  paroisse_id: number;
+  celebrant?: string;
+}
+
 // Interface pour les props
 interface AjouterSacrementIndividuelFormProps {
   onClose: () => void;
@@ -66,7 +75,7 @@ const TYPES_SACREMENTS = [
   "Baptême",
   "Première Communion",
   "Profession De Foi",
-  "Sacrement De Malade"
+  "Sacrement De Malade",
 ];
 
 const AjouterSacrementIndividuelForm = ({
@@ -83,6 +92,9 @@ const AjouterSacrementIndividuelForm = ({
     paroisse_id: getUserParoisseId(),
     celebrant: "",
   });
+
+  // NOUVEAU : État local pour la date sélectionnée dans le Calendar
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
 
   type FormErrors = {
     soustype?: string | null;
@@ -111,12 +123,35 @@ const AjouterSacrementIndividuelForm = ({
       celebrant: "",
     });
 
+    // Réinitialiser la date sélectionnée
+    setSelectedDate(undefined);
+
     // Réinitialiser les erreurs
     setFormErrors({});
   }, []);
 
+  // NOUVEAU : Synchroniser selectedDate avec formData.date
+  useEffect(() => {
+    if (formData.date) {
+      try {
+        const dateObj = new Date(formData.date);
+        // Vérifier que la date est valide
+        if (!isNaN(dateObj.getTime())) {
+          setSelectedDate(dateObj);
+        } else {
+          setSelectedDate(undefined);
+        }
+      } catch (error) {
+        console.error("Erreur de parsing de date:", error);
+        setSelectedDate(undefined);
+      }
+    } else {
+      setSelectedDate(undefined);
+    }
+  }, [formData.date]);
+
   // Gestion des changements dans le formulaire pour les champs texte
-  const handleChange = (e: { target: { name: any; value: any; }; }) => {
+  const handleChange = (e: { target: { name: any; value: any } }) => {
     const { name, value } = e.target;
 
     setFormData((prev) => ({
@@ -148,14 +183,21 @@ const AjouterSacrementIndividuelForm = ({
     }
   };
 
-  // Gestion du changement de date
+  // CORRIGÉ : Gestion du changement de date
   const handleDateChange = (date: Date | undefined) => {
+    console.log("Date sélectionnée:", date);
+
+    // Mettre à jour l'état local
+    setSelectedDate(date);
+
+    // Mettre à jour formData
     setFormData((prev) => ({
       ...prev,
       date: date ? format(date, "yyyy-MM-dd") : "",
     }));
 
-    if (formErrors.date) {
+    // Effacer l'erreur si une date est sélectionnée
+    if (date && formErrors.date) {
       setFormErrors((prev) => ({
         ...prev,
         date: null,
@@ -191,7 +233,7 @@ const AjouterSacrementIndividuelForm = ({
   };
 
   // Soumission du formulaire
-  const handleSubmit = async (e: { preventDefault: () => void; }) => {
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
 
     // Valider le formulaire avant soumission
@@ -384,46 +426,36 @@ const AjouterSacrementIndividuelForm = ({
           )}
         </div>
 
-        {/* Date du sacrement */}
+        {/* CORRIGÉ : Date du sacrement */}
         <div className="space-y-1">
-          <label
-            htmlFor="date"
-            className="flex items-center text-sm font-medium text-slate-700"
-          >
+          <label className="flex items-center text-sm font-medium text-slate-700">
             <CalendarIcon className="h-4 w-4 mr-2 text-blue-600" />
             Date du sacrement <span className="text-red-500 ml-1">*</span>
           </label>
-          <div className="relative">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={`w-full justify-start text-left font-normal ${
-                    formErrors.date ? "border-red-500" : "border-blue-200"
-                  } focus:border-blue-500 focus:ring-blue-500`}
-                >
-                  {formData.date ? (
-                    format(new Date(formData.date), "dd MMMM yyyy", {
-                      locale: fr,
-                    })
-                  ) : (
-                    <span className="text-slate-500">
-                      Sélectionner une date
-                    </span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={formData.date ? new Date(formData.date) : undefined}
-                  onSelect={handleDateChange}
-                  initialFocus
-                  locale={fr}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+
+          {/* Date picker HTML natif pour test */}
+          <Input
+            type="date"
+            name="date"
+            value={formData.date}
+            onChange={(e) => {
+              setFormData((prev) => ({
+                ...prev,
+                date: e.target.value,
+              }));
+              if (formErrors.date) {
+                setFormErrors((prev) => ({
+                  ...prev,
+                  date: null,
+                }));
+              }
+            }}
+            className={cn(
+              "w-full",
+              formErrors.date ? "border-red-500" : "border-blue-200"
+            )}
+          />
+
           {formErrors.date && (
             <p className="text-xs text-red-500">{formErrors.date}</p>
           )}
@@ -443,7 +475,7 @@ const AjouterSacrementIndividuelForm = ({
             name="celebrant"
             value={formData.celebrant}
             onChange={handleChange}
-            placeholder="Numéro du célébrant"
+            placeholder="Nom du célébrant"
             className="border-violet-200 focus:border-violet-500 focus:ring-violet-500"
           />
         </div>

@@ -45,7 +45,6 @@ export default function NewSacrementUnionForm({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // État du formulaire
   // Obtenir l'ID de paroisse depuis le localStorage
   const getUserParoisseId = () => {
     try {
@@ -64,12 +63,12 @@ export default function NewSacrementUnionForm({
     type: "Mariage",
     date: "",
     description: "",
-    temoin_marie: "",
-    temoin_mariee: "",
+    marie_ou_mariee: "",
+    premier_temoin: "",
+    second_temoin: "",
+    pere_celebrant: "",
     paroisse_id: getUserParoisseId(),
-    numero_celebrant: "",
-    numero_marie: "",
-    numero_mariee: "",
+    numero_marie_ou_mariee: "",
   });
 
   // Réinitialiser le formulaire à chaque ouverture
@@ -78,12 +77,12 @@ export default function NewSacrementUnionForm({
       type: "Mariage",
       date: "",
       description: "",
-      temoin_marie: "",
-      temoin_mariee: "",
-      paroisse_id: 0,
-      numero_celebrant: "",
-      numero_marie: "",
-      numero_mariee: "",
+      marie_ou_mariee: "",
+      premier_temoin: "",
+      second_temoin: "",
+      pere_celebrant: "",
+      paroisse_id: getUserParoisseId(),
+      numero_marie_ou_mariee: "",
     });
   };
 
@@ -93,16 +92,6 @@ export default function NewSacrementUnionForm({
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Gérer la sélection de la date
-  const handleDateSelect = (date: Date | undefined) => {
-    if (date) {
-      setFormData((prev) => ({
-        ...prev,
-        date: date.toISOString().split("T")[0],
-      }));
-    }
   };
 
   // Valider le formulaire
@@ -125,11 +114,19 @@ export default function NewSacrementUnionForm({
       });
       return false;
     }
-    // Vérifier au moins un numéro de téléphone (marié ou mariée)
-    if (!formData.numero_marie && !formData.numero_mariee) {
+
+    // Vérifier le numéro de téléphone
+    if (!formData.numero_marie_ou_mariee) {
       toast.error("Erreur de validation", {
-        description:
-          "Veuillez saisir au moins un numéro de téléphone (marié ou mariée).",
+        description: "Le numéro de téléphone est requis.",
+      });
+      return false;
+    }
+
+    // Vérifier le nom du marié/mariée
+    if (!formData.marie_ou_mariee) {
+      toast.error("Erreur de validation", {
+        description: "Le nom du marié/mariée est requis.",
       });
       return false;
     }
@@ -158,24 +155,22 @@ export default function NewSacrementUnionForm({
         throw new AuthenticationError("Token d'authentification non trouvé");
       }
 
-      // Construire les données à envoyer
+      // Construire les données à envoyer selon le nouveau format de l'API
       const apiData = {
         type: formData.type,
         date: formData.date,
         description: formData.description || "",
-        temoin_marie: formData.temoin_marie || "",
-        temoin_mariee: formData.temoin_mariee || "",
+        marie_ou_mariee: formData.marie_ou_mariee,
+        premier_temoin: formData.premier_temoin || "",
+        second_temoin: formData.second_temoin || "",
+        pere_celebrant: formData.pere_celebrant || "",
         paroisse_id: Number(paroisseId),
-        numero_celebrant: formData.numero_celebrant || "",
-        numero_marie: formData.numero_marie || "",
-        numero_mariee: formData.numero_mariee || "",
-        field_value: true, // Comme pour les sacrements individuels
+        numero_marie_ou_mariee: formData.numero_marie_ou_mariee,
       };
 
       console.log("Données envoyées à l'API:", apiData);
 
-      // Première tentative avec le format standard
-      let response = await fetch(
+      const response = await fetch(
         "https://api.cathoconnect.ci/api:HzF8fFua/sacrement-union/creer",
         {
           method: "POST",
@@ -187,12 +182,16 @@ export default function NewSacrementUnionForm({
         }
       );
 
-      // Si erreur, essayer un format alternatif
       if (!response.ok) {
         const responseText = await response.text();
-        console.error("Première tentative échouée:", responseText);
+        console.error("Erreur de l'API:", responseText);
 
-        const errorData = await response.json().catch(() => ({}));
+        let errorData;
+        try {
+          errorData = JSON.parse(responseText);
+        } catch {
+          errorData = {};
+        }
 
         // Gérer les différents codes d'erreur
         if (response.status === 401) {
@@ -201,41 +200,6 @@ export default function NewSacrementUnionForm({
           throw new ForbiddenError("Accès refusé");
         } else if (response.status === 404) {
           throw new NotFoundError("Ressource non trouvée");
-        } else if (response.status === 400) {
-          // Si erreur de validation liée au format de données, essayer un format alternatif
-          if (responseText.includes("Text filter requires")) {
-            console.log("Tentative avec format alternatif...");
-
-            // Format alternatif
-            const alternativeData = {
-              ...apiData,
-              formData: apiData,
-            };
-
-            response = await fetch(
-              "https://api.cathoconnect.ci/api:HzF8fFua/sacrement-union/creer",
-              {
-                method: "POST",
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify(alternativeData),
-              }
-            );
-
-            if (!response.ok) {
-              throw new ApiError(
-                `Erreur HTTP: ${response.status}`,
-                response.status
-              );
-            }
-          } else {
-            // Autre erreur de validation
-            const errorMessage =
-              errorData.message || "Le formulaire contient des erreurs.";
-            throw new ApiError(errorMessage, 400);
-          }
         } else if (response.status === 429) {
           throw new ApiError(
             "Trop de requêtes, veuillez réessayer plus tard",
@@ -303,7 +267,7 @@ export default function NewSacrementUnionForm({
       }}
     >
       <DialogTrigger asChild>
-        <Button className=" text-white cursor-pointer">
+        <Button className="text-white cursor-pointer">
           <Plus className="h-4 w-4 mr-2" />
           Nouveau Mariage
         </Button>
@@ -315,132 +279,95 @@ export default function NewSacrementUnionForm({
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="grid grid-cols-2 gap-4">
             {/* Date du sacrement */}
-            <div className="space-y-2">
-              <Label htmlFor="date">
-                Date du mariage <span className="text-red-500">*</span>
-              </Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !formData.date && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.date ? (
-                      format(new Date(formData.date), "PPP", { locale: fr })
-                    ) : (
-                      <span>Sélectionnez une date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={
-                      formData.date ? new Date(formData.date) : undefined
-                    }
-                    onSelect={handleDateSelect}
-                    initialFocus
-                    locale={fr}
-                  />
-                </PopoverContent>
-              </Popover>
+            <div className="space-y-1">
+              <label className="flex items-center text-sm font-medium text-slate-700">
+                <CalendarIcon className="h-4 w-4 mr-2 text-blue-600" />
+                Date du sacrement <span className="text-red-500 ml-1">*</span>
+              </label>
+              <Input
+                type="date"
+                name="date"
+                value={formData.date}
+                onChange={handleChange}
+                className="w-full border-blue-200"
+                required
+              />
             </div>
 
+            {/* Nom du marié/mariée */}
             <div className="space-y-2">
-              <Label htmlFor="numero_marie">
-                Numéro de téléphone du marié{" "}
-                <span className="text-red-500">*</span>
+              <Label htmlFor="marie_ou_mariee">
+                Nom du marié/mariée <span className="text-red-500">*</span>
               </Label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 text-xs sm:text-sm">
-                  +225
-                </span>
-                <Input
-                  id="numero_marie"
-                  name="numero_marie"
-                  value={formData.numero_marie}
-                  onChange={handleChange}
-                  placeholder="Ex: 0101020304"
-                  className="pl-12"
-                  maxLength={10}
-                  inputMode="numeric"
-                />
-              </div>
+              <Input
+                id="marie_ou_mariee"
+                name="marie_ou_mariee"
+                value={formData.marie_ou_mariee}
+                onChange={handleChange}
+                placeholder="Nom complet du marié ou de la mariée"
+                required
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {/* Témoin du marié */}
+            {/* Premier témoin */}
             <div className="space-y-2">
-              <Label htmlFor="temoin_marie">Témoin du marié</Label>
+              <Label htmlFor="premier_temoin">Premier témoin</Label>
               <Input
-                id="temoin_marie"
-                name="temoin_marie"
-                value={formData.temoin_marie}
+                id="premier_temoin"
+                name="premier_temoin"
+                value={formData.premier_temoin}
                 onChange={handleChange}
-                placeholder="Nom complet du témoin"
+                placeholder="Nom complet du premier témoin"
               />
             </div>
 
-            {/* Numéro de la mariée */}
+            {/* Second témoin */}
             <div className="space-y-2">
-              <Label htmlFor="numero_mariee">
-                Numéro de téléphone de la mariée{" "}
-                <span className="text-red-500">*</span>
-              </Label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 text-xs sm:text-sm">
-                  +225
-                </span>
-                <Input
-                  id="numero_mariee"
-                  name="numero_mariee"
-                  value={formData.numero_mariee}
-                  onChange={handleChange}
-                  placeholder="Ex: 0101020304"
-                  className="pl-12"
-                  maxLength={10}
-                  inputMode="numeric"
-                />
-              </div>
+              <Label htmlFor="second_temoin">Second témoin</Label>
+              <Input
+                id="second_temoin"
+                name="second_temoin"
+                value={formData.second_temoin}
+                onChange={handleChange}
+                placeholder="Nom complet du second témoin"
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {/* Témoin de la mariée */}
+            {/* Père célébrant */}
             <div className="space-y-2">
-              <Label htmlFor="temoin_mariee">Témoin de la mariée</Label>
+              <Label htmlFor="pere_celebrant">Père célébrant</Label>
               <Input
-                id="temoin_mariee"
-                name="temoin_mariee"
-                value={formData.temoin_mariee}
+                id="pere_celebrant"
+                name="pere_celebrant"
+                value={formData.pere_celebrant}
                 onChange={handleChange}
-                placeholder="Nom complet du témoin"
+                placeholder="Nom du père célébrant"
               />
             </div>
 
-            {/* Numéro du célébrant */}
+            {/* Numéro de téléphone */}
             <div className="space-y-2">
-              <Label htmlFor="numero_celebrant">
-                Numéro de téléphone du célébrant
+              <Label htmlFor="numero_marie_ou_mariee">
+                Numéro de téléphone <span className="text-red-500">*</span>
               </Label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 text-xs sm:text-sm">
                   +225
                 </span>
                 <Input
-                  id="numero_celebrant"
-                  name="numero_celebrant"
-                  value={formData.numero_celebrant}
+                  id="numero_marie_ou_mariee"
+                  name="numero_marie_ou_mariee"
+                  value={formData.numero_marie_ou_mariee}
                   onChange={handleChange}
                   placeholder="Ex: 0101020304"
                   className="pl-12"
                   maxLength={10}
                   inputMode="numeric"
+                  required
                 />
               </div>
             </div>

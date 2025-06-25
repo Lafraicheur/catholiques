@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -75,7 +75,9 @@ const LoadingAnimation = () => (
             <circle cx="140" cy="60" r="4" fill="#4F46E5" />
           </svg>
         </div>
-        <p className="text-indigo-600 font-medium">Chargement des données...</p>
+        <p className="text-indigo-600 font-medium">
+          Vérification de l'authentification...
+        </p>
       </div>
     </div>
   </div>
@@ -84,6 +86,7 @@ const LoadingAnimation = () => (
 export default function LoginForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   // Définir le formulaire
   const form = useForm<z.infer<typeof formSchema>>({
@@ -93,6 +96,65 @@ export default function LoginForm() {
       password: "",
     },
   });
+
+  // Fonction pour vérifier si l'utilisateur est déjà connecté
+  const checkExistingAuth = async () => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      const userProfile = localStorage.getItem("user_profile");
+
+      if (!token) {
+        setIsCheckingAuth(false);
+        return;
+      }
+
+      // Vérifier la validité du token en appelant l'API
+      const response = await axios.get(`${API_URL}/admin/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const adminProfile = response.data?.item;
+
+      if (adminProfile) {
+        // L'utilisateur est déjà connecté, rediriger vers son dashboard
+        let route = "paroisse"; // Route par défaut
+
+        if (adminProfile.entite) {
+          const entite = adminProfile.entite.toLowerCase();
+          const routeMapping: Record<string, string> = {
+            diocese: "diocese",
+            vicariat: "vicariat",
+            doyenne: "doyenne",
+            paroisse: "paroisse",
+          };
+          route = routeMapping[entite] || "paroisse";
+        }
+
+        toast.info("Déjà connecté", {
+          description: `Redirection vers votre tableau de bord...`,
+          duration: 2000,
+        });
+
+        // Redirection immédiate
+        router.replace(`/dashboard/${route}`);
+        return;
+      }
+    } catch (error) {
+      // Token invalide ou expiré, nettoyer le localStorage
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user_profile");
+      console.log("Token expiré ou invalide, nettoyage effectué");
+    }
+
+    setIsCheckingAuth(false);
+  };
+
+  // Vérifier l'authentification au chargement du composant
+  useEffect(() => {
+    checkExistingAuth();
+  }, []);
 
   // Gérer la soumission du formulaire
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -165,8 +227,8 @@ export default function LoginForm() {
 
           // Attendre un court délai avant la redirection
           setTimeout(() => {
-            // Redirection vers le tableau de bord approprié
-            router.push(`/dashboard/${route}`);
+            // Utiliser replace au lieu de push pour éviter le retour en arrière
+            router.replace(`/dashboard/${route}`);
           }, 1500); // Délai de 1.5 secondes
         } else {
           throw new Error("Profil administrateur incomplet");
@@ -179,7 +241,7 @@ export default function LoginForm() {
         console.error("Message d'erreur:", profileError.message);
         if (profileError.response) {
           console.error("Réponse d'erreur:", profileError.response.data);
-          console.error("entite:", profileError.response.status);
+          console.error("Status:", profileError.response.status);
         }
 
         // Utiliser le toast de Sonner pour l'avertissement
@@ -191,20 +253,18 @@ export default function LoginForm() {
 
         // Redirection par défaut avec délai
         setTimeout(() => {
-          router.push("/dashboard/paroisse");
+          router.replace("/dashboard/paroisse");
         }, 2000);
       }
     } catch (error: any) {
       if (error.response && error.response.status === 403) {
         toast.error("Accès refusé", {
-          description:
-            "Vérifiez vos identifiants de connexion",
+          description: "Vérifiez vos identifiants de connexion",
           duration: 5000,
         });
       } else {
         toast.error("Échec de connexion", {
-          description:
-            "Serveur indisponible. Veuillez réessayer.",
+          description: "Serveur indisponible. Veuillez réessayer.",
           duration: 5000,
         });
       }
@@ -213,8 +273,8 @@ export default function LoginForm() {
     }
   }
 
-  // Si en chargement, afficher l'animation
-  if (isLoading) {
+  // Si en vérification d'authentification, afficher l'animation
+  if (isCheckingAuth || isLoading) {
     return <LoadingAnimation />;
   }
 

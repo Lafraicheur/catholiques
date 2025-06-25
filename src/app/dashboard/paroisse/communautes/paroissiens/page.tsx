@@ -17,33 +17,20 @@ import {
   User,
   UserCheck,
   UserX,
-  Calendar,
   ChevronRight,
   ChevronLeft,
-  MoreHorizontal,
-  UserPlus,
-  CheckCircle,
   Users,
   Eye,
+  MoreVertical,
+  TrendingUp,
+  TrendingDown,
+  Calendar,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -95,7 +82,7 @@ interface Paroissien {
   email: string;
   date_de_naissance: string;
   pays: string;
-  nationalite: string; // ✅ Ajouté
+  nationalite: string;
   ville: string;
   commune: string;
   quartier: string;
@@ -113,6 +100,52 @@ interface Paroissien {
     intitule: string;
   };
 }
+
+// Composant pour les cartes de statistiques modernes
+interface StatsCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  iconBgColor: string;
+  iconColor: string;
+  trend?: {
+    value: string;
+    isPositive: boolean;
+  };
+}
+
+const StatsCard = ({
+  title,
+  value,
+  icon,
+  iconBgColor,
+  iconColor,
+  trend,
+}: StatsCardProps) => {
+  return (
+    <Card className="relative overflow-hidden border-0 shadow-sm bg-white hover:shadow-md transition-shadow duration-200">
+      <CardContent className="p-y-1">
+        {/* Header avec icône et menu */}
+        <div className="flex items-center mb-4">
+          <div
+            className={`h-12 w-12 rounded-xl ${iconBgColor} flex items-center justify-center`}
+          >
+            <div className={iconColor}>{icon}</div>
+          </div>
+          &nbsp;&nbsp;
+          <h3 className="text-sm font-medium text-slate-600 mb-2">{title}</h3>
+        </div>
+
+        {/* Titre */}
+
+        {/* Valeur et tendance */}
+        <div className="flex items-end justify-between">
+          <div className="text-3xl font-bold text-slate-900">{value}</div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 export default function ParoissiensPage() {
   const router = useRouter();
@@ -475,37 +508,6 @@ export default function ParoissiensPage() {
     loadParoissiens();
   }, [router]);
 
-  // Filtrer les paroissiens selon la recherche
-  useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredParoissiens(paroissiens);
-    } else {
-      const query = searchQuery.toLowerCase().trim();
-      const results = paroissiens.filter(
-        (p) =>
-          p.nom.toLowerCase().includes(query) ||
-          p.prenoms.toLowerCase().includes(query) ||
-          p.email?.toLowerCase().includes(query) ||
-          p.num_de_telephone?.includes(query)
-      );
-      setFilteredParoissiens(results);
-    }
-    setCurrentPage(1);
-    setTotalPages(Math.ceil(filteredParoissiens.length / itemsPerPage));
-  }, [searchQuery, paroissiens]);
-
-  const getTotalParoissiens = () => paroissiens.length;
-
-  const getParoissiensAbonnes = () =>
-    paroissiens.filter((p) => p.est_abonne).length;
-
-  const getParoissiensNonAbonnes = () =>
-    paroissiens.filter((p) => !p.est_abonne).length;
-
-  const getParoissiensStatut = (statut: string) => {
-    return paroissiens.filter((p) => p.statut === statut).length;
-  };
-
   // Calculer les paroissiens à afficher pour la pagination
   const getCurrentPageItems = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -525,6 +527,13 @@ export default function ParoissiensPage() {
       setCurrentPage(currentPage - 1);
     }
   };
+
+  // Fonctions utilitaires
+  const getTotalParoissiens = () => paroissiens.length;
+  const getParoissiensAbonnes = () =>
+    paroissiens.filter((p) => p.est_abonne).length;
+  const getParoissiensNonAbonnes = () =>
+    paroissiens.filter((p) => !p.est_abonne).length;
 
   // Formater les dates: 2023-05-15 -> 15/05/2023
   const formatDate = (dateString: string | null | undefined): string => {
@@ -558,27 +567,40 @@ export default function ParoissiensPage() {
     const statusMap: Record<
       string,
       {
-        variant:
-          | "default"
-          | "success"
-          | "secondary"
-          | "outline"
-          | "destructive";
+        className: string;
         label: string;
       }
     > = {
-      Baptisé: { variant: "default", label: "Baptisé" },
-      Confirmé: { variant: "default", label: "Confirmé" },
-      Marié: { variant: "default", label: "Marié à l'église" },
-      Aucun: { variant: "outline", label: "Aucun" },
+      Baptisé: {
+        className: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-200",
+        label: "Baptisé",
+      },
+      Confirmé: {
+        className: "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-200",
+        label: "Confirmé",
+      },
+      Marié: {
+        className: "bg-green-50 text-green-700 border-green-200 hover:bg-green-200",
+        label: "Marié",
+      },
+      Aucun: {
+        className: "bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-200",
+        label: "Aucun",
+      },
     };
 
     const status = statusMap[statut] || {
-      variant: "outline",
+      className: "bg-slate-50 text-slate-500 border-slate-200",
       label: statut || "Aucun",
     };
 
-    return <Badge variant={status.variant}>{status.label}</Badge>;
+    return (
+      <Badge
+        className={`px-3 py-1 font-medium text-sm rounded-full ${status.className}`}
+      >
+        {status.label}
+      </Badge>
+    );
   };
 
   // Gérer le succès de la mise à jour
@@ -704,116 +726,115 @@ export default function ParoissiensPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">Total</p>
-                <h3 className="text-2xl font-bold">{getTotalParoissiens()}</h3>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <Users className="h-5 w-5 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Statistiques avec nouveau design moderne */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <StatsCard
+          title="Total Paroissiens"
+          value={getTotalParoissiens()}
+          icon={<Users size={24} />}
+          iconBgColor="bg-blue-50"
+          iconColor="text-blue-600"
+          trend={{
+            value: "+6,2%",
+            isPositive: true,
+          }}
+        />
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">Abonnés</p>
-                <h3 className="text-2xl font-bold">
-                  {getParoissiensAbonnes()}
-                </h3>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                <UserCheck className="h-5 w-5 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <StatsCard
+          title="Abonnés"
+          value={getParoissiensAbonnes()}
+          icon={<UserCheck size={24} />}
+          iconBgColor="bg-green-50"
+          iconColor="text-green-600"
+          trend={{
+            value: "+12,4%",
+            isPositive: true,
+          }}
+        />
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">
-                  Non Abonnés
-                </p>
-                <h3 className="text-2xl font-bold">
-                  {getParoissiensNonAbonnes()}
-                </h3>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
-                <UserX className="h-5 w-5 text-red-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <StatsCard
+          title="Non Abonnés"
+          value={getParoissiensNonAbonnes()}
+          icon={<UserX size={24} />}
+          iconBgColor="bg-red-50"
+          iconColor="text-red-600"
+          trend={{
+            value: "-2,8%",
+            isPositive: false,
+          }}
+        />
       </div>
 
-      <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-          <Input
-            placeholder="Rechercher par nom, prénom, email, téléphone..."
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        {/* Filtre par statut */}
-        <div className="flex gap-2">
-          {/* Filtre par statut existant */}
-          <div className="w-full sm:w-64">
-            <Select value={statutFilter} onValueChange={setStatutFilter}>
-              <SelectTrigger>
-                <div className="flex items-center">
-                  <Filter className="h-4 w-4 mr-2 text-slate-400" />
-                  <SelectValue placeholder="Filtrer par statut" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                {getUniqueStatuts().map((statut) => (
-                  <SelectItem key={statut} value={statut}>
-                    {statut === "TOUS" ? "Tous les statuts" : statut}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      {/* Section filtres et actions - Design moderne */}
+      <div className="mb-8">
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+          {/* Section recherche */}
+          <div className="relative flex-1 max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-slate-400" />
+            </div>
+            <Input
+              placeholder="Rechercher par nom, prénom, email, téléphone..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-12 h-12 bg-white border-slate-200 rounded-xl transition-all duration-200"
+            />
           </div>
 
-          {/* Nouveau bouton d'exportation */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="cursor-pointer"
-                disabled={exporting || filteredParoissiens.length === 0}
+          {/* Section filtres et actions */}
+          <div className="flex gap-3">
+            {/* Filtre par statut moderne */}
+            <div className="w-48">
+              <Select value={statutFilter} onValueChange={setStatutFilter}>
+                <SelectTrigger className="h-12 bg-white border-slate-200 rounded-xl">
+                  <div className="flex items-center cursor-pointer">
+                    <Filter className="h-4 w-4 mr-2 text-slate-400" />
+                    <SelectValue placeholder="Filtrer par statut" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent className="bg-white border-slate-200 rounded-xl">
+                  {getUniqueStatuts().map((statut) => (
+                    <SelectItem key={statut} value={statut}>
+                      {statut === "TOUS" ? "Tous les statuts" : statut}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Bouton d'exportation moderne */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="h-12 px-6 bg-white border-slate-200 hover:bg-slate-50 rounded-xl transition-all duration-200 disabled:opacity-50 cursor-pointer"
+                  disabled={exporting || filteredParoissiens.length === 0}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  {exporting ? "Export..." : "Exporter"}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-48 bg-white border-slate-200 shadow-lg rounded-xl"
               >
-                <Download className="h-4 w-4 mr-2" />
-                {exporting ? "Export..." : "Exporter"}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={exportToExcel}
-                className="cursor-pointer"
-              >
-                <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
-                Exporter en Excel
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={exportToPDF}
-                className="cursor-pointer"
-              >
-                <FileDown className="h-4 w-4 mr-2 text-red-600" />
-                Exporter en PDF
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuItem
+                  onClick={exportToExcel}
+                  className="cursor-pointer hover:bg-slate-50 rounded-lg m-1 p-3 transition-colors"
+                >
+                  <FileSpreadsheet className="h-4 w-4 mr-3 text-green-600" />
+                  <span className="font-medium">Exporter en Excel</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={exportToPDF}
+                  className="cursor-pointer hover:bg-slate-50 rounded-lg m-1 p-3 transition-colors"
+                >
+                  <FileDown className="h-4 w-4 mr-3 text-red-600" />
+                  <span className="font-medium">Exporter en PDF</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
 
@@ -842,83 +863,163 @@ export default function ParoissiensPage() {
           )}
         </div>
       ) : (
-        <div className="rounded-lg border border-slate-200 overflow-hidden bg-white shadow-sm">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          {/* Header du tableau moderne */}
+          <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-200">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900">
+                Paroissiens
+              </h3>
+              <div className="text-sm text-slate-500">
+                {filteredParoissiens.length} résultat
+                {filteredParoissiens.length > 1 ? "s" : ""}
+              </div>
+            </div>
+          </div>
+
           <Table className="w-full">
-            <TableHeader className="bg-slate-50">
-              <TableRow className="hover:bg-slate-100 border-slate-200">
-                <TableHead className="font-semibold text-slate-600 py-3 px-4">
-                  Date d'ajout
+            <TableHeader>
+              <TableRow className="border-slate-200 hover:bg-transparent">
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
+                  Date d'inscription
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600 py-3 px-4">
-                  Nom
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
+                  Nom & Prénom
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600 py-3 px-4">
-                  Téléphone
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
+                  Contact
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
                   Statut
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
                   Abonnement
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600 py-3 px-4 text-right">
-                  Détails
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-right">
+                  Actions
                 </TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
               {getCurrentPageItems().map((paroissien) => (
                 <TableRow
                   key={paroissien.id}
-                  // onClick={() => navigateToDetails(paroissien.id)}
-                  className="hover:bg-slate-50/80 border-slate-200"
+                  className="border-slate-200 hover:bg-slate-50/50 transition-colors duration-150"
                 >
-                  <TableCell className="text-slate-500 py-3 px-4">
+                  <TableCell className="py-4 px-6">
                     <div className="flex items-center">
-                      <div className="h-2 w-2 rounded-full mr-2 " />
-                      {formatDate(paroissien.created_at)}
+                      <div className="h-2 w-2 rounded-full opacity-60" />
+                      <span className="text-slate-600 font-medium">
+                        {formatDate(paroissien.created_at)}
+                      </span>
                     </div>
                   </TableCell>
 
-                  <TableCell className="py-3 px-4 font-medium text-slate-900">
-                    <div className="font-medium text-xs text-slate-900">
-                      {paroissien.nom} {paroissien.prenoms}
-                    </div>
-                    <div className="text-xs text-slate-500">
-                      Né(e) le {formatDate(paroissien.date_de_naissance)}
+                  <TableCell className="py-4 px-6">
+                    <div className="flex items-center">
+                      <div
+                        className={`h-10 w-10 rounded-full flex items-center justify-center mr-3 ${
+                          paroissien.genre === "M"
+                            ? "bg-blue-100"
+                            : "bg-pink-100"
+                        }`}
+                      >
+                        <span
+                          className={`text-sm font-semibold ${
+                            paroissien.genre === "M"
+                              ? "text-blue-600"
+                              : "text-pink-600"
+                          }`}
+                        >
+                          {paroissien.prenoms.charAt(0)}
+                          {paroissien.nom.charAt(0)}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-slate-900 text-base">
+                          {paroissien.nom} {paroissien.prenoms}
+                        </div>
+                        <div className="text-sm text-slate-500 flex items-center">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          Né(e) le {formatDate(paroissien.date_de_naissance)}
+                        </div>
+                      </div>
                     </div>
                   </TableCell>
 
-                  <TableCell className="text-xs text-slate-700">
-                    {formatPhoneNumber(paroissien.num_de_telephone)}
+                  <TableCell className="py-4 px-6">
+                    <div className="space-y-1">
+                      {paroissien.num_de_telephone ? (
+                        <div className="flex items-center">
+                          <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center mr-2">
+                            <Phone className="h-3 w-3 text-green-600" />
+                          </div>
+                          <span className="text-sm font-medium text-slate-900">
+                            {formatPhoneNumber(paroissien.num_de_telephone)}
+                          </span>
+                        </div>
+                      ) : null}
+
+                      {paroissien.email ? (
+                        <div className="flex items-center">
+                          <div className="h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center mr-2">
+                            <Mail className="h-3 w-3 text-blue-600" />
+                          </div>
+                          <span className="text-sm text-slate-600 truncate max-w-[150px]">
+                            {paroissien.email}
+                          </span>
+                        </div>
+                      ) : null}
+
+                      {!paroissien.num_de_telephone && !paroissien.email && (
+                        <span className="text-slate-400 text-sm italic">
+                          Aucun contact
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
 
-                  <TableCell>{getStatusBadge(paroissien.statut)}</TableCell>
+                  <TableCell className="py-4 px-6">
+                    {getStatusBadge(paroissien.statut)}
+                  </TableCell>
 
-                  <TableCell>
+                  <TableCell className="py-4 px-6">
                     {paroissien.est_abonne ? (
-                      <Badge variant="success" className="bg-green-800">
-                        {paroissien.abonnement?.intitule || "Abonné"}
-                      </Badge>
+                      <div className="flex items-center">
+                        <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                          <UserCheck className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div>
+                          <Badge className="bg-green-50 text-green-700 border-green-200 px-3 py-1 font-medium text-sm rounded-full hover:bg-green-100">
+                            {paroissien.abonnement?.intitule || "Abonné"}
+                          </Badge>
+                        </div>
+                      </div>
                     ) : (
-                      <Badge variant="outline" className="text-slate-500">
-                        Aucun
-                      </Badge>
+                      <div className="flex items-center">
+                        <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center mr-3">
+                          <UserX className="h-4 w-4 text-slate-400" />
+                        </div>
+                        <Badge className="bg-slate-50 text-slate-500 border-slate-200 px-3 py-1 font-medium text-sm rounded-full hover:bg-slate-200">
+                          Aucun
+                        </Badge>
+                      </div>
                     )}
                   </TableCell>
 
-                  <TableCell className="text-right py-2 px-4">
+                  <TableCell className="py-4 px-6 text-right">
                     <div className="flex justify-end gap-2">
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        className="flex items-center text-blue-600 hover:bg-blue-50 cursor-pointer"
+                        className="h-9 w-9 p-0 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigateToDetails(paroissien.id);
                         }}
                       >
-                        <Eye className="h-4 w-4 mr-1" />
+                        <Eye className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
@@ -926,17 +1027,25 @@ export default function ParoissiensPage() {
               ))}
             </TableBody>
           </Table>
+
+          {/* Footer du tableau moderne */}
           {filteredParoissiens.length > 0 && (
-            <div className="py-3 px-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-              <p className="text-sm text-slate-500">
-                Page {currentPage} sur {totalPages}
-              </p>
+            <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-200 flex items-center justify-between">
+              <div className="text-sm text-slate-600">
+                Affichage de {(currentPage - 1) * itemsPerPage + 1} à{" "}
+                {Math.min(
+                  currentPage * itemsPerPage,
+                  filteredParoissiens.length
+                )}{" "}
+                sur {filteredParoissiens.length} résultats
+              </div>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={goToPreviousPage}
                   disabled={currentPage === 1}
+                  className="h-9 px-4 bg-white border-slate-200 hover:bg-slate-50 disabled:opacity-50 transition-all duration-150"
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Précédent
@@ -946,6 +1055,7 @@ export default function ParoissiensPage() {
                   size="sm"
                   onClick={goToNextPage}
                   disabled={currentPage === totalPages}
+                  className="h-9 px-4 bg-white border-slate-200 hover:bg-slate-50 disabled:opacity-50 transition-all duration-150"
                 >
                   Suivant
                   <ChevronRight className="h-4 w-4 ml-1" />
@@ -955,34 +1065,6 @@ export default function ParoissiensPage() {
           )}
         </div>
       )}
-
-      {/* Dialog de modification de paroissien */}
-      <Dialog
-        open={showEditDialog}
-        onOpenChange={(open) => {
-          setShowEditDialog(open);
-          if (!open) {
-            setSelectedParoissien(null);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-[600px] w-[92vw] max-h-[90vh] overflow-y-auto p-3 sm:p-6">
-          <DialogHeader className="pb-2">
-            <DialogTitle className="text-lg text-blue-800 font-semibold flex items-center">
-              <Edit className="h-5 w-5 mr-2 text-blue-600" />
-              Modifier le paroissien
-            </DialogTitle>
-          </DialogHeader>
-
-          {/* {selectedParoissien && (
-            <ModifierParoissienForm
-              onClose={() => setShowEditDialog(false)}
-              paroissienData={selectedParoissien}
-              onSuccess={handleUpdateSuccess}
-            />
-          )} */}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

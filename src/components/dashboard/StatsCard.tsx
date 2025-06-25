@@ -46,12 +46,12 @@ export default function StatsCard({
   };
 
   return (
-    <Card className="p-3 hover:shadow-md transition-shadow h-full">
+    <Card className="p-3 transition-shadow h-full">
       <div className="flex justify-between items-start mb-2">
-        <h3 className="font-medium text-xs text-slate-500 truncate max-w-[70%]">
+        <h3 className="font-medium text-base text-slate-500 truncate max-w-[70%]">
           {title}
         </h3>
-        {icon && <div className="p-1.5 bg-slate-50 rounded-full">{icon}</div>}
+        {icon && <div className="p-3.5 bg-slate-50 rounded-full">{icon}</div>}
       </div>
 
       <div className="mb-1">

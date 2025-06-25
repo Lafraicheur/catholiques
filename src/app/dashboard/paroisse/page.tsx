@@ -468,13 +468,13 @@ export default function ParoisseDashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-6">
         {/* Graphique plus grand (9/12 colonnes) */}
-        <div className="lg:col-span-9">
+        <div className="lg:col-span-9 p-1">
           <ChartAreaInteractive paroisse_id={userProfile?.paroisse?.id || 1} />
         </div>
 
         {/* Événements à venir plus petit (3/12 colonnes) */}
         <div className="lg:col-span-3">
-          <Card className="p-6 h-full">
+          <Card className="p-3 h-full">
             <h2 className="text-x font-bold mb-4">Événements à venir</h2>
             <EventsList />
           </Card>

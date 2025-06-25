@@ -23,6 +23,9 @@ import {
   Download,
   FileSpreadsheet,
   FileDown,
+  MoreVertical,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import {
   Card,
@@ -58,9 +61,9 @@ import {
   NotFoundError,
 } from "@/services/api";
 import { fetchCebs } from "@/services/ceb-services";
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // Importer les composants de formulaire
 import AjouterCebForm from "@/components/forms/AjouterCebForm";
@@ -93,6 +96,52 @@ interface Ceb {
     // Autres champs du président...
   };
 }
+
+// Composant pour les cartes de statistiques modernes
+interface StatsCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  iconBgColor: string;
+  iconColor: string;
+  trend?: {
+    value: string;
+    isPositive: boolean;
+  };
+}
+
+const StatsCard = ({
+  title,
+  value,
+  icon,
+  iconBgColor,
+  iconColor,
+  trend,
+}: StatsCardProps) => {
+  return (
+    <Card className="relative overflow-hidden border-0 shadow-sm bg-white transition-shadow duration-200">
+      <CardContent className="p-y-1">
+        {/* Header avec icône et menu */}
+        <div className="flex items-center mb-4">
+          <div
+            className={`h-12 w-12 rounded-xl ${iconBgColor} flex items-center justify-center`}
+          >
+            <div className={iconColor}>{icon}</div>
+          </div>
+          &nbsp;&nbsp;
+          <h3 className="text-sm font-medium text-slate-600 mb-2">{title}</h3>
+        </div>
+
+        {/* Titre */}
+
+        {/* Valeur et tendance */}
+        <div className="flex items-end justify-between">
+          <div className="text-3xl font-bold text-slate-900">{value}</div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 export default function CebsPage() {
   const router = useRouter();
@@ -137,19 +186,22 @@ export default function CebsPage() {
         return userProfile.paroisse_nom || "Paroisse";
       }
     } catch (err) {
-      console.error("Erreur lors de la récupération du nom de la paroisse:", err);
+      console.error(
+        "Erreur lors de la récupération du nom de la paroisse:",
+        err
+      );
     }
     return "Paroisse";
   };
 
   // Fonction utilitaire pour formater la date
   const formatExportDate = (): string => {
-    return new Intl.DateTimeFormat('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Intl.DateTimeFormat("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     }).format(new Date());
   };
 
@@ -157,42 +209,46 @@ export default function CebsPage() {
   const exportToExcel = async () => {
     try {
       setExporting(true);
-      
+
       const exportDate = formatExportDate();
       const paroisseName = getParoisseName();
-      
+
       // Préparer les données pour l'exportation
       const exportData = filteredCebs.map((ceb, index) => ({
-        'N°': index + 1,
-        'Date d\'ajout': formatDate(ceb.created_at),
-        'Nom de la CEB': ceb.nom,
-        'Identifiant': ceb.identifiant || 'N/A',
-        'Président': ceb.president 
-          ? `${ceb.president.nom} ${ceb.president.prenoms}` 
-          : 'Aucun',
-        'Téléphone Président': ceb.president?.num_de_telephone || 'N/A',
-        'Solde (FCFA)': ceb.solde || 0,
-        'Nombre de Membres': 0, // À remplacer par la vraie valeur
+        "N°": index + 1,
+        "Date d'ajout": formatDate(ceb.created_at),
+        "Nom de la CEB": ceb.nom,
+        Identifiant: ceb.identifiant || "N/A",
+        Président: ceb.president
+          ? `${ceb.president.nom} ${ceb.president.prenoms}`
+          : "Aucun",
+        "Téléphone Président": ceb.president?.num_de_telephone || "N/A",
+        "Solde (FCFA)": ceb.solde || 0,
+        "Nombre de Membres": 0, // À remplacer par la vraie valeur
       }));
 
       // Créer le workbook
       const wb = XLSX.utils.book_new();
-      
+
       // Créer la feuille principale avec les données
       const ws = XLSX.utils.json_to_sheet(exportData);
-      
+
       // Ajouter des informations d'en-tête
-      XLSX.utils.sheet_add_aoa(ws, [
-        [`Liste des Communautés Ecclésiales de Base`],
-        [`${paroisseName}`],
-        [`Date d'exportation: ${exportDate}`],
-        [`Nombre total de CEB: ${filteredCebs.length}`],
-        [], // Ligne vide
-      ], { origin: 'A1' });
-      
+      XLSX.utils.sheet_add_aoa(
+        ws,
+        [
+          [`Liste des Communautés Ecclésiales de Base`],
+          [`${paroisseName}`],
+          [`Date d'exportation: ${exportDate}`],
+          [`Nombre total de CEB: ${filteredCebs.length}`],
+          [], // Ligne vide
+        ],
+        { origin: "A1" }
+      );
+
       // Ajuster les largeurs des colonnes
       const colWidths = [
-        { wch: 5 },  // N°
+        { wch: 5 }, // N°
         { wch: 15 }, // Date
         { wch: 25 }, // Nom CEB
         { wch: 15 }, // Identifiant
@@ -201,22 +257,21 @@ export default function CebsPage() {
         { wch: 12 }, // Solde
         { wch: 10 }, // Membres
       ];
-      ws['!cols'] = colWidths;
-      
+      ws["!cols"] = colWidths;
+
       // Ajouter la feuille au workbook
-      XLSX.utils.book_append_sheet(wb, ws, 'CEB');
-      
+      XLSX.utils.book_append_sheet(wb, ws, "CEB");
+
       // Sauvegarder le fichier
-      const fileName = `CEB_${paroisseName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      const fileName = `CEB_${paroisseName.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.xlsx`;
       XLSX.writeFile(wb, fileName);
-      
-      toast.success('Exportation Excel réussie', {
-        description: `Le fichier ${fileName} a été téléchargé.`
+
+      toast.success("Exportation Excel réussie", {
+        description: `Le fichier ${fileName} a été téléchargé.`,
       });
-      
     } catch (error) {
-      console.error('Erreur lors de l\'exportation Excel:', error);
-      toast.error('Erreur lors de l\'exportation Excel');
+      console.error("Erreur lors de l'exportation Excel:", error);
+      toast.error("Erreur lors de l'exportation Excel");
     } finally {
       setExporting(false);
     }
@@ -226,63 +281,72 @@ export default function CebsPage() {
   const exportToPDF = async () => {
     try {
       setExporting(true);
-      
+
       const exportDate = formatExportDate();
       const paroisseName = getParoisseName();
-      
+
       // Créer le document PDF
       const doc = new jsPDF();
-      
+
       // Configuration des couleurs
       const primaryColor: [number, number, number] = [59, 130, 246]; // Blue-500
       const secondaryColor: [number, number, number] = [148, 163, 184]; // Slate-400
       const textColor: [number, number, number] = [15, 23, 42]; // Slate-900
-      
+
       // En-tête du document avec design moderne
       doc.setFillColor(...primaryColor);
-      doc.rect(0, 0, 210, 35, 'F');
-      
+      doc.rect(0, 0, 210, 35, "F");
+
       // Titre principal
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(18);
-      doc.setFont('helvetica', 'bold');
-      doc.text('COMMUNAUTÉS ECCLÉSIALES DE BASE', 105, 15, { align: 'center' });
-      
+      doc.setFont("helvetica", "bold");
+      doc.text("COMMUNAUTÉS ECCLÉSIALES DE BASE", 105, 15, { align: "center" });
+
       // Sous-titre
       doc.setFontSize(12);
-      doc.setFont('helvetica', 'normal');
-      doc.text(paroisseName, 105, 25, { align: 'center' });
-      
+      doc.setFont("helvetica", "normal");
+      doc.text(paroisseName, 105, 25, { align: "center" });
+
       // Informations d'exportation
       doc.setTextColor(...textColor);
       doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont("helvetica", "normal");
       doc.text(`Date d'exportation: ${exportDate}`, 20, 45);
       doc.text(`Nombre total de CEB: ${filteredCebs.length}`, 20, 52);
-      
+
       // Ligne de séparation
       doc.setDrawColor(...secondaryColor);
       doc.setLineWidth(0.5);
       doc.line(20, 58, 190, 58);
-      
+
       // Préparer les données pour le tableau
       const tableData = filteredCebs.map((ceb, index) => [
         (index + 1).toString(),
         formatDate(ceb.created_at),
         ceb.nom,
-        ceb.president 
-          ? `${ceb.president.nom} ${ceb.president.prenoms}` 
-          : 'Aucun',
-        ceb.president?.num_de_telephone || 'N/A',
-        '0', // Nombre de membres
+        ceb.president
+          ? `${ceb.president.nom} ${ceb.president.prenoms}`
+          : "Aucun",
+        ceb.president?.num_de_telephone || "N/A",
+        "0", // Nombre de membres
       ]);
-      
+
       // Créer le tableau avec autoTable
       autoTable(doc, {
         startY: 65,
-        head: [['N°', 'Date d\'ajout', 'Nom de la CEB', 'Président', 'Téléphone', 'Membres']],
+        head: [
+          [
+            "N°",
+            "Date d'ajout",
+            "Nom de la CEB",
+            "Président",
+            "Téléphone",
+            "Membres",
+          ],
+        ],
         body: tableData,
-        theme: 'grid',
+        theme: "grid",
         styles: {
           fontSize: 9,
           cellPadding: 4,
@@ -291,52 +355,55 @@ export default function CebsPage() {
         headStyles: {
           fillColor: primaryColor,
           textColor: [255, 255, 255],
-          fontStyle: 'bold',
+          fontStyle: "bold",
           fontSize: 10,
         },
         alternateRowStyles: {
           fillColor: [248, 250, 252], // Slate-50
         },
         columnStyles: {
-          0: { cellWidth: 15, halign: 'center' }, // N°
+          0: { cellWidth: 15, halign: "center" }, // N°
           1: { cellWidth: 25 }, // Date
           2: { cellWidth: 45 }, // Nom
           3: { cellWidth: 40 }, // Président
           4: { cellWidth: 30 }, // Téléphone
-          5: { cellWidth: 20, halign: 'center' }, // Membres
+          5: { cellWidth: 20, halign: "center" }, // Membres
         },
-        margin: { left: 20, right: 20         },
+        margin: { left: 20, right: 20 },
       });
-      
+
       // Pied de page
       const pageCount = doc.internal.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
-        
+
         // Ligne de séparation du pied de page
         const pageHeight = doc.internal.pageSize.height;
         doc.setDrawColor(...secondaryColor);
         doc.line(20, pageHeight - 20, 190, pageHeight - 20);
-        
+
         // Informations du pied de page
         doc.setFontSize(8);
         doc.setTextColor(...secondaryColor);
-        doc.text(`Page ${i} sur ${pageCount}`, 105, pageHeight - 12, { align: 'center' });
+        doc.text(`Page ${i} sur ${pageCount}`, 105, pageHeight - 12, {
+          align: "center",
+        });
         doc.text(`Généré le ${exportDate}`, 20, pageHeight - 12);
-        doc.text('Système de Gestion Paroissiale', 190, pageHeight - 12, { align: 'right' });
+        doc.text("Système de Gestion Paroissiale", 190, pageHeight - 12, {
+          align: "right",
+        });
       }
-      
+
       // Sauvegarder le fichier
-      const fileName = `CEB_${paroisseName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+      const fileName = `CEB_${paroisseName.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.pdf`;
       doc.save(fileName);
-      
-      toast.success('Exportation PDF réussie', {
-        description: `Le fichier ${fileName} a été téléchargé.`
+
+      toast.success("Exportation PDF réussie", {
+        description: `Le fichier ${fileName} a été téléchargé.`,
       });
-      
     } catch (error) {
-      console.error('Erreur lors de l\'exportation PDF:', error);
-      toast.error('Erreur lors de l\'exportation PDF');
+      console.error("Erreur lors de l'exportation PDF:", error);
+      toast.error("Erreur lors de l'exportation PDF");
     } finally {
       setExporting(false);
     }
@@ -487,81 +554,85 @@ export default function CebsPage() {
         </div>
       </div>
 
-      {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">Total</p>
-                <h3 className="text-2xl font-bold">{cebs.length}</h3>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <Church className="h-5 w-5 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Statistiques avec nouveau design */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <StatsCard
+          title="Total CEB"
+          value={cebs.length}
+          icon={<Church size={24} />}
+          iconBgColor="bg-blue-50"
+          iconColor="text-blue-600"
+        />
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">
-                  Sans président
-                </p>
-                <h3 className="text-2xl font-bold">
-                  {cebs.filter((c) => !c.president_id).length}
-                </h3>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
-                <User className="h-5 w-5 text-amber-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <StatsCard
+          title="Sans président"
+          value={cebs.filter((c) => !c.president_id).length}
+          icon={<User size={24} />}
+          iconBgColor="bg-amber-50"
+          iconColor="text-amber-600"
+        />
       </div>
 
-      {/* Barre de recherche + boutons */}
-      <div className="mb-6 flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder="Rechercher une CEB..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <div className="flex gap-2">
-          {/* Bouton d'exportation */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="outline" 
-                className="cursor-pointer"
-                disabled={exporting || filteredCebs.length === 0}
+      {/* Barre de recherche + boutons - Design moderne */}
+      <div className="mb-8">
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+          {/* Section recherche */}
+          <div className="relative flex-1 max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-slate-400" />
+            </div>
+            <Input
+              placeholder="Rechercher une CEB..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-12 h-12 bg-white border-slate-200 rounded-xl transition-all duration-200"
+            />
+          </div>
+
+          {/* Section boutons d'action */}
+          <div className="flex gap-3">
+            {/* Bouton d'exportation moderne */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="h-12 px-6 bg-white border-slate-200 hover:bg-slate-50 rounded-xl shadow-sm transition-all duration-200 disabled:opacity-50 cursor-pointer"
+                  disabled={exporting || filteredCebs.length === 0}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  {exporting ? "Exportation..." : "Exporter"}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-48 bg-white border-slate-200 shadow-lg rounded-xl"
               >
-                <Download className="h-4 w-4 mr-2" />
-                {exporting ? 'Exportation...' : 'Exporter'}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={exportToExcel} className="cursor-pointer">
-                <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
-                Exporter en Excel
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={exportToPDF} className="cursor-pointer">
-                <FileDown className="h-4 w-4 mr-2 text-red-600" />
-                Exporter en PDF
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
-          <Button onClick={openAddModal} className="cursor-pointer">
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvelle CEB
-          </Button>
+                <DropdownMenuItem
+                  onClick={exportToExcel}
+                  className="cursor-pointer hover:bg-slate-50 rounded-lg m-1 p-3 transition-colors"
+                >
+                  <FileSpreadsheet className="h-4 w-4 mr-3 text-green-600" />
+                  <span className="font-medium">Excel</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={exportToPDF}
+                  className="cursor-pointer hover:bg-slate-50 rounded-lg m-1 p-3 transition-colors"
+                >
+                  <FileDown className="h-4 w-4 mr-3 text-red-600" />
+                  <span className="font-medium">PDF</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Bouton d'ajout moderne */}
+            <Button
+              onClick={openAddModal}
+              className="h-12 px-6 bg-slate-800 hover:bg-slate-700 text-white rounded-xl shadow-sm transition-all duration-200 font-medium cursor-pointer"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Nouvelle CEB
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -621,23 +692,36 @@ export default function CebsPage() {
           )}
         </div>
       ) : (
-        <div className="rounded-lg border border-slate-200 overflow-hidden bg-white shadow-sm">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          {/* Header du tableau moderne */}
+          <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-200">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900">
+                Liste des CEB
+              </h3>
+              <div className="text-sm text-slate-500">
+                {filteredCebs.length} résultat
+                {filteredCebs.length > 1 ? "s" : ""}
+              </div>
+            </div>
+          </div>
+
           <Table className="w-full">
-            <TableHeader className="bg-slate-50">
-              <TableRow className="hover:bg-slate-100 border-slate-200">
-                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+            <TableHeader>
+              <TableRow className="border-slate-200 hover:bg-transparent">
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
                   Date d'ajout
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600 py-3 px-4">
-                  Nom Complets
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
+                  Nom de la CEB
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
                   Président
                 </TableHead>
-                <TableHead className="font-semibold text-center text-slate-600 py-3 px-4">
-                  Total Membres
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-center">
+                  Membres
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600 py-3 px-4 text-right">
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-right">
                   Détails
                 </TableHead>
               </TableRow>
@@ -647,45 +731,69 @@ export default function CebsPage() {
               {getCurrentPageItems().map((ceb) => (
                 <TableRow
                   key={ceb.id}
-                  className="hover:bg-slate-50/80 border-slate-200"
+                  className="border-slate-200 hover:bg-slate-50/50 transition-colors duration-150"
                 >
-                  <TableCell className="text-slate-500 py-3 px-4">
+                  <TableCell className="py-4 px-6">
                     <div className="flex items-center">
-                      <div className="h-2 w-2 rounded-full mr-2 " />
-                      {formatDate(ceb.created_at)}
+                      <div className="h-2 w-2 rounded-full bg-blue-400 mr-3 opacity-60" />
+                      <span className="text-slate-600 font-medium">
+                        {formatDate(ceb.created_at)}
+                      </span>
                     </div>
                   </TableCell>
-                  <TableCell className="py-3 px-4 font-medium text-slate-900">
-                    {ceb.nom}
+
+                  <TableCell className="py-4 px-6">
+                    <div className="font-semibold text-slate-900 text-base">
+                      {ceb.nom}
+                    </div>
                   </TableCell>
-                  <TableCell className="py-3 px-4">
+
+                  <TableCell className="py-4 px-6">
                     {ceb.president ? (
-                      <div className="flex items-center text-sm">
-                        <User className="h-3.5 w-3.5 mr-1 opacity-70" />
-                        <span>
-                          {ceb.president.nom} {ceb.president.prenoms}
-                        </span>
+                      <div className="flex items-center">
+                        <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                          <User className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-slate-900 text-sm">
+                            {ceb.president.nom} {ceb.president.prenoms}
+                          </div>
+                          {ceb.president.num_de_telephone && (
+                            <div className="text-xs text-slate-500">
+                              {ceb.president.num_de_telephone}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ) : (
-                      <div className="flex items-center text-sm">
-                        <span>Aucun</span>
+                      <div className="flex items-center">
+                        <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center mr-3">
+                          <User className="h-4 w-4 text-amber-600" />
+                        </div>
+                        <span className="text-amber-600 font-medium text-sm">
+                          Aucun président
+                        </span>
                       </div>
                     )}
                   </TableCell>
-                  <TableCell className="py-3 px-4">
-                    <div className="font-medium text-center">0</div>
+
+                  <TableCell className="py-4 px-6 text-center">
+                    <div className="inline-flex items-center justify-center h-8 w-12 bg-slate-100 rounded-lg font-semibold text-slate-700">
+                      0
+                    </div>
                   </TableCell>
-                  <TableCell className="text-right py-2 px-4">
+
+                  <TableCell className="py-4 px-6 text-right">
                     <div className="flex justify-end gap-2">
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        className="flex items-center text-blue-600 hover:bg-blue-50 cursor-pointer"
+                        className="h-9 w-9 p-0 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150 cursor-pointer"
                         onClick={() =>
                           router.push(`/dashboard/paroisse/ceb/${ceb.id}`)
                         }
                       >
-                        <Eye className="h-4 w-4 mr-1" />
+                        <Eye className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
@@ -693,17 +801,23 @@ export default function CebsPage() {
               ))}
             </TableBody>
           </Table>
-          <div className="py-3 px-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-            <p className="text-sm text-slate-500">
-              Page {currentPage} sur {totalPages}
-            </p>
+
+          {/* Footer du tableau moderne */}
+          <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-200 flex items-center justify-between">
+            <div className="text-sm text-slate-600">
+              Affichage de {(currentPage - 1) * itemsPerPage + 1} à{" "}
+              {Math.min(currentPage * itemsPerPage, filteredCebs.length)} sur{" "}
+              {filteredCebs.length} résultats
+            </div>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={goToPreviousPage}
                 disabled={currentPage === 1}
+                className="h-9 px-4 bg-white border-slate-200 hover:bg-slate-50 disabled:opacity-50 transition-all duration-150"
               >
+                <ChevronLeft className="h-4 w-4 mr-1" />
                 Précédent
               </Button>
               <Button
@@ -711,8 +825,10 @@ export default function CebsPage() {
                 size="sm"
                 onClick={goToNextPage}
                 disabled={currentPage === totalPages}
+                className="h-9 px-4 bg-white border-slate-200 hover:bg-slate-50 disabled:opacity-50 transition-all duration-150"
               >
                 Suivant
+                <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
           </div>
@@ -735,7 +851,7 @@ export default function CebsPage() {
       </Dialog>
 
       {/* Dialog de modification */}
-      <Dialog
+      {/* <Dialog
         open={showEditDialog}
         onOpenChange={(open) => {
           setShowEditDialog(open);
@@ -756,7 +872,31 @@ export default function CebsPage() {
             />
           )}
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
+
+      {/* Dialog de suppression */}
+      {/* <Dialog
+        open={showDeleteDialog}
+        onOpenChange={(open) => {
+          setShowDeleteDialog(open);
+          if (!open) setSelectedCeb(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-[500px] w-[92vw]">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-lg text-red-800 font-semibold flex items-center">
+              Supprimer la CEB
+            </DialogTitle>
+          </DialogHeader>
+          {selectedCeb && (
+            <DeleteCebConfirmation
+              onClose={() => setShowDeleteDialog(false)}
+              cebData={selectedCeb}
+              onSuccess={handleDeleteSuccess}
+            />
+          )}
+        </DialogContent>
+      </Dialog> */}
     </div>
   );
 }

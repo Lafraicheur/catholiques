@@ -1,4 +1,4 @@
-// NonParoissiensPage.jsx - Version mise à jour
+// NonParoissiensPage.jsx - Version mise à jour avec design moderne
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -19,6 +19,14 @@ import {
   Mars,
   UserPlus,
   Trash2,
+  Download,
+  FileSpreadsheet,
+  FileDown,
+  MoreVertical,
+  TrendingUp,
+  TrendingDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,21 +62,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-import AjouterNonParoissienForm from "@/components/forms/AjouterNonParoissienForm";
-import ModifierNonParoissienForm from "@/components/forms/ModifierNonParoissienForm";
-import SupprimerNonParoissienConfirmation from "@/components/forms/SupprimerNonParoissienConfirmation";
-import ConvertirEnParoissienForm from "@/components/forms/ConvertirEnParoissienForm";
-import { Download, FileSpreadsheet, FileDown } from "lucide-react";
-import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+import AjouterNonParoissienForm from "@/components/forms/AjouterNonParoissienForm";
+import ModifierNonParoissienForm from "@/components/forms/ModifierNonParoissienForm";
+import SupprimerNonParoissienConfirmation from "@/components/forms/SupprimerNonParoissienConfirmation";
+import ConvertirEnParoissienForm from "@/components/forms/ConvertirEnParoissienForm";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // Types
 interface NonParoissien {
@@ -79,6 +86,52 @@ interface NonParoissien {
   genre: "M" | "F";
   num_de_telephone: string;
 }
+
+// Composant pour les cartes de statistiques modernes
+interface StatsCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  iconBgColor: string;
+  iconColor: string;
+  trend?: {
+    value: string;
+    isPositive: boolean;
+  };
+}
+
+const StatsCard = ({
+  title,
+  value,
+  icon,
+  iconBgColor,
+  iconColor,
+  trend,
+}: StatsCardProps) => {
+  return (
+    <Card className="relative overflow-hidden border-0 shadow-sm bg-white transition-shadow duration-200">
+      <CardContent className="p-y-1">
+        {/* Header avec icône et menu */}
+        <div className="flex items-center mb-4">
+          <div
+            className={`h-12 w-12 rounded-xl ${iconBgColor} flex items-center justify-center`}
+          >
+            <div className={iconColor}>{icon}</div>
+          </div>
+          &nbsp;&nbsp;
+          <h3 className="text-sm font-medium text-slate-600 mb-2">{title}</h3>
+        </div>
+
+        {/* Titre */}
+
+        {/* Valeur et tendance */}
+        <div className="flex items-end justify-between">
+          <div className="text-3xl font-bold text-slate-900">{value}</div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 export default function NonParoissiensPage() {
   const router = useRouter();
@@ -483,119 +536,122 @@ export default function NonParoissiensPage() {
         </div>
       </div>
 
-      {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">Total</p>
-                <h3 className="text-2xl font-bold">{nonParoissiens.length}</h3>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <Users className="h-5 w-5 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">Hommes</p>
-                <h3 className="text-2xl font-bold">
-                  {nonParoissiens.filter((np) => np.genre === "M").length}
-                </h3>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <Mars className="h-5 w-5 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">Femmes</p>
-                <h3 className="text-2xl font-bold">
-                  {nonParoissiens.filter((np) => np.genre === "F").length}
-                </h3>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-pink-100 flex items-center justify-center">
-                <Venus className="h-5 w-5 text-pink-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Statistiques avec nouveau design moderne */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <StatsCard
+          title="Total Non-Paroissiens"
+          value={nonParoissiens.length}
+          icon={<Users size={24} />}
+          iconBgColor="bg-blue-50"
+          iconColor="text-blue-600"
+          trend={{
+            value: "+4,2%",
+            isPositive: true,
+          }}
+        />
+
+        <StatsCard
+          title="Hommes"
+          value={nonParoissiens.filter((np) => np.genre === "M").length}
+          icon={<Mars size={24} />}
+          iconBgColor="bg-indigo-50"
+          iconColor="text-indigo-600"
+          trend={{
+            value: "+1,8%",
+            isPositive: true,
+          }}
+        />
+
+        <StatsCard
+          title="Femmes"
+          value={nonParoissiens.filter((np) => np.genre === "F").length}
+          icon={<Venus size={24} />}
+          iconBgColor="bg-pink-50"
+          iconColor="text-pink-600"
+          trend={{
+            value: "+6,5%",
+            isPositive: true,
+          }}
+        />
       </div>
 
-      {/* Filtres et recherche */}
-      <div className="mb-6 flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder="Rechercher par nom, prénom ou téléphone..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-
-        <div className="flex gap-2">
-          {/* Filtre par genre existant */}
-          <div className="w-full md:w-48">
-            <Select value={genreFilter} onValueChange={setGenreFilter}>
-              <SelectTrigger>
-                <div className="flex items-center">
-                  <Filter className="h-4 w-4 mr-2 text-slate-400" />
-                  <SelectValue placeholder="Genre" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="TOUS">Tous</SelectItem>
-                <SelectItem value="M">Hommes</SelectItem>
-                <SelectItem value="F">Femmes</SelectItem>
-              </SelectContent>
-            </Select>
+      {/* Section filtres et actions - Design moderne */}
+      <div className="mb-8">
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+          {/* Section recherche */}
+          <div className="relative flex-1 max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-slate-400" />
+            </div>
+            <Input
+              placeholder="Rechercher par nom, prénom ou téléphone..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-12 h-12 bg-white border-slate-200 rounded-xl shadow-sm transition-all duration-200"
+            />
           </div>
 
-          {/* Nouveau bouton d'exportation */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="cursor-pointer"
-                disabled={exporting || filteredNonParoissiens.length === 0}
+          {/* Section filtres et actions */}
+          <div className="flex gap-3">
+            {/* Filtre par genre moderne */}
+            <div className="w-40">
+              <Select value={genreFilter} onValueChange={setGenreFilter}>
+                <SelectTrigger className="h-12 bg-white border-slate-200 rounded-xl shadow-sm">
+                  <div className="flex items-center">
+                    <Filter className="h-4 w-4 mr-2 text-slate-400" />
+                    <SelectValue placeholder="Genre" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent className="bg-white border-slate-200 shadow-lg rounded-xl">
+                  <SelectItem value="TOUS">Tous</SelectItem>
+                  <SelectItem value="M">Hommes</SelectItem>
+                  <SelectItem value="F">Femmes</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Bouton d'exportation moderne */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="h-12 px-6 bg-white border-slate-200 hover:bg-slate-50 rounded-xl shadow-sm transition-all duration-200 disabled:opacity-50 cursor-pointer"
+                  disabled={exporting || filteredNonParoissiens.length === 0}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  {exporting ? "Export..." : "Exporter"}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-48 bg-white border-slate-200 shadow-lg rounded-xl"
               >
-                <Download className="h-4 w-4 mr-2" />
-                {exporting ? "Export..." : "Exporter"}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={exportToExcel}
-                className="cursor-pointer"
-              >
-                <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
-                Exporter en Excel
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={exportToPDF}
-                className="cursor-pointer"
-              >
-                <FileDown className="h-4 w-4 mr-2 text-red-600" />
-                Exporter en PDF
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button
-            onClick={() => setShowAddDialog(true)}
-            className="cursor-pointer"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Nouveau
-          </Button>
+                <DropdownMenuItem
+                  onClick={exportToExcel}
+                  className="cursor-pointer hover:bg-slate-50 rounded-lg m-1 p-3 transition-colors"
+                >
+                  <FileSpreadsheet className="h-4 w-4 mr-3 text-green-600" />
+                  <span className="font-medium">Exporter en Excel</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={exportToPDF}
+                  className="cursor-pointer hover:bg-slate-50 rounded-lg m-1 p-3 transition-colors"
+                >
+                  <FileDown className="h-4 w-4 mr-3 text-red-600" />
+                  <span className="font-medium">Exporter en PDF</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Bouton d'ajout moderne */}
+            <Button
+              onClick={() => setShowAddDialog(true)}
+              className="h-12 px-6 bg-slate-800 hover:bg-slate-800 text-white rounded-xl shadow-sm transition-all duration-200 font-medium cursor-pointer"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Nouveau
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -647,67 +703,100 @@ export default function NonParoissiensPage() {
           )}
         </div>
       ) : (
-        <div className="rounded-lg border border-slate-200 overflow-hidden bg-white shadow-sm">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          {/* Header du tableau moderne */}
+          <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-200">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900">
+                Non-Paroissiens
+              </h3>
+              <div className="text-sm text-slate-500">
+                {filteredNonParoissiens.length} résultat
+                {filteredNonParoissiens.length > 1 ? "s" : ""}
+              </div>
+            </div>
+          </div>
+
           <Table className="w-full">
-            <TableHeader className="bg-slate-50">
-              <TableRow className="hover:bg-slate-100 border-slate-200">
-                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+            <TableHeader>
+              <TableRow className="border-slate-200 hover:bg-transparent">
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
                   Date de Création
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
                   Nom & Prénom
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600 py-3 px-4 ">
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
                   Genre
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600 py-3 px-4">
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
                   Téléphone
                 </TableHead>
-                <TableHead className="font-semibold text-slate-600 py-3 px-4 text-right">
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-right">
                   Actions
                 </TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
               {getCurrentPageItems().map((np) => (
                 <TableRow
                   key={np.id}
-                  className="hover:bg-slate-50/80 border-slate-200"
+                  className="border-slate-200 hover:bg-slate-50/50 transition-colors duration-150"
                 >
-                  <TableCell className="text-slate-500 py-3 px-4">
+                  <TableCell className="py-4 px-6">
                     <div className="flex items-center">
-                      <div className="h-2 w-2 rounded-full"></div>
-                      {formatDate(np.created_at)}
+                      <div className="h-2 w-2 rounded-full opacity-60" />
+                      <span className="text-slate-600 font-medium">
+                        {formatDate(np.created_at)}
+                      </span>
                     </div>
                   </TableCell>
-                  <TableCell className="py-3 px-4">
+
+                  <TableCell className="py-4 px-6">
                     <div className="flex items-center">
+                      <div
+                        className={`h-10 w-10 rounded-full flex items-center justify-center mr-3 ${
+                          np.genre === "M" ? "bg-indigo-100" : "bg-pink-100"
+                        }`}
+                      >
+                        <span
+                          className={`text-sm font-semibold ${
+                            np.genre === "M"
+                              ? "text-indigo-600"
+                              : "text-pink-600"
+                          }`}
+                        >
+                          {np.prenom.charAt(0)}
+                          {np.nom.charAt(0)}
+                        </span>
+                      </div>
                       <div>
-                        <div className="font-medium text-slate-900">
+                        <div className="font-semibold text-slate-900 text-base">
                           {np.prenom} {np.nom}
                         </div>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="py-3 px-5">
-                    <div className="flex items-center gap-2">
+
+                  <TableCell className="py-4 px-6">
+                    <div className="flex items-center gap-3">
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          np.genre === "M" ? "bg-blue-100" : "bg-pink-100"
+                        className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                          np.genre === "M" ? "bg-indigo-100" : "bg-pink-100"
                         }`}
                       >
                         {np.genre === "M" ? (
-                          <Mars className="h-4 w-4 text-blue-600" />
+                          <Mars className="h-4 w-4 text-indigo-600" />
                         ) : (
                           <Venus className="h-4 w-4 text-pink-600" />
                         )}
                       </div>
-
                       <Badge
-                        className={`px-2 py-1 font-normal text-xs ${
+                        className={`px-3 py-1 font-medium text-sm rounded-full ${
                           np.genre === "M"
-                            ? "bg-blue-50 text-blue-700 hover:bg-blue-50 border border-blue-100"
-                            : "bg-pink-50 text-pink-700 hover:bg-pink-50 border border-pink-100"
+                            ? "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100"
+                            : "bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100"
                         }`}
                       >
                         {np.genre === "M" ? "Homme" : "Femme"}
@@ -715,57 +804,64 @@ export default function NonParoissiensPage() {
                     </div>
                   </TableCell>
 
-                  <TableCell className="py-3 px-4">
+                  <TableCell className="py-4 px-6">
                     {np.num_de_telephone ? (
                       <div className="flex items-center">
-                        <Phone className="h-3 w-3 text-slate-400 mr-2" />
-                        <span className="font-medium">
+                        <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                          <Phone className="h-4 w-4 text-green-600" />
+                        </div>
+                        <span className="font-medium text-slate-900">
                           {formatPhoneDisplay(np.num_de_telephone)}
                         </span>
                       </div>
                     ) : (
-                      <span className="text-slate-400 text-sm italic">
-                        Non renseigné
-                      </span>
+                      <div className="flex items-center">
+                        <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center mr-3">
+                          <Phone className="h-4 w-4 text-slate-400" />
+                        </div>
+                        <span className="text-slate-400 text-sm italic">
+                          Non renseigné
+                        </span>
+                      </div>
                     )}
                   </TableCell>
 
-                  <TableCell className="text-right py-2 px-4">
+                  <TableCell className="py-4 px-6 text-right">
                     <div className="flex justify-end gap-2">
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        className="flex items-center text-blue-600 hover:bg-blue-50 cursor-pointer"
+                        className="h-9 w-9 p-0 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
                         onClick={() => {
                           setSelectedNonParoissien(np);
                           setShowEditDialog(true);
                         }}
                       >
-                        <Edit className="h-4 w-4 mr-1" />
+                        <Edit className="h-4 w-4" />
                       </Button>
 
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        className="flex items-center text-green-600 hover:bg-green-50 cursor-pointer"
+                        className="h-9 w-9 p-0 hover:bg-green-50 hover:text-green-600 transition-colors duration-150"
                         onClick={() => {
                           setSelectedNonParoissien(np);
                           setShowConvertDialog(true);
                         }}
                       >
-                        <UserPlus className="h-4 w-4 mr-1" />
+                        <UserPlus className="h-4 w-4" />
                       </Button>
 
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        className="flex items-center text-red-600 hover:bg-red-50 cursor-pointer"
+                        className="h-9 w-9 p-0 hover:bg-red-50 hover:text-red-600 transition-colors duration-150"
                         onClick={() => {
                           setSelectedNonParoissien(np);
                           setShowDeleteDialog(true);
                         }}
                       >
-                        <Trash2 className="h-4 w-4 mr-1" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
@@ -773,17 +869,26 @@ export default function NonParoissiensPage() {
               ))}
             </TableBody>
           </Table>
-          <div className="py-3 px-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-            <p className="text-sm text-slate-500">
-              Page {currentPage} sur {totalPages}
-            </p>
+
+          {/* Footer du tableau moderne */}
+          <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-200 flex items-center justify-between">
+            <div className="text-sm text-slate-600">
+              Affichage de {(currentPage - 1) * itemsPerPage + 1} à{" "}
+              {Math.min(
+                currentPage * itemsPerPage,
+                filteredNonParoissiens.length
+              )}{" "}
+              sur {filteredNonParoissiens.length} résultats
+            </div>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={goToPreviousPage}
                 disabled={currentPage === 1}
+                className="h-9 px-4 bg-white border-slate-200 hover:bg-slate-50 disabled:opacity-50 transition-all duration-150"
               >
+                <ChevronLeft className="h-4 w-4 mr-1" />
                 Précédent
               </Button>
               <Button
@@ -791,8 +896,10 @@ export default function NonParoissiensPage() {
                 size="sm"
                 onClick={goToNextPage}
                 disabled={currentPage === totalPages}
+                className="h-9 px-4 bg-white border-slate-200 hover:bg-slate-50 disabled:opacity-50 transition-all duration-150"
               >
                 Suivant
+                <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
           </div>

@@ -89,11 +89,13 @@ export default function EventsList() {
         }
       );
 
-      // ✅ Gérer la structure de réponse de l'API
+      // ✅ Gérer la structure de réponse de l'API et limiter à 5 événements
       const eventsData = eventsResponse.data.items || [];
-      setEvents(
-        Array.isArray(eventsData) ? eventsData : [eventsData].filter(Boolean)
-      );
+      const limitedEvents = Array.isArray(eventsData)
+        ? eventsData.slice(0, 5)
+        : [eventsData].filter(Boolean).slice(0, 5);
+
+      setEvents(limitedEvents);
       setLoading(false);
     } catch (error: any) {
       console.error("Erreur lors de la récupération des événements:", error);
@@ -170,7 +172,13 @@ export default function EventsList() {
   }
 
   return (
-    <div className="space-y-1">
+    <div
+      className={`space-y-1 ${
+        events.length > 3
+          ? "max-h-[230px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100"
+          : ""
+      }`}
+    >
       {events.map((event) => {
         const { label, variant } = getEventTypeDetails(event.type);
         return (
@@ -183,7 +191,7 @@ export default function EventsList() {
             </div>
             <div className="flex-grow min-w-0">
               <div className="flex items-center justify-between mb-1">
-                <h5 className="font-medium text-xs text-slate-900 truncate">
+                <h5 className="font-medium text-sm text-slate-900 truncate">
                   {event?.libelle}
                 </h5>
                 <Badge variant={variant} className="text-xs px-2 py-0.5 h-5">

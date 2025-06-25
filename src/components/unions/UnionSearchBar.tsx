@@ -84,7 +84,7 @@ export default function UnionSearchBar({
             placeholder="Rechercher par noms des mariés..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-12 h-12 bg-white border-slate-200 rounded-xl transition-all duration-200"
+            className="pl-12 h-9 bg-white border-slate-200 rounded-xl transition-all duration-200"
           />
         </div>
 

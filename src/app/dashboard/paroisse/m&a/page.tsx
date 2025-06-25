@@ -1410,7 +1410,7 @@ export default function MouvementsAssociationsPage() {
               placeholder="Rechercher un mouvement ou une association..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-12 bg-white border-slate-200 rounded-xl transition-all duration-200"
+              className="pl-12 h-9 bg-white border-slate-200 rounded-xl transition-all duration-200"
             />
           </div>
 
@@ -1444,7 +1444,7 @@ export default function MouvementsAssociationsPage() {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="h-12 px-6 bg-white border-slate-200 hover:bg-slate-50 rounded-xl shadow-sm transition-all duration-200 disabled:opacity-50 cursor-pointer"
+                  className="h-9 px-6 bg-white border-slate-200 hover:bg-slate-50 rounded-xl shadow-sm transition-all duration-200 disabled:opacity-50 cursor-pointer"
                   disabled={exporting || filteredMouvements.length === 0}
                 >
                   <Download className="h-4 w-4 mr-2" />
@@ -1475,7 +1475,7 @@ export default function MouvementsAssociationsPage() {
             {/* Bouton d'ajout moderne */}
             <Button
               onClick={openAddModal}
-              className="h-12 px-6 bg-slate-800 text-white rounded-xl shadow-sm transition-all duration-200 font-medium cursor-pointer"
+              className="h-9 px-6 bg-slate-800 text-white rounded-xl shadow-sm transition-all duration-200 font-medium cursor-pointer"
             >
               <Plus className="h-4 w-4 mr-2" />
               Nouveau Mouvement

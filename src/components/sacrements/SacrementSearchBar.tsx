@@ -93,7 +93,7 @@ export default function SacrementSearchBar({
             placeholder="Rechercher un sacrement..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-12 h-12 bg-white border-slate-200 rounded-xl transition-all duration-200"
+            className="pl-12 h-9 bg-white border-slate-200 rounded-xl transition-all duration-200"
           />
         </div>
 
@@ -133,7 +133,7 @@ export default function SacrementSearchBar({
           <Button
             variant="outline"
             onClick={onExportCSV}
-            className="h-12 px-4 bg-white border-slate-200 hover:bg-slate-50 rounded-xl transition-all duration-200 cursor-pointer"
+            className="h-9 px-4 bg-white border-slate-200 hover:bg-slate-50 rounded-xl transition-all duration-200 cursor-pointer"
           >
             <Download className="h-4 w-4 mr-2" />
             Télécharger

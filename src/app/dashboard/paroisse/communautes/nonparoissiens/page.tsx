@@ -587,7 +587,7 @@ export default function NonParoissiensPage() {
               placeholder="Rechercher par nom, prénom ou téléphone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-12 bg-white border-slate-200 rounded-xl shadow-sm transition-all duration-200"
+              className="pl-12 h-9 bg-white border-slate-200 rounded-xl shadow-sm transition-all duration-200"
             />
           </div>
 
@@ -596,7 +596,7 @@ export default function NonParoissiensPage() {
             {/* Filtre par genre moderne */}
             <div className="w-40">
               <Select value={genreFilter} onValueChange={setGenreFilter}>
-                <SelectTrigger className="h-12 bg-white border-slate-200 rounded-xl shadow-sm">
+                <SelectTrigger className="h-9 bg-white border-slate-200 rounded-xl shadow-sm">
                   <div className="flex items-center">
                     <Filter className="h-4 w-4 mr-2 text-slate-400" />
                     <SelectValue placeholder="Genre" />
@@ -615,7 +615,7 @@ export default function NonParoissiensPage() {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="h-12 px-6 bg-white border-slate-200 hover:bg-slate-50 rounded-xl shadow-sm transition-all duration-200 disabled:opacity-50 cursor-pointer"
+                  className="h-9 px-6 bg-white border-slate-200 hover:bg-slate-50 rounded-xl shadow-sm transition-all duration-200 disabled:opacity-50 cursor-pointer"
                   disabled={exporting || filteredNonParoissiens.length === 0}
                 >
                   <Download className="h-4 w-4 mr-2" />
@@ -646,7 +646,7 @@ export default function NonParoissiensPage() {
             {/* Bouton d'ajout moderne */}
             <Button
               onClick={() => setShowAddDialog(true)}
-              className="h-12 px-6 bg-slate-800 hover:bg-slate-800 text-white rounded-xl shadow-sm transition-all duration-200 font-medium cursor-pointer"
+              className="h-9 px-6 bg-slate-800 hover:bg-slate-800 text-white rounded-xl shadow-sm transition-all duration-200 font-medium cursor-pointer"
             >
               <Plus className="h-4 w-4 mr-2" />
               Nouveau

@@ -777,7 +777,7 @@ export default function ParoissiensPage() {
               placeholder="Rechercher par nom, prénom, email, téléphone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-12 bg-white border-slate-200 rounded-xl transition-all duration-200"
+              className="pl-12 h-9 bg-white border-slate-200 rounded-xl transition-all duration-200"
             />
           </div>
 
@@ -786,7 +786,7 @@ export default function ParoissiensPage() {
             {/* Filtre par statut moderne */}
             <div className="w-48">
               <Select value={statutFilter} onValueChange={setStatutFilter}>
-                <SelectTrigger className="h-12 bg-white border-slate-200 rounded-xl">
+                <SelectTrigger className="h-9 bg-white border-slate-200 rounded-xl">
                   <div className="flex items-center cursor-pointer">
                     <Filter className="h-4 w-4 mr-2 text-slate-400" />
                     <SelectValue placeholder="Filtrer par statut" />
@@ -807,7 +807,7 @@ export default function ParoissiensPage() {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="h-12 px-6 bg-white border-slate-200 hover:bg-slate-50 rounded-xl transition-all duration-200 disabled:opacity-50 cursor-pointer"
+                  className="h-9 px-6 bg-white border-slate-200 hover:bg-slate-50 rounded-xl transition-all duration-200 disabled:opacity-50 cursor-pointer"
                   disabled={exporting || filteredParoissiens.length === 0}
                 >
                   <Download className="h-4 w-4 mr-2" />

@@ -225,7 +225,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container py-6 max-w-4xl mx-auto">
+    <div className="container py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-slate-900">Mon Profil</h1>
         {!isEditing ? (

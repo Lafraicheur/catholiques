@@ -381,7 +381,7 @@ export default function Header({
             
             <button 
               className="flex items-center p-3 hover:bg-slate-50 rounded-md transition-colors"
-              onClick={() => router.push('/dashboard/profile')}
+              onClick={() => router.push('/dashboard/paroisse/profile')}
               role="menuitem"
             >
               <User size={16} className="mr-3 text-slate-500" />

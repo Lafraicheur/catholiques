@@ -99,6 +99,9 @@ interface Paroissien {
   abonnement?: {
     intitule: string;
   };
+  photo?: {
+    url: string;
+  };
 }
 
 // Composant pour les cartes de statistiques modernes
@@ -108,10 +111,6 @@ interface StatsCardProps {
   icon: React.ReactNode;
   iconBgColor: string;
   iconColor: string;
-  trend?: {
-    value: string;
-    isPositive: boolean;
-  };
 }
 
 const StatsCard = ({
@@ -120,19 +119,17 @@ const StatsCard = ({
   icon,
   iconBgColor,
   iconColor,
-  trend,
 }: StatsCardProps) => {
   return (
     <Card className="relative overflow-hidden border-0 shadow-sm bg-white hover:shadow-md transition-shadow duration-200">
       <CardContent className="p-y-1">
         {/* Header avec icône et menu */}
-        <div className="flex items-center mb-4">
+        <div className="flex items-center gap-3 mb-4">
           <div
             className={`h-12 w-12 rounded-xl ${iconBgColor} flex items-center justify-center`}
           >
             <div className={iconColor}>{icon}</div>
           </div>
-          &nbsp;&nbsp;
           <h3 className="text-sm font-medium text-slate-600 mb-2">{title}</h3>
         </div>
 
@@ -426,11 +423,12 @@ export default function ParoissiensPage() {
         columnStyles: {
           0: { cellWidth: 15, halign: "center" },
           1: { cellWidth: 60 },
-          2: { cellWidth: 20, halign: "center" },
-          3: { cellWidth: 35, halign: "center" },
+          2: { cellWidth: 60 },
+          3: { cellWidth: 20, halign: "center" },
           4: { cellWidth: 35, halign: "center" },
-          5: { cellWidth: 25 },
-          6: { cellWidth: 45 },
+          5: { cellWidth: 35, halign: "center" },
+          6: { cellWidth: 25 },
+          7: { cellWidth: 45 },
         },
         margin: { left: 20, right: 20 },
       });
@@ -576,15 +574,18 @@ export default function ParoissiensPage() {
         label: "Baptisé",
       },
       Confirmé: {
-        className: "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-200",
+        className:
+          "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-200",
         label: "Confirmé",
       },
       Marié: {
-        className: "bg-green-50 text-green-700 border-green-200 hover:bg-green-200",
+        className:
+          "bg-green-50 text-green-700 border-green-200 hover:bg-green-200",
         label: "Marié",
       },
       Aucun: {
-        className: "bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-200",
+        className:
+          "bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-200",
         label: "Aucun",
       },
     };
@@ -734,10 +735,6 @@ export default function ParoissiensPage() {
           icon={<Users size={24} />}
           iconBgColor="bg-blue-50"
           iconColor="text-blue-600"
-          trend={{
-            value: "+6,2%",
-            isPositive: true,
-          }}
         />
 
         <StatsCard
@@ -746,10 +743,6 @@ export default function ParoissiensPage() {
           icon={<UserCheck size={24} />}
           iconBgColor="bg-green-50"
           iconColor="text-green-600"
-          trend={{
-            value: "+12,4%",
-            isPositive: true,
-          }}
         />
 
         <StatsCard
@@ -758,10 +751,6 @@ export default function ParoissiensPage() {
           icon={<UserX size={24} />}
           iconBgColor="bg-red-50"
           iconColor="text-red-600"
-          trend={{
-            value: "-2,8%",
-            isPositive: false,
-          }}
         />
       </div>
 
@@ -918,24 +907,46 @@ export default function ParoissiensPage() {
 
                   <TableCell className="py-4 px-6">
                     <div className="flex items-center">
-                      <div
-                        className={`h-10 w-10 rounded-full flex items-center justify-center mr-3 ${
-                          paroissien.genre === "M"
-                            ? "bg-blue-100"
-                            : "bg-pink-100"
-                        }`}
-                      >
-                        <span
-                          className={`text-sm font-semibold ${
+                      {/* Photo de profil ou avatar par défaut */}
+                      <div className="h-10 w-10 rounded-full mr-3 overflow-hidden flex-shrink-0">
+                        {paroissien.photo?.url ? (
+                          <img
+                            src={paroissien.photo.url}
+                            alt={`Photo de ${paroissien.prenoms} ${paroissien.nom}`}
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              // En cas d'erreur de chargement, afficher l'avatar par défaut
+                              (e.target as HTMLImageElement).style.display = "none";
+                              if ((e.target as HTMLImageElement).nextSibling instanceof HTMLElement) {
+                                ((e.target as HTMLImageElement).nextSibling as HTMLElement).style.display = "flex";
+                              }
+                            }}
+                          />
+                        ) : null}
+
+                        {/* Avatar par défaut avec initiales */}
+                        <div
+                          className={`h-full w-full rounded-full flex items-center justify-center ${
+                            paroissien.photo?.url ? "hidden" : "flex"
+                          } ${
                             paroissien.genre === "M"
-                              ? "text-blue-600"
-                              : "text-pink-600"
+                              ? "bg-blue-100"
+                              : "bg-pink-100"
                           }`}
                         >
-                          {paroissien.prenoms.charAt(0)}
-                          {paroissien.nom.charAt(0)}
-                        </span>
+                          <span
+                            className={`text-sm font-semibold ${
+                              paroissien.genre === "M"
+                                ? "text-blue-600"
+                                : "text-pink-600"
+                            }`}
+                          >
+                            {paroissien.prenoms.charAt(0)}
+                            {paroissien.nom.charAt(0)}
+                          </span>
+                        </div>
                       </div>
+
                       <div>
                         <div className="font-semibold text-slate-900 text-base">
                           {paroissien.nom} {paroissien.prenoms}
@@ -1032,12 +1043,7 @@ export default function ParoissiensPage() {
           {filteredParoissiens.length > 0 && (
             <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-200 flex items-center justify-between">
               <div className="text-sm text-slate-600">
-                Affichage de {(currentPage - 1) * itemsPerPage + 1} à{" "}
-                {Math.min(
-                  currentPage * itemsPerPage,
-                  filteredParoissiens.length
-                )}{" "}
-                sur {filteredParoissiens.length} résultats
+                Affichage de {filteredParoissiens.length} résultats
               </div>
               <div className="flex gap-2">
                 <Button

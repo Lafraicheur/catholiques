@@ -436,24 +436,6 @@ export default function Sidebar({ isOpen }: SidebarProps) {
           <div className="flex-1 flex flex-col items-center space-y-3 px-3">
             {menuIcons}
           </div>
-
-          {/* Section settings en bas */}
-          {/* <div className="border-t border-slate-700 pt-4 pb-6">
-            <div className="flex flex-col items-center space-y-3 px-3">
-              <Link
-                href="/support"
-                className="p-3 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
-              >
-                <HeadphonesIcon size={22} />
-              </Link>
-              <Link
-                href="/settings"
-                className="p-3 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
-              >
-                <Settings size={22} />
-              </Link>
-            </div>
-          </div> */}
         </div>
       </div>
     );

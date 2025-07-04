@@ -98,7 +98,6 @@ const variantClasses: Record<string, string> = {
   outline: "border border-gray-400 text-gray-700",
 };
 
-// Obtenir les détails du statut
 const getStatusDetails = (statut: string) => {
   const normalized = statut.toUpperCase();
 
@@ -115,6 +114,22 @@ const getStatusDetails = (statut: string) => {
   }
 
   return { label: statut, variant: "outline" as const };
+};
+
+const canPerformActions = (statut: string) => {
+  const normalized = statut.toUpperCase();
+
+  // Ne pas afficher les boutons si le statut est "VALIDÉ" ou "REJETÉ"
+  const blockedStatuses = [
+    "VALIDÉ",
+    "VALIDE",
+    "CONFIRMÉ",
+    "CONFIRME",
+    "REJETÉ",
+    "REJETE",
+  ];
+
+  return !blockedStatuses.includes(normalized);
 };
 
 // Composant pour la galerie d'images
@@ -289,8 +304,8 @@ export default function SacrementUnionDetailsPage() {
         description: "La soumission de sacrement a été validée avec succès.",
       });
 
-      // Redirection vers la liste des soumissions
-      router.push("/dashboard/paroisse/sacrements/soumissions");
+      // AJOUT : Actualiser les données après validation réussie
+      await fetchSacrementDetails();
     } catch (err: any) {
       console.error("Erreur lors de la validation de la soumission:", err);
 
@@ -393,8 +408,8 @@ export default function SacrementUnionDetailsPage() {
         description: "La soumission de sacrement a été rejetée avec succès.",
       });
 
-      // Redirection vers la liste des soumissions
-      router.push("/dashboard/paroisse/sacrements/soumissions");
+      // AJOUT : Actualiser les données après rejet réussi
+      await fetchSacrementDetails();
     } catch (err: any) {
       console.error("Erreur lors du rejet de la soumission:", err);
 
@@ -488,16 +503,14 @@ export default function SacrementUnionDetailsPage() {
   // Obtenir les détails du statut pour l'affichage
   const { label, variant } = getStatusDetails(sacrement.statut);
   const badgeClass = `${variantClasses[variant]} text-xs px-2 py-0.5 rounded`;
-  const {
-    label: statusLabel,
-    variant: statusVariant,
-  } = getStatusDetails(sacrement.statut);
+  const { label: statusLabel, variant: statusVariant } = getStatusDetails(
+    sacrement.statut
+  );
 
   // Déterminer si la date est passée
   const isDatePassed = new Date(sacrement.date) < new Date();
 
-  const canPerformActions =
-    sacrement.statut !== "REJETE" && sacrement.statut !== "VALIDE";
+  const canShowActions = canPerformActions(sacrement.statut);
 
   return (
     <div className="space-y-6">
@@ -519,7 +532,7 @@ export default function SacrementUnionDetailsPage() {
           </h1>
         </div>
         <ActionButtons
-          canPerformActions={canPerformActions}
+          canPerformActions={canShowActions}
           onValidate={handleValidate}
           onReject={handleReject}
         />
@@ -531,8 +544,7 @@ export default function SacrementUnionDetailsPage() {
           <div className="flex flex-wrap gap-2 mb-2">
             <Badge variant="secondary" className="flex items-center">
               <Heart className="h-3 w-3 mr-1" /> {sacrement.type}
-            </Badge>
-            {" "}
+            </Badge>{" "}
           </div>
           <CardTitle className="text-2xl flex items-center">
             {sacrement?.paroissien?.nom} {sacrement?.paroissien?.prenoms} &{" "}

@@ -321,10 +321,6 @@ import SacrementSearchBar from "@/components/sacrements/SacrementSearchBar";
 import SacrementTable from "@/components/sacrements/SacrementTable";
 import SacrementPagination from "@/components/sacrements/SacrementPagination";
 import SacrementEmptyState from "@/components/sacrements/SacrementEmptyState";
-import {
-  SacrementLoading,
-  SacrementError,
-} from "@/components/sacrements/SacrementLoadingError";
 import SacrementDeleteDialog from "@/components/sacrements/SacrementDeleteDialog";
 
 // Import des types et utilitaires
@@ -335,6 +331,10 @@ import {
   countSacrements,
   exportSacrementsToCSV,
 } from "@/lib/sacrement-utils";
+import {
+  SacrementsPageSkeleton,
+  SacrementError,
+} from "@/components/sacrements/SacrementsPageSkeleton";
 
 export default function SacrementsIndividuelsPage() {
   // États
@@ -525,6 +525,15 @@ export default function SacrementsIndividuelsPage() {
   const counts = countSacrements(sacrements);
   const totalSacrements = sacrements.length;
 
+  if (loading) {
+    return <SacrementsPageSkeleton />;
+  }
+
+  // Si erreur, afficher le composant d'erreur
+  if (error) {
+    return <SacrementError error={error} onRetry={fetchSacrements} />;
+  }
+
   return (
     <div className="space-y-6">
       {/* En-tête moderne */}
@@ -597,10 +606,6 @@ export default function SacrementsIndividuelsPage() {
           {/* Contenu des onglets */}
           <div className="p-6">
             <TabsContent value={activeTab} className="mt-0">
-              {/* États de chargement et d'erreur */}
-              <SacrementLoading loading={loading} />
-              <SacrementError error={error} onRetry={fetchSacrements} />
-
               {/* État vide */}
               {!loading && !error && filteredSacrements.length === 0 && (
                 <SacrementEmptyState

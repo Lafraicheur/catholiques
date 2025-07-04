@@ -28,16 +28,6 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
 }) => {
   return (
     <div className="py-3 px-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <p className="text-sm text-slate-500">
-          Page {currentPage} sur {totalPages}
-        </p>
-        {hasActiveFilters && (
-          <div className="text-xs text-slate-400">
-            {filteredCount} résultat(s) sur {totalCount}
-          </div>
-        )}
-      </div>
       <div className="flex gap-2">
         <Button
           variant="outline"

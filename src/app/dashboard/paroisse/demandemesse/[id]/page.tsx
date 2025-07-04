@@ -81,11 +81,9 @@ export default function DemandeMesseDetailsPage() {
 
   // Types d'intention possibles pour les badges
   const intentionTypes = {
-    "PRIÈRE DE REMERCIEMENT": "success",
-    "PRIÈRE D'INTERCESSION": "secondary",
-    "PRIÈRE POUR LES DÉFUNTS": "destructive",
-    "PRIÈRE DE DÉLIVRANCE": "outline",
-    "PRIÈRE DE GUÉRISON": "default",
+    "Action de Grâce": "default",
+    "Aide, assistance et protection": "success",
+    "Rappel à Dieu": "secondary",
   } as const;
 
   type IntentionType = keyof typeof intentionTypes;
@@ -281,7 +279,8 @@ export default function DemandeMesseDetailsPage() {
       : "destructive";
     const paymentStatusText = demandeMesse.est_payee ? "Payée" : "Non payée";
     const intentionStyle =
-      demandeMesse.intention && intentionTypes[demandeMesse.intention as IntentionType]
+      demandeMesse.intention &&
+      intentionTypes[demandeMesse.intention as IntentionType]
         ? intentionTypes[demandeMesse.intention as IntentionType]
         : "default";
 
@@ -314,12 +313,15 @@ export default function DemandeMesseDetailsPage() {
                     <Badge variant={intentionStyle} className="font-medium">
                       {(() => {
                         const intentionLabels: { [key: string]: string } = {
-                          "1": "PRIÈRE DE REMERCIEMENT",
-                          "2": "PRIÈRE D'INTERCESSION",
-                          "3": "MESSE DE REQUIEM",
+                          "0": "Action de Grâce",
+                          "1": "Aide, assistance et protection",
+                          "2": "Rappel à Dieu",
                         };
                         return (
-                          (demandeMesse.intention && intentionLabels[demandeMesse.intention as string]) ||
+                          (demandeMesse.intention &&
+                            intentionLabels[
+                              demandeMesse.intention as string
+                            ]) ||
                           demandeMesse.intention
                         );
                       })()}
@@ -500,8 +502,13 @@ export default function DemandeMesseDetailsPage() {
                       Horaire
                     </p>
                     <p className="text-sm font-semibold">
-                      {formatTime(demandeMesse.messe?.extras?.heure_de_debut ?? "")} -{" "}
-                      {formatTime(demandeMesse.messe?.extras?.heure_de_fin ?? "")}
+                      {formatTime(
+                        demandeMesse.messe?.extras?.heure_de_debut ?? ""
+                      )}{" "}
+                      -{" "}
+                      {formatTime(
+                        demandeMesse.messe?.extras?.heure_de_fin ?? ""
+                      )}
                     </p>
                   </div>
                 </div>

@@ -189,11 +189,6 @@ const ModifierCebForm: React.FC<ModifierCebFormProps> = ({
         ...data.item
       };
 
-      // Notification de succès
-      toast.success("CEB modifiée", {
-        description: `La CEB "${formData.nom}" a été mise à jour avec succès.`,
-      });
-
       // Fermer le formulaire et notifier le parent du succès
       onClose();
       onSuccess(updatedCeb);

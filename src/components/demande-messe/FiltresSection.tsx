@@ -5,11 +5,32 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
-import { Search, CheckCircle, Clock, Filter, XCircle, Download, Calendar, FileSpreadsheet, FileDown } from "lucide-react";
+import {
+  Search,
+  CheckCircle,
+  Clock,
+  Filter,
+  XCircle,
+  Download,
+  Calendar,
+  FileSpreadsheet,
+  FileDown,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { DemandeMesse, MesseFilters } from "../../types/demandeMesse";
 import { formatTimestamp, formatTime } from "@/utils/emandeMesseUtils";
 
@@ -80,19 +101,21 @@ export const FiltresSection: React.FC<FiltresSectionProps> = ({
       {/* Ligne 1: Recherche */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-slate-400" />
+          </div>
           <Input
             placeholder="Rechercher une demande..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
+            className="pl-9 h-9 bg-white border-slate-200 rounded-xl transition-all duration-200"
           />
         </div>
         <div className="flex gap-2">
           <Button
             variant={filtrePayee === true ? "default" : "outline"}
             onClick={() => setFiltrePayee(filtrePayee === true ? null : true)}
-            className="cursor-pointer"
+            className="bg-white border-slate-200 hover:bg-slate-50 cursor-pointer rounded-xl"
           >
             <CheckCircle className="h-4 w-4 mr-2" />
             Payées
@@ -100,7 +123,7 @@ export const FiltresSection: React.FC<FiltresSectionProps> = ({
           <Button
             variant={filtrePayee === false ? "default" : "outline"}
             onClick={() => setFiltrePayee(filtrePayee === false ? null : false)}
-            className="cursor-pointer"
+            className="bg-white border-slate-200 hover:bg-slate-50 cursor-pointer rounded-xl"
           >
             <Clock className="h-4 w-4 mr-2" />
             Non payées
@@ -109,7 +132,7 @@ export const FiltresSection: React.FC<FiltresSectionProps> = ({
       </div>
 
       {/* Ligne 2: Filtres de messe */}
-      <div className="flex flex-col lg:flex-row gap-4 p-4 bg-slate-50 rounded-lg border">
+      <div className="flex flex-col lg:flex-row gap-4 p-4 bg-white rounded-lg border">
         <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
           <Filter className="h-4 w-4" />
           Filtres messe:
@@ -208,11 +231,17 @@ export const FiltresSection: React.FC<FiltresSectionProps> = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onExportExcel} className="cursor-pointer">
+              <DropdownMenuItem
+                onClick={onExportExcel}
+                className="cursor-pointer"
+              >
                 <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
                 Exporter en Excel
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onExportPDF} className="cursor-pointer">
+              <DropdownMenuItem
+                onClick={onExportPDF}
+                className="cursor-pointer"
+              >
                 <FileDown className="h-4 w-4 mr-2 text-red-600" />
                 Exporter en PDF
               </DropdownMenuItem>

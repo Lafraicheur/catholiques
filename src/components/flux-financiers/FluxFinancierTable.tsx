@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 // components/flux-financiers/FluxFinancierTable.tsx
-import { Eye } from "lucide-react";
+import { Eye, User, Calendar, TrendingUp, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -42,11 +42,19 @@ interface FluxFinancier {
 interface FluxFinancierTableProps {
   fluxFinanciers: FluxFinancier[];
   totalCount: number;
+  currentPage: number;
+  totalPages: number;
+  onPreviousPage: () => void;
+  onNextPage: () => void;
 }
 
 export default function FluxFinancierTable({
   fluxFinanciers,
   totalCount,
+  currentPage,
+  totalPages,
+  onPreviousPage,
+  onNextPage,
 }: FluxFinancierTableProps) {
   const formatDate = (timestamp: number): string => {
     try {
@@ -82,14 +90,29 @@ export default function FluxFinancierTable({
   const getStatusBadgeVariant = (statut: string) => {
     switch (statut) {
       case "SUCCÈS":
-        return "bg-green-50 text-green-700 border border-green-100 hover:bg-green-50";
+        return "bg-green-100 text-green-800 hover:bg-green-200 border-green-200";
       case "EN ATTENTE":
-        return "bg-yellow-50 text-yellow-700 border border-yellow-100 hover:bg-yellow-50";
+        return "bg-amber-100 text-amber-800 hover:bg-amber-200 border-amber-200";
       case "ECHEC":
-        return "bg-red-50 text-red-700 border border-red-100 hover:bg-red-50";
+        return "bg-red-100 text-red-800 hover:bg-red-200 border-red-200";
       default:
-        return "bg-gray-50 text-gray-700 border border-gray-100 hover:bg-gray-50";
+        return "bg-slate-100 text-slate-800 hover:bg-slate-200 border-slate-200";
     }
+  };
+
+  const getTypeIcon = (type: string) => {
+    if (
+      type.toLowerCase().includes("crédit") ||
+      type.toLowerCase().includes("entrée")
+    ) {
+      return <TrendingUp className="h-4 w-4 text-green-600" />;
+    } else if (
+      type.toLowerCase().includes("débit") ||
+      type.toLowerCase().includes("sortie")
+    ) {
+      return <TrendingDown className="h-4 w-4 text-red-600" />;
+    }
+    return <TrendingUp className="h-4 w-4 text-blue-600" />;
   };
 
   const handleViewDetails = (flux: FluxFinancier) => {
@@ -99,91 +122,145 @@ export default function FluxFinancierTable({
   };
 
   return (
-    <div className="rounded-lg border border-slate-200 overflow-hidden bg-white shadow-sm">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      {/* Header du tableau moderne */}
+      <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-200">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-slate-900">
+            Flux financiers
+          </h3>
+          <div className="text-sm text-slate-500">
+            {totalCount} flux financier{totalCount > 1 ? "s" : ""}
+          </div>
+        </div>
+      </div>
+
       <Table className="w-full">
-        <TableHeader className="bg-slate-50">
-          <TableRow className="hover:bg-slate-100 border-slate-200">
-            <TableHead className="font-semibold text-slate-600 py-3 px-4">
+        <TableHeader>
+          <TableRow className="border-slate-200 hover:bg-transparent">
+            <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
               Date
             </TableHead>
-            <TableHead className="font-semibold text-slate-600 py-3 px-4">
+            <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
               Référence
             </TableHead>
-            <TableHead className="font-semibold text-slate-600 py-3 px-4">
+            <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
               Initiateur
             </TableHead>
-            <TableHead className="font-semibold text-slate-600 py-3 px-4">
+            <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
               Type
             </TableHead>
-            <TableHead className="font-semibold text-center text-slate-600 py-3 px-4">
+            <TableHead className="font-semibold text-slate-700 py-4 px-6 text-center">
               Montant
             </TableHead>
-            <TableHead className="font-semibold text-slate-600 py-3 px-4">
+            <TableHead className="font-semibold text-slate-700 py-4 px-6 text-center">
               Statut
             </TableHead>
-            <TableHead className="font-semibold text-slate-600 py-3 px-4 text-right">
+            {/* <TableHead className="font-semibold text-slate-700 py-4 px-6 text-right">
               Actions
-            </TableHead>
+            </TableHead> */}
           </TableRow>
         </TableHeader>
+
         <TableBody>
-          {fluxFinanciers.map((flux, index) => (
+          {fluxFinanciers.map((flux) => (
             <TableRow
               key={flux.id}
-              className={`hover:bg-slate-50/80 ${
-                index % 2 === 0 ? "bg-white" : "bg-slate-50/40"
-              } border-slate-200`}
+              className="border-slate-200 hover:bg-slate-50/50 transition-colors duration-150"
             >
-              <TableCell className="text-slate-500 py-3 px-4">
+              <TableCell className="py-4 px-6">
                 <div className="flex items-center">
-                  <div className="h-2 w-2 rounded-full mr-2"></div>
-                  {formatDate(flux?.created_at)}
-                </div>
-              </TableCell>
-              <TableCell className="py-3 px-4 font-medium text-slate-900">
-                {flux?.reference}
-              </TableCell>
-              <TableCell className="py-3 px-4">
-                <div className="flex items-center">
-                  <span className="font-medium">
-                    {flux?.initiateur?.nom} {flux?.initiateur?.prenoms}
+                  <div className="h-2 w-2 rounded-full opacity-60" />
+                  <span className="text-slate-600 font-medium">
+                    {formatDate(flux?.created_at)}
                   </span>
                 </div>
               </TableCell>
-              <TableCell className="py-3 px-4">
-                <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                  {flux.type}
-                </Badge>
+
+              <TableCell className="py-4 px-6">
+                <div className="font-medium text-slate-900 text-sm">
+                  {flux?.reference}
+                </div>
               </TableCell>
-              <TableCell className="py-3 px-4 text-right font-medium text-slate-900">
-                {formatMontant(flux?.montant_avec_frais)}
+
+              <TableCell className="py-4 px-6">
+                <div className="flex items-center">
+                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                    <User className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-slate-900 text-sm">
+                      {flux?.initiateur?.nom} {flux?.initiateur?.prenoms}
+                    </div>
+                  </div>
+                </div>
               </TableCell>
-              <TableCell className="py-3 px-4">
+
+              <TableCell className="py-4 px-6">
+                <div className="flex items-center gap-2">
+                  {getTypeIcon(flux.type)}
+                  <span className="text-sm text-slate-700 font-medium">
+                    {flux.type}
+                  </span>
+                </div>
+              </TableCell>
+
+              <TableCell className="py-4 px-6 text-center">
+                <div className="font-semibold text-slate-900 text-base">
+                  {formatMontant(flux?.montant_avec_frais)}
+                </div>
+              </TableCell>
+
+              <TableCell className="py-4 px-6 text-center">
                 <Badge
-                  className={`px-2 py-1 font-normal text-xs ${getStatusBadgeVariant(flux?.statut)}`}
+                  className={`text-xs py-1 px-3 font-medium ${getStatusBadgeVariant(flux?.statut)}`}
                 >
                   {flux?.statut}
                 </Badge>
               </TableCell>
-              <TableCell className="text-right py-2 px-4">
+
+              {/* <TableCell className="py-4 px-6 text-right">
                 <div className="flex justify-end gap-2">
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    className="flex items-center text-blue-600 hover:bg-blue-50 cursor-pointer"
+                    className="h-9 w-9 p-0 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150 cursor-pointer"
                     onClick={() => handleViewDetails(flux)}
                   >
-                    <Eye className="h-4 w-4 mr-1" />
+                    <Eye className="h-4 w-4" />
                   </Button>
                 </div>
-              </TableCell>
+              </TableCell> */}
             </TableRow>
           ))}
         </TableBody>
       </Table>
-      <div className="py-3 px-4 bg-slate-50 border-t border-slate-200 text-sm text-slate-500">
-        Affichage de {fluxFinanciers.length} flux financier(s) sur {totalCount}{" "}
-        au total
+
+      {/* Footer du tableau moderne */}
+      <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-200 flex items-center justify-between">
+        <div className="text-sm text-slate-600">
+          {totalCount === 0
+            ? "Aucun flux financier trouvé"
+            : `Affichage de ${fluxFinanciers.length} flux financier${fluxFinanciers.length > 1 ? "s" : ""}`}
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onPreviousPage}
+            disabled={currentPage === 1}
+          >
+            Précédent
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onNextPage}
+            disabled={currentPage === totalPages}
+          >
+            Suivant
+          </Button>
+        </div>
       </div>
     </div>
   );

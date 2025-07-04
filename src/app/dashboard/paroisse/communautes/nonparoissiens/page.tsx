@@ -94,10 +94,6 @@ interface StatsCardProps {
   icon: React.ReactNode;
   iconBgColor: string;
   iconColor: string;
-  trend?: {
-    value: string;
-    isPositive: boolean;
-  };
 }
 
 const StatsCard = ({
@@ -106,19 +102,17 @@ const StatsCard = ({
   icon,
   iconBgColor,
   iconColor,
-  trend,
 }: StatsCardProps) => {
   return (
     <Card className="relative overflow-hidden border-0 shadow-sm bg-white transition-shadow duration-200">
       <CardContent className="p-y-1">
         {/* Header avec icône et menu */}
-        <div className="flex items-center mb-4">
+        <div className="flex items-center gap-3 mb-4">
           <div
             className={`h-12 w-12 rounded-xl ${iconBgColor} flex items-center justify-center`}
           >
             <div className={iconColor}>{icon}</div>
           </div>
-          &nbsp;&nbsp;
           <h3 className="text-sm font-medium text-slate-600 mb-2">{title}</h3>
         </div>
 
@@ -544,10 +538,6 @@ export default function NonParoissiensPage() {
           icon={<Users size={24} />}
           iconBgColor="bg-blue-50"
           iconColor="text-blue-600"
-          trend={{
-            value: "+4,2%",
-            isPositive: true,
-          }}
         />
 
         <StatsCard
@@ -556,10 +546,6 @@ export default function NonParoissiensPage() {
           icon={<Mars size={24} />}
           iconBgColor="bg-indigo-50"
           iconColor="text-indigo-600"
-          trend={{
-            value: "+1,8%",
-            isPositive: true,
-          }}
         />
 
         <StatsCard
@@ -568,10 +554,6 @@ export default function NonParoissiensPage() {
           icon={<Venus size={24} />}
           iconBgColor="bg-pink-50"
           iconColor="text-pink-600"
-          trend={{
-            value: "+6,5%",
-            isPositive: true,
-          }}
         />
       </div>
 
@@ -873,12 +855,7 @@ export default function NonParoissiensPage() {
           {/* Footer du tableau moderne */}
           <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-200 flex items-center justify-between">
             <div className="text-sm text-slate-600">
-              Affichage de {(currentPage - 1) * itemsPerPage + 1} à{" "}
-              {Math.min(
-                currentPage * itemsPerPage,
-                filteredNonParoissiens.length
-              )}{" "}
-              sur {filteredNonParoissiens.length} résultats
+              Affichage de {filteredNonParoissiens.length} résultats
             </div>
             <div className="flex gap-2">
               <Button

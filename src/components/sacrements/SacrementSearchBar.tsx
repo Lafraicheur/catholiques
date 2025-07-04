@@ -136,7 +136,7 @@ export default function SacrementSearchBar({
             className="h-9 px-4 bg-white border-slate-200 hover:bg-slate-50 rounded-xl transition-all duration-200 cursor-pointer"
           >
             <Download className="h-4 w-4 mr-2" />
-            Télécharger
+            Exporter
           </Button>
 
           {/* Nouveau sacrement */}

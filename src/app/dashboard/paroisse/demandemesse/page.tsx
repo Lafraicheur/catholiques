@@ -11,7 +11,11 @@ import { StatistiquesCard } from "@/components/demande-messe/StatistiquesCard";
 import { FiltresSection } from "@/components/demande-messe/FiltresSection";
 import { DemandesTableau } from "@/components/demande-messe/DemandesTableau";
 import { PaginationControls } from "@/components/demande-messe/PaginationControls";
-import { LoadingState, ErrorState, EmptyState } from "@/components/demande-messe/EmptyStates";
+import {
+  LoadingState,
+  ErrorState,
+  EmptyState,
+} from "@/components/demande-messe/EmptyStates";
 
 // Imports des hooks
 import { useDemandesMesse } from "@/hooks/useDemandesMesse";
@@ -40,12 +44,8 @@ export default function DemandeMessePage() {
   } = useDemandesMesse();
 
   // Hook pour l'exportation
-  const {
-    exporting,
-    exportIndividualDemande,
-    exportToExcel,
-    exportToPDF,
-  } = useExport();
+  const { exporting, exportIndividualDemande, exportToExcel, exportToPDF } =
+    useExport();
 
   // Calcul des statistiques
   const totalDemandes = demandes.length;
@@ -101,18 +101,27 @@ export default function DemandeMessePage() {
             demandes={getCurrentPageItems()}
             exporting={exporting}
             onExportIndividual={exportIndividualDemande}
-          />
-
-          {/* Pagination */}
-          <PaginationControls
             currentPage={currentPage}
             totalPages={totalPages}
-            hasActiveFilters={hasActiveFilters()}
-            filteredCount={filteredDemandes.length}
-            totalCount={demandes.length}
             onPreviousPage={goToPreviousPage}
             onNextPage={goToNextPage}
           />
+
+          {/* Pagination */}
+          {/* <PaginationControls
+
+            demandes,
+  exporting,
+  currentPage,
+  totalPages,
+  onPreviousPage,
+  onNextPage,
+  onExportIndividual,
+           
+            hasActiveFilters={hasActiveFilters()}
+            filteredCount={filteredDemandes.length}
+            
+          /> */}
         </>
       )}
     </div>

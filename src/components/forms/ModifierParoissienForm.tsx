@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// ModifierParoissienForm.jsx
+// ModifierParoissienForm.jsx - Version corrigée
 "use client";
 
 import { useState, useEffect } from "react";
@@ -16,11 +16,11 @@ import {
   Home,
   UserCircle,
   Globe,
+  Users,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -29,17 +29,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DialogFooter } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import {
   AuthenticationError,
   ApiError,
   ForbiddenError,
   NotFoundError,
-} from "@/services/api";
-import { updateParoissien } from "@/services/parishioner-service";
+  updateParoissien,
+} from "@/services/parishioner-service";
+import { toast } from "sonner";
 
+// Types pour TypeScript
 type ParoissienData = {
   id: number;
+  paroissien_id: number; // Ajouté pour correspondre au paramètre requis
   nom: string;
   prenoms: string;
   genre: string;
@@ -54,7 +56,9 @@ type ParoissienData = {
   est_abonne: boolean;
   date_de_fin_abonnement: number;
   statut: string;
+  statut_social?: string; // Nouveau champ
   abonnement_id: number;
+  mouvements?: string[]; // Nouveau champ
   [key: string]: any;
 };
 
@@ -64,6 +68,18 @@ interface ModifierParoissienFormProps {
   onSuccess: (updatedParoissien: ParoissienData) => void;
 }
 
+// Constantes pour les options
+const STATUTS_RELIGIEUX = ["Aucun", "Baptisé", "Confirmé", "Marié à l'église"];
+
+const STATUTS_SOCIAUX = [
+  "Bébé",
+  "Enfant",
+  "Adolescent",
+  "Jeune",
+  "Adulte",
+  "Personne âgée",
+];
+
 const ModifierParoissienForm = ({
   onClose,
   paroissienData,
@@ -71,8 +87,9 @@ const ModifierParoissienForm = ({
 }: ModifierParoissienFormProps) => {
   const router = useRouter();
 
-  // État pour le formulaire
-  const [formData, setFormData] = useState({
+  // État pour le formulaire avec tous les champs requis
+  const [formData, setFormData] = useState<ParoissienData>({
+    id: 0,
     paroissien_id: 0,
     nom: "",
     prenoms: "",
@@ -88,21 +105,26 @@ const ModifierParoissienForm = ({
     est_abonne: false,
     date_de_fin_abonnement: 0,
     statut: "Aucun",
+    statut_social: "Bébé", // Nouveau champ
     abonnement_id: 0,
+    mouvements: [], // Nouveau champ
   });
 
-  const [formErrors, setFormErrors] = useState<Record<string, string | null>>({});
+  const [formErrors, setFormErrors] = useState<Record<string, string | null>>(
+    {}
+  );
   const [formLoading, setFormLoading] = useState(false);
 
   // Initialiser le formulaire avec les données existantes
   useEffect(() => {
     if (paroissienData) {
-      // Formatage de la date de naissance (2025-05-15 -> 2025-05-15)
+      // Formatage de la date de naissance
       const dateNaissance = paroissienData.date_de_naissance
         ? new Date(paroissienData.date_de_naissance).toISOString().split("T")[0]
         : "";
 
       setFormData({
+        id: paroissienData.id,
         paroissien_id: paroissienData.id,
         nom: paroissienData.nom || "",
         prenoms: paroissienData.prenoms || "",
@@ -118,7 +140,9 @@ const ModifierParoissienForm = ({
         est_abonne: paroissienData.est_abonne || false,
         date_de_fin_abonnement: paroissienData.date_de_fin_abonnement || 0,
         statut: paroissienData.statut || "Aucun",
+        statut_social: paroissienData.statut_social || "Bébé",
         abonnement_id: paroissienData.abonnement_id || 0,
+        mouvements: paroissienData.mouvements || [],
       });
     }
 
@@ -127,7 +151,9 @@ const ModifierParoissienForm = ({
   }, [paroissienData]);
 
   // Gestion des changements dans le formulaire
-  const handleChange = (e: { target: { name: any; value: any; type: any; checked: any; }; }) => {
+  const handleChange = (e: {
+    target: { name: any; value: any; type: any; checked: any };
+  }) => {
     const { name, value, type, checked } = e.target;
 
     // Pour les cases à cocher, utilisez la propriété checked
@@ -171,19 +197,9 @@ const ModifierParoissienForm = ({
     }
   };
 
-  // Formater le numéro pour l'affichage (XX XX XX XX XX)
-  const formatPhoneDisplay = (phone: string | any[]) => {
-    if (!phone) return "";
-    const groups = [];
-    for (let i = 0; i < phone.length; i += 2) {
-      groups.push(phone.slice(i, i + 2));
-    }
-    return groups.join(" ");
-  };
-
   // Validation du formulaire
   const validateForm = () => {
-    const newErrors: Record<string, string | null> = {};
+    const newErrors: Record<string, string> = {};
 
     // Validation du nom (requis)
     if (!formData.nom.trim()) {
@@ -206,12 +222,22 @@ const ModifierParoissienForm = ({
       newErrors.email = "Format d'email invalide";
     }
 
+    // Validation de la date de naissance (pas dans le futur)
+    if (formData.date_de_naissance) {
+      const birthDate = new Date(formData.date_de_naissance);
+      const today = new Date();
+      if (birthDate > today) {
+        newErrors.date_de_naissance =
+          "La date de naissance ne peut pas être dans le futur";
+      }
+    }
+
     setFormErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   // Soumission du formulaire
-  const handleSubmit = async (e: { preventDefault: () => void; }) => {
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
 
     // Valider le formulaire avant soumission
@@ -226,14 +252,19 @@ const ModifierParoissienForm = ({
 
     try {
       // Appel API pour mettre à jour le paroissien
+      console.log("Modification du paroissien avec les données:", formData);
+
       const result = await updateParoissien(formData);
 
       // Fermer le formulaire et notifier le parent du succès
       onClose();
 
-      // Comme l'API de modification ne renvoie pas l'objet mis à jour,
-      // nous utilisons les données du formulaire pour mettre à jour l'UI
-      const updatedParoissien = { ...paroissienData, ...formData };
+      // Créer l'objet mis à jour pour l'UI
+      const updatedParoissien = {
+        ...paroissienData,
+        ...formData,
+        id: formData.paroissien_id, // S'assurer que l'ID est correct
+      };
       onSuccess(updatedParoissien);
     } catch (err) {
       console.error("Erreur lors de la modification du paroissien:", err);
@@ -260,7 +291,7 @@ const ModifierParoissienForm = ({
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         {/* Nom et Prénom */}
-        <div className="grid grid-cols-4 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="nom" className="flex items-center text-sm">
               <User className="h-4 w-4 mr-2 text-slate-500" />
@@ -298,6 +329,35 @@ const ModifierParoissienForm = ({
               <p className="text-xs text-red-500">{formErrors.prenoms}</p>
             )}
           </div>
+        </div>
+
+        {/* Genre, Téléphone et Email */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="genre" className="flex items-center text-sm">
+              <UserCircle className="h-4 w-4 mr-2 text-slate-500" />
+              Genre <span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Select
+              value={formData.genre}
+              onValueChange={(value) => handleSelectChange("genre", value)}
+              required
+            >
+              <SelectTrigger
+                id="genre"
+                className={formErrors.genre ? "border-red-500" : ""}
+              >
+                <SelectValue placeholder="Sélectionner le genre" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="M">Masculin</SelectItem>
+                <SelectItem value="F">Féminin</SelectItem>
+              </SelectContent>
+            </Select>
+            {formErrors.genre && (
+              <p className="text-xs text-red-500">{formErrors.genre}</p>
+            )}
+          </div>
 
           <div className="space-y-2">
             <Label
@@ -328,44 +388,30 @@ const ModifierParoissienForm = ({
                 {formErrors.num_de_telephone}
               </p>
             )}
-            {formData.num_de_telephone &&
-              formData.num_de_telephone.length > 0 &&
-              !formErrors.num_de_telephone && (
-                <p className="text-xs text-slate-600 font-medium pl-6">
-                  {/* {formatPhoneDisplay(formData.num_de_telephone)} */}
-                </p>
-              )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email" className="flex items-center text-sm">
+              <Mail className="h-4 w-4 mr-2 text-slate-500" />
+              Email
+            </Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="exemple@mail.com"
+              className={formErrors.email ? "border-red-500" : ""}
+            />
+            {formErrors.email && (
+              <p className="text-xs text-red-500">{formErrors.email}</p>
+            )}
           </div>
         </div>
 
-        {/* Genre et Date de naissance */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          <div className="space-y-2">
-            <Label htmlFor="genre" className="flex items-center text-sm">
-              <UserCircle className="h-4 w-4 mr-2 text-slate-500" />
-              Genre <span className="text-red-500 ml-1">*</span>
-            </Label>
-            <Select
-              value={formData.genre}
-              onValueChange={(value) => handleSelectChange("genre", value)}
-              required
-            >
-              <SelectTrigger
-                id="genre"
-                className={formErrors.genre ? "border-red-500" : ""}
-              >
-                <SelectValue placeholder="Sélectionner le genre" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="M">Masculin</SelectItem>
-                <SelectItem value="F">Féminin</SelectItem>
-              </SelectContent>
-            </Select>
-            {formErrors.genre && (
-              <p className="text-xs text-red-500">{formErrors.genre}</p>
-            )}
-          </div>
-
+        {/* Date de naissance et Statuts */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label
               htmlFor="date_de_naissance"
@@ -390,29 +436,68 @@ const ModifierParoissienForm = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email" className="flex items-center text-sm">
-              <Mail className="h-4 w-4 mr-2 text-slate-500" />
-              Email
+            <Label htmlFor="statut" className="flex items-center text-sm">
+              <UserCircle className="h-4 w-4 mr-2 text-slate-500" />
+              Statut religieux
             </Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="exemple@mail.com"
-              className={formErrors.email ? "border-red-500" : ""}
-            />
-            {formErrors.email && (
-              <p className="text-xs text-red-500">{formErrors.email}</p>
+            <Select
+              value={formData.statut}
+              onValueChange={(value) => handleSelectChange("statut", value)}
+            >
+              <SelectTrigger
+                id="statut"
+                className={formErrors.statut ? "border-red-500" : ""}
+              >
+                <SelectValue placeholder="Sélectionner le statut" />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUTS_RELIGIEUX.map((statut) => (
+                  <SelectItem key={statut} value={statut}>
+                    {statut}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {formErrors.statut && (
+              <p className="text-xs text-red-500">{formErrors.statut}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label
+              htmlFor="statut_social"
+              className="flex items-center text-sm"
+            >
+              <Users className="h-4 w-4 mr-2 text-slate-500" />
+              Statut social
+            </Label>
+            <Select
+              value={formData.statut_social}
+              onValueChange={(value) =>
+                handleSelectChange("statut_social", value)
+              }
+            >
+              <SelectTrigger
+                id="statut_social"
+                className={formErrors.statut_social ? "border-red-500" : ""}
+              >
+                <SelectValue placeholder="Sélectionner le statut social" />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUTS_SOCIAUX.map((statut) => (
+                  <SelectItem key={statut} value={statut}>
+                    {statut}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {formErrors.statut_social && (
+              <p className="text-xs text-red-500">{formErrors.statut_social}</p>
             )}
           </div>
         </div>
-      </div>
 
-      <div className="space-y-4">
-
-        {/* Pays et Nationalité */}
+        {/* Localisation */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="pays" className="flex items-center text-sm">
@@ -469,8 +554,8 @@ const ModifierParoissienForm = ({
           </div>
         </div>
 
-        {/* Ville et Commune */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Commune et Quartier */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="commune" className="flex items-center text-sm">
               <Map className="h-4 w-4 mr-2 text-slate-500" />
@@ -506,33 +591,6 @@ const ModifierParoissienForm = ({
               <p className="text-xs text-red-500">{formErrors.quartier}</p>
             )}
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="statut" className="flex items-center text-sm">
-              <UserCircle className="h-4 w-4 mr-2 text-slate-500" />
-              Statut
-            </Label>
-            <Select
-              value={formData.statut}
-              onValueChange={(value) => handleSelectChange("statut", value)}
-            >
-              <SelectTrigger
-                id="statut"
-                className={formErrors.statut ? "border-red-500" : ""}
-              >
-                <SelectValue placeholder="Sélectionner le statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Aucun">Aucun</SelectItem>
-                <SelectItem value="Baptisé">Baptisé</SelectItem>
-                <SelectItem value="Confirmé">Confirmé</SelectItem>
-                <SelectItem value="Marié à l'église">Marié</SelectItem>
-              </SelectContent>
-            </Select>
-            {formErrors.statut && (
-              <p className="text-xs text-red-500">{formErrors.statut}</p>
-            )}
-          </div>
         </div>
       </div>
 
@@ -542,7 +600,7 @@ const ModifierParoissienForm = ({
           variant="outline"
           onClick={onClose}
           disabled={formLoading}
-          className="border-slate-300 hover:bg-slate-100 hover:text-slate-800 transition-colors w-full sm:w-auto"
+          className="border-slate-300 hover:bg-slate-100 hover:text-slate-800 transition-colors w-full sm:w-auto cursor-pointer"
         >
           Annuler
         </Button>
@@ -550,7 +608,7 @@ const ModifierParoissienForm = ({
         <Button
           type="submit"
           disabled={formLoading}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors w-full sm:w-auto"
+          className="bg-slate-800 hover:bg-slate-800 text-white font-medium transition-colors w-full sm:w-auto cursor-pointer"
         >
           {formLoading ? (
             <>

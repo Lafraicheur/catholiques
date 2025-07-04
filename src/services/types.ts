@@ -24,33 +24,6 @@ export interface Evenement {
   responsable: string;
 }
 
-// Créer un exemple d'événements couvrant plusieurs années
-export const evenements: Evenement[] = [
-  {
-    id: 1,
-    titre: "Messe dominicale",
-    date: "2025-05-18",
-    heure: "10:30",
-    lieu: "Église principale",
-    description: "Messe du 6ème dimanche de Pâques",
-    type: "messe",
-    statut: "programmé",
-    responsable: "Père Jean Dupont",
-  },
-  // [...autres événements comme dans le fichier original...]
-  {
-    id: 11,
-    titre: "Première communion",
-    date: "2025-05-18",
-    heure: "10:30",
-    lieu: "Église principale",
-    description: "Célébration des premières communions",
-    type: "sacrement",
-    statut: "confirmé",
-    responsable: "Père Jean Dupont",
-  },
-];
-
 // Formatage de la date
 export const formatDate = (dateString: string) => {
   const date = new Date(dateString);

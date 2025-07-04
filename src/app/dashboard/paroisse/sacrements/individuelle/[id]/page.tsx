@@ -39,6 +39,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import ModifierSacrementIndividuelForm from "@/components/forms/ModifierSacrementIndividuelForm";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Types
 interface SacrementIndividuel {
@@ -257,8 +258,96 @@ export default function SacrementDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-800"></div>
+      <div className="space-y-6">
+        {/* En-tête avec navigation et actions */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-9 w-20" /> {/* Bouton retour */}
+            <Skeleton className="h-8 w-48" /> {/* Titre */}
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-9 w-24" /> {/* Bouton modifier */}
+            <Skeleton className="h-9 w-24" /> {/* Bouton supprimer */}
+          </div>
+        </div>
+
+        {/* Badges d'information */}
+        <div className="flex flex-wrap gap-2">
+          <Skeleton className="h-6 w-32" /> {/* Badge type */}
+          <Skeleton className="h-6 w-24" /> {/* Badge statut */}
+        </div>
+
+        {/* Carte principale d'informations */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-48 mb-2" /> {/* Titre de carte */}
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Date et Célébrant */}
+            <div className="flex flex-col md:flex-row gap-1 md:gap-6">
+              <div className="w-full md:w-1/2 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-4 w-4" /> {/* Icône */}
+                  <Skeleton className="h-4 w-32" /> {/* Label */}
+                </div>
+                <Skeleton className="h-6 w-full" /> {/* Valeur */}
+              </div>
+              <div className="w-full md:w-1/2 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-4 w-4" /> {/* Icône */}
+                  <Skeleton className="h-4 w-24" /> {/* Label */}
+                </div>
+                <Skeleton className="h-6 w-full" /> {/* Valeur */}
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Description */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4" /> {/* Icône */}
+                <Skeleton className="h-4 w-20" /> {/* Label */}
+              </div>
+              <div className="bg-slate-50 p-4 rounded-md space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            </div>
+
+            {/* Métadonnées */}
+            <div className="pt-4">
+              <Skeleton className="h-3 w-48" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Cartes supplémentaires optionnelles */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-32" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-40" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-4 w-3/4" />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -304,9 +393,6 @@ export default function SacrementDetailPage() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour
           </Button>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-            Détails du sacrement
-          </h1>
         </div>
         <div className="flex gap-2">
           <ModifierSacrementIndividuelForm
@@ -354,15 +440,15 @@ export default function SacrementDetailPage() {
 
       {/* Badges d'information */}
       <div className="flex flex-wrap gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+          Détails du sacrement {sacrement.type} :
+        </h1>
         <Badge
           variant={typeVariant}
           className="flex items-center text-sm px-2.5 py-0.5"
         >
           {typeIcon} {typeLabel}
         </Badge>
-        {/* <Badge variant={statusVariant} className="text-sm px-2.5 py-0.5">
-          {statusLabel}
-        </Badge> */}
       </div>
 
       {/* Carte principale d'informations */}
@@ -393,7 +479,7 @@ export default function SacrementDetailPage() {
             </div>
           </div>
 
-          <Separator />          
+          <Separator />
 
           {/* Description complète */}
           <div className="space-y-2">
@@ -414,11 +500,19 @@ export default function SacrementDetailPage() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
 
-      {/* Section des documents et actions supplémentaires */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Documents */}
-        {/* <Card>
+{
+  /* Section des documents et actions supplémentaires */
+}
+// <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+{
+  /* Documents */
+}
+{
+  /* <Card>
           <CardHeader>
             <CardTitle>Documents</CardTitle>
           </CardHeader>
@@ -466,10 +560,14 @@ export default function SacrementDetailPage() {
               </div>
             </div>
           </CardContent>
-        </Card> */}
+        </Card> */
+}
 
-        {/* Actions rapides */}
-        {/* <Card>
+{
+  /* Actions rapides */
+}
+{
+  /* <Card>
           <CardHeader>
             <CardTitle>Actions rapides</CardTitle>
           </CardHeader>
@@ -498,8 +596,6 @@ export default function SacrementDetailPage() {
               <User className="h-4 w-4 mr-2" /> Notifier le responsable
             </Button>
           </CardContent>
-        </Card> */}
-      </div>
-    </div>
-  );
+        </Card> */
 }
+// </div>

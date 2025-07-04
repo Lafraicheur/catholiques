@@ -166,7 +166,7 @@ export default function LoginForm() {
     try {
       // Connexion via l'API avec en-têtes CORS
       const loginResponse = await axios.post(
-        `${API_URL}/user/auth/login`,
+        `${API_URL}/admin/auth/login`,
         {
           email: values.email,
           password: values.password,

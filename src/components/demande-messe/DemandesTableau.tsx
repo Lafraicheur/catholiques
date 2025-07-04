@@ -6,124 +6,195 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Eye, FileDown, FileSpreadsheet, CheckCircle, Clock, MapPin } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Eye,
+  FileDown,
+  FileSpreadsheet,
+  CheckCircle,
+  Clock,
+  MapPin,
+  User,
+  Calendar,
+} from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { DemandeMesse } from "../../types/demandeMesse";
 import { formatDate, getIntentionLabel } from "@/utils/emandeMesseUtils";
 
 interface DemandesTableauProps {
   demandes: DemandeMesse[];
   exporting: boolean;
+  currentPage: number;
+  totalPages: number;
+  onPreviousPage: () => void;
+  onNextPage: () => void;
   onExportIndividual: (demande: DemandeMesse, format: "excel" | "pdf") => void;
 }
 
 export const DemandesTableau: React.FC<DemandesTableauProps> = ({
   demandes,
   exporting,
+  currentPage,
+  totalPages,
+  onPreviousPage,
+  onNextPage,
   onExportIndividual,
 }) => {
   const router = useRouter();
 
   return (
-    <div className="rounded-lg border border-slate-200 overflow-hidden bg-white shadow-sm">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      {/* Header du tableau moderne */}
+      <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-200">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-slate-900">
+            Demandes de messe
+          </h3>
+          <div className="text-sm text-slate-500">
+            {demandes.length} demande{demandes.length > 1 ? "s" : ""}
+          </div>
+        </div>
+      </div>
+
       <Table className="w-full">
-        <TableHeader className="bg-slate-50">
-          <TableRow className="hover:bg-slate-100 border-slate-200">
-            <TableHead className="font-semibold text-slate-600 py-3 px-4">
+        <TableHeader>
+          <TableRow className="border-slate-200 hover:bg-transparent">
+            <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
               Date de demande
             </TableHead>
-            <TableHead className="font-semibold text-slate-600 py-3 px-4">
+            <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
               Initiateur
             </TableHead>
-            <TableHead className="font-semibold text-slate-600 py-3 px-4">
+            <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
               Demandeur
             </TableHead>
-            <TableHead className="font-semibold text-slate-600 py-3 px-4">
+            <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
               Intention
             </TableHead>
-            <TableHead className="font-semibold text-slate-600 py-3 px-4">
+            <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
               Concerne
             </TableHead>
-            <TableHead className="font-semibold text-slate-600 py-3 px-4">
+            <TableHead className="font-semibold text-slate-700 py-4 px-6 text-center">
               Statut
             </TableHead>
-            <TableHead className="font-semibold text-slate-600 py-3 px-4">
+            <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
               Messe
             </TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="font-semibold text-slate-700 py-4 px-6 text-right">
+              Actions
+            </TableHead>
           </TableRow>
         </TableHeader>
+
         <TableBody>
           {demandes.map((demande) => (
             <TableRow
               key={demande.id}
-              className="hover:bg-slate-50 border-slate-100"
+              className="border-slate-200 hover:bg-slate-50/50 transition-colors duration-150"
             >
-              <TableCell className="text-slate-500 py-3 px-4">
+              <TableCell className="py-4 px-6">
                 <div className="flex items-center">
-                  {formatDate(demande?.created_at)}
+                  <div className="h-2 w-2 rounded-full opacity-60" />
+                  <span className="text-slate-600 font-medium">
+                    {formatDate(demande?.created_at)}
+                  </span>
                 </div>
               </TableCell>
-              <TableCell className="py-3 px-4">
-                <div className="font-medium text-slate-900">
-                  {demande?.initiateur?.prenoms} {demande?.initiateur?.nom}
-                </div>
-                <div className="text-xs text-slate-500">
-                  {demande?.initiateur?.num_de_telephone}
+
+              <TableCell className="py-4 px-6">
+                <div className="flex items-center">
+                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                    <User className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-slate-900 text-sm">
+                      {demande?.initiateur?.prenoms} {demande?.initiateur?.nom}
+                    </div>
+                    {demande?.initiateur?.num_de_telephone && (
+                      <div className="text-xs text-slate-500">
+                        {demande?.initiateur?.num_de_telephone}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </TableCell>
-              <TableCell className="py-3 px-4 font-medium text-slate-900">
-                {demande?.demandeur}
+
+              <TableCell className="py-4 px-6">
+                <div className="font-semibold text-slate-900 text-base">
+                  {demande?.demandeur}
+                </div>
               </TableCell>
-              <TableCell className="py-3 px-4">
-                <div className="text-sm text-slate-700">
+
+              <TableCell className="py-4 px-6">
+                <div className="text-sm text-slate-700 font-medium">
                   {getIntentionLabel(demande?.intention)}
                 </div>
               </TableCell>
-              <TableCell className="py-3 px-4 font-medium text-slate-900">
-                {demande?.concerne}
+
+              <TableCell className="py-4 px-6">
+                <div className="font-medium text-slate-900">
+                  {demande?.concerne}
+                </div>
               </TableCell>
-              <TableCell>
+
+              <TableCell className="py-4 px-6 text-center">
                 {demande?.est_payee ? (
-                  <Badge
-                    variant="secondary"
-                    className="bg-green-100 text-green-800 hover:bg-green-200 text-xs py-0.5 px-1.5"
-                  >
-                    <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
+                  <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border-green-200 text-xs py-1 px-3 font-medium">
+                    {/* <CheckCircle className="h-3 w-3 mr-1" /> */}
                     Payée
                   </Badge>
                 ) : (
-                  <Badge
-                    variant="outline"
-                    className="bg-amber-100 text-amber-800 hover:bg-amber-200 text-xs py-0.5 px-1.5"
-                  >
-                    <Clock className="h-2.5 w-2.5 mr-0.5" />
-                    Non Payée
+                  <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-amber-200 text-xs py-1 px-3 font-medium">
+                    {/* <Clock className="h-3 w-3 mr-1" /> */}
+                    Non payée
                   </Badge>
                 )}
               </TableCell>
-              <TableCell className="py-3 px-4">
-                <div className="space-y-1">
-                  <div className="font-medium text-slate-700">
-                    {demande.messe?.libelle}
+
+              <TableCell className="py-4 px-6">
+                {demande.messe ? (
+                  <div className="space-y-2">
+                    <div className="font-medium text-slate-900 text-sm">
+                      {demande.messe.libelle}
+                    </div>
+                    {/* {demande.messe.extras?.type_messe && (
+                      <div className="inline-flex items-center gap-1 text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
+                        <MapPin className="h-3 w-3" />
+                        {demande.messe.extras.type_messe}
+                      </div>
+                    )} */}
                   </div>
-                  <div className="text-xs text-slate-500 flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    {demande.messe?.extras?.type_messe}
+                ) : (
+                  <div className="text-sm text-slate-500 italic">
+                    Aucune messe assignée
                   </div>
-                </div>
+                )}
               </TableCell>
-              <TableCell className="text-right py-2 px-4">
-                <div className="flex justify-end gap-1">
+
+              <TableCell className="py-4 px-6 text-right">
+                <div className="flex justify-end gap-2">
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    className="flex items-center text-blue-600 hover:bg-blue-50 cursor-pointer"
+                    className="h-9 w-9 p-0 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150 cursor-pointer"
                     onClick={() =>
-                      router.push(`/dashboard/paroisse/demandemesse/${demande.id}`)
+                      router.push(
+                        `/dashboard/paroisse/demandemesse/${demande.id}`
+                      )
                     }
                   >
                     <Eye className="h-4 w-4" />
@@ -132,28 +203,31 @@ export const DemandesTableau: React.FC<DemandesTableauProps> = ({
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        className="cursor-pointer text-green-600 hover:bg-green-50"
+                        className="h-9 w-9 p-0 hover:bg-green-50 hover:text-green-600 transition-colors duration-150 cursor-pointer"
                         disabled={exporting}
                       >
                         <FileDown className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent
+                      align="end"
+                      className="bg-white border-slate-200 shadow-lg rounded-xl"
+                    >
                       <DropdownMenuItem
                         onClick={() => onExportIndividual(demande, "excel")}
-                        className="cursor-pointer"
+                        className="cursor-pointer hover:bg-slate-50 rounded-lg m-1 p-3"
                       >
-                        <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
-                        Excel
+                        <FileSpreadsheet className="h-4 w-4 mr-3 text-green-600" />
+                        <span className="font-medium">Exporter en Excel</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => onExportIndividual(demande, "pdf")}
-                        className="cursor-pointer"
+                        className="cursor-pointer hover:bg-slate-50 rounded-lg m-1 p-3"
                       >
-                        <FileDown className="h-4 w-4 mr-2 text-red-600" />
-                        PDF
+                        <FileDown className="h-4 w-4 mr-3 text-red-600" />
+                        <span className="font-medium">Exporter en PDF</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -163,6 +237,33 @@ export const DemandesTableau: React.FC<DemandesTableauProps> = ({
           ))}
         </TableBody>
       </Table>
+
+      {/* Footer du tableau moderne */}
+      <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-200 flex items-center justify-between">
+        <div className="text-sm text-slate-600">
+          {demandes.length === 0
+            ? "Aucune demande trouvée"
+            : `Affichage de ${demandes.length} demande${demandes.length > 1 ? "s" : ""}`}
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onPreviousPage}
+            disabled={currentPage === 1}
+          >
+            Précédent
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onNextPage}
+            disabled={currentPage === totalPages}
+          >
+            Suivant
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

@@ -8,6 +8,7 @@ import { useRouter, useParams } from "next/navigation";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Loader2, XCircle, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -83,6 +84,116 @@ const formatDate = (dateString: string) => {
   } catch (error) {
     return "Date inconnue";
   }
+};
+
+const canPerformActions = (statut: string) => {
+  const normalized = statut.toUpperCase();
+
+  // Ne pas afficher les boutons si le statut est "VALIDÉ" ou "REJETÉ"
+  const blockedStatuses = [
+    "VALIDÉ",
+    "VALIDE",
+    "CONFIRMÉ",
+    "CONFIRME",
+    "REJETÉ",
+    "REJETE",
+  ];
+
+  return !blockedStatuses.includes(normalized);
+};
+
+// Composant Skeleton pour les détails du sacrement
+const SacrementDetailsLoadingSkeleton = () => {
+  return (
+    <div className="space-y-6">
+      {/* En-tête */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="space-y-2">
+          <Skeleton className="h-10 w-20" /> {/* Bouton retour */}
+          <Skeleton className="h-8 w-80" /> {/* Titre */}
+          <Skeleton className="h-4 w-40" /> {/* Date de création */}
+        </div>
+        {/* Boutons d'action */}
+        <div className="flex gap-2">
+          <Skeleton className="h-10 w-24" />
+          <Skeleton className="h-10 w-20" />
+        </div>
+      </div>
+
+      {/* Carte principale du sacrement */}
+      <div className="bg-white rounded-lg border border-slate-200 p-6 space-y-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Skeleton className="h-6 w-6 rounded-full" />
+          <Skeleton className="h-5 w-32" />
+        </div>
+        <Skeleton className="h-7 w-64" />
+        <Skeleton className="h-5 w-48" />
+
+        {/* Description */}
+        <div className="space-y-2 pt-4">
+          <Skeleton className="h-5 w-24" />
+          <div className="bg-slate-50 p-4 rounded-lg space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+        </div>
+
+        {/* Détails du sacrement */}
+        <div className="space-y-2 pt-4">
+          <Skeleton className="h-5 w-40" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className="flex justify-between px-4 py-2 bg-slate-50 rounded-md"
+              >
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Grille des cartes de personnes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {[...Array(2)].map((_, cardIndex) => (
+          <div
+            key={cardIndex}
+            className="bg-white rounded-lg border border-slate-200 p-6 space-y-4"
+          >
+            <Skeleton className="h-6 w-48" />
+            <div className="flex items-center space-x-4">
+              <Skeleton className="w-16 h-16 rounded-full" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-4 w-28" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex justify-between py-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Galerie de documents */}
+      <div className="bg-white rounded-lg border border-slate-200 p-6 space-y-4">
+        <Skeleton className="h-6 w-40" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="aspect-square rounded-md" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default function SacrementSoumissionDetailsPage() {
@@ -270,8 +381,7 @@ export default function SacrementSoumissionDetailsPage() {
         description: "La soumission de sacrement a été validée avec succès.",
       });
 
-      // Redirection vers la liste des soumissions
-      router.push("/dashboard/paroisse/sacrements/soumissions");
+      await fetchSacrementDetails();
     } catch (err: any) {
       console.error("Erreur lors de la validation de la soumission:", err);
 
@@ -374,8 +484,7 @@ export default function SacrementSoumissionDetailsPage() {
         description: "La soumission de sacrement a été rejetée avec succès.",
       });
 
-      // Redirection vers la liste des soumissions
-      router.push("/dashboard/paroisse/sacrements/soumissions");
+      await fetchSacrementDetails();
     } catch (err: any) {
       console.error("Erreur lors du rejet de la soumission:", err);
 
@@ -415,13 +524,9 @@ export default function SacrementSoumissionDetailsPage() {
     setShowRejectDialog(true);
   };
 
-  // États de chargement
+  // États de chargement - REMPLACÉ PAR LE SKELETON
   if (loading) {
-    return (
-      <div className="flex justify-center items-center p-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-800"></div>
-      </div>
-    );
+    return <SacrementDetailsLoadingSkeleton />;
   }
 
   // État d'erreur
@@ -472,8 +577,7 @@ export default function SacrementSoumissionDetailsPage() {
   }
 
   // Calculer si les actions sont possibles
-  const canPerformActions =
-    sacrement.statut !== "REJETE" && sacrement.statut !== "VALIDE";
+  const canShowActions = canPerformActions(sacrement.statut);
 
   return (
     <div className="space-y-6">
@@ -499,7 +603,7 @@ export default function SacrementSoumissionDetailsPage() {
 
         {/* Boutons d'action */}
         <ActionButtons
-          canPerformActions={canPerformActions}
+          canPerformActions={canShowActions}
           onValidate={handleValidate}
           onReject={handleReject}
         />

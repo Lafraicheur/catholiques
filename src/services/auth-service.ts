@@ -4,7 +4,7 @@ const API_URL = 'https://api.cathoconnect.ci/api:35Re9Rls';
 
 export const login = async (email: string, password: string) => {
   try {
-    const response = await axios.post(`${API_URL}/user/auth/login`, {
+    const response = await axios.post(`${API_URL}/admin/auth/login`, {
       email,
       password,
       type: 'email'

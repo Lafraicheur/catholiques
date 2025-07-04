@@ -908,13 +908,12 @@ const StatsCard = ({
     <Card className="relative overflow-hidden border-0 shadow-sm bg-white hover:shadow-md transition-shadow duration-200">
       <CardContent className="p-y-1">
         {/* Header avec icône et menu */}
-        <div className="flex items-center mb-4">
+        <div className="flex items-center gap-3 mb-4">
           <div
             className={`h-12 w-12 rounded-xl ${iconBgColor} flex items-center justify-center`}
           >
             <div className={iconColor}>{icon}</div>
           </div>
-          &nbsp;&nbsp;
           <h3 className="text-sm font-medium text-slate-600 mb-2">{title}</h3>
         </div>
 

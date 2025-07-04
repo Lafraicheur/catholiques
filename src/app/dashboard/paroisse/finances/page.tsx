@@ -1,6 +1,7 @@
 // FluxFinanciersPage.tsx
 "use client";
 
+import { useState, useMemo } from "react";
 import { useFluxFinanciers } from "@/hooks/useFluxFinanciers";
 import { useFluxFiltering } from "@/hooks/useFluxFiltering";
 import FluxFinancierStats from "@/components/flux-financiers/FluxFinancierStats";
@@ -13,7 +14,13 @@ import {
 } from "@/components/flux-financiers/FluxFinancierEmptyStates";
 import RetraitButton from "@/components/retrait/RetraitButton";
 
+// Configuration de la pagination
+const ITEMS_PER_PAGE = 10;
+
 export default function FluxFinanciersPage() {
+  // État pour la pagination
+  const [currentPage, setCurrentPage] = useState(1);
+
   // Hook pour charger les données
   const { fluxFinanciers, stats, loading, error, retry } = useFluxFinanciers();
 
@@ -34,13 +41,71 @@ export default function FluxFinanciersPage() {
     resetFilters,
   } = useFluxFiltering(fluxFinanciers);
 
+  // Calculs de pagination
+  const totalPages = Math.ceil(filteredFluxFinanciers.length / ITEMS_PER_PAGE);
+
+  // Données paginées
+  const paginatedFluxFinanciers = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return filteredFluxFinanciers.slice(startIndex, endIndex);
+  }, [filteredFluxFinanciers, currentPage]);
+
+  // Fonctions de navigation
+  const goToPreviousPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const goToNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
+  // Réinitialiser la page quand les filtres changent
+  const handleFilterChange = () => {
+    setCurrentPage(1);
+  };
+
+  // Gestionnaires d'événements
   const handleRetry = () => {
     retry();
+    setCurrentPage(1);
   };
 
   const handleRetraitSuccess = () => {
     // Recharger les données après un retrait réussi
     retry();
+    setCurrentPage(1);
+  };
+
+  const handleResetFilters = () => {
+    resetFilters();
+    setCurrentPage(1);
+  };
+
+  // Wrapper pour les fonctions de filtrage avec reset de page
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    handleFilterChange();
+  };
+
+  const handleTypeFilterChange = (value: string) => {
+    setTypeFilter(value);
+    handleFilterChange();
+  };
+
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value);
+    handleFilterChange();
+  };
+
+  const handleDateFromChange = (date: Date | undefined) => {
+    setDateFrom(date);
+    handleFilterChange();
+  };
+
+  const handleDateToChange = (date: Date | undefined) => {
+    setDateTo(date);
+    handleFilterChange();
   };
 
   return (
@@ -71,15 +136,15 @@ export default function FluxFinanciersPage() {
       {!loading && !error && (
         <FluxFinancierFilters
           searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
+          setSearchQuery={handleSearchChange}
           typeFilter={typeFilter}
-          setTypeFilter={setTypeFilter}
+          setTypeFilter={handleTypeFilterChange}
           statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
+          setStatusFilter={handleStatusFilterChange}
           dateFrom={dateFrom}
-          setDateFrom={setDateFrom}
+          setDateFrom={handleDateFromChange}
           dateTo={dateTo}
-          setDateTo={setDateTo}
+          setDateTo={handleDateToChange}
         />
       )}
 
@@ -89,11 +154,18 @@ export default function FluxFinanciersPage() {
       ) : error ? (
         <ErrorState error={error} onRetry={handleRetry} />
       ) : filteredFluxFinanciers.length === 0 ? (
-        <EmptyState hasFilters={hasFilters} onResetFilters={resetFilters} />
+        <EmptyState
+          hasFilters={hasFilters}
+          onResetFilters={handleResetFilters}
+        />
       ) : (
         <FluxFinancierTable
-          fluxFinanciers={filteredFluxFinanciers}
-          totalCount={fluxFinanciers.length}
+          fluxFinanciers={paginatedFluxFinanciers}
+          totalCount={filteredFluxFinanciers.length}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPreviousPage={goToPreviousPage}
+          onNextPage={goToNextPage}
         />
       )}
     </div>

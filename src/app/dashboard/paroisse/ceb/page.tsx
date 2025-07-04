@@ -122,13 +122,12 @@ const StatsCard = ({
     <Card className="relative overflow-hidden border-0 shadow-sm bg-white transition-shadow duration-200">
       <CardContent className="p-y-1">
         {/* Header avec icône et menu */}
-        <div className="flex items-center mb-4">
+        <div className="flex items-center gap-3 mb-4">
           <div
             className={`h-12 w-12 rounded-xl ${iconBgColor} flex items-center justify-center`}
           >
             <div className={iconColor}>{icon}</div>
           </div>
-          &nbsp;&nbsp;
           <h3 className="text-sm font-medium text-slate-600 mb-2">{title}</h3>
         </div>
 
@@ -585,7 +584,7 @@ export default function CebsPage() {
               placeholder="Rechercher une CEB..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-12 bg-white border-slate-200 rounded-xl transition-all duration-200"
+              className="pl-12 h-9 bg-white border-slate-200 rounded-xl transition-all duration-200"
             />
           </div>
 
@@ -596,7 +595,7 @@ export default function CebsPage() {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="h-12 px-6 bg-white border-slate-200 hover:bg-slate-50 rounded-xl shadow-sm transition-all duration-200 disabled:opacity-50 cursor-pointer"
+                  className="h-9 px-6 bg-white border-slate-200 hover:bg-slate-50 rounded-xl shadow-sm transition-all duration-200 disabled:opacity-50 cursor-pointer"
                   disabled={exporting || filteredCebs.length === 0}
                 >
                   <Download className="h-4 w-4 mr-2" />
@@ -627,7 +626,7 @@ export default function CebsPage() {
             {/* Bouton d'ajout moderne */}
             <Button
               onClick={openAddModal}
-              className="h-12 px-6 bg-slate-800 hover:bg-slate-700 text-white rounded-xl shadow-sm transition-all duration-200 font-medium cursor-pointer"
+              className="h-9 px-6 bg-slate-800 hover:bg-slate-700 text-white rounded-xl shadow-sm transition-all duration-200 font-medium cursor-pointer"
             >
               <Plus className="h-4 w-4 mr-2" />
               Nouvelle CEB
@@ -735,7 +734,7 @@ export default function CebsPage() {
                 >
                   <TableCell className="py-4 px-6">
                     <div className="flex items-center">
-                      <div className="h-2 w-2 rounded-full bg-blue-400 mr-3 opacity-60" />
+                      <div className="h-2 w-2 rounded-full opacity-60" />
                       <span className="text-slate-600 font-medium">
                         {formatDate(ceb.created_at)}
                       </span>
@@ -805,9 +804,7 @@ export default function CebsPage() {
           {/* Footer du tableau moderne */}
           <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-200 flex items-center justify-between">
             <div className="text-sm text-slate-600">
-              Affichage de {(currentPage - 1) * itemsPerPage + 1} à{" "}
-              {Math.min(currentPage * itemsPerPage, filteredCebs.length)} sur{" "}
-              {filteredCebs.length} résultats
+              Affichage de {filteredCebs.length} ceb
             </div>
             <div className="flex gap-2">
               <Button

@@ -227,7 +227,7 @@ export default function UnionTable({
   onView,
 }: UnionTableProps) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
       {/* Header du tableau */}
       <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-200">
         <div className="flex items-center justify-between">

@@ -31,6 +31,7 @@ import {
   Church,
   Mars,
   Venus,
+  UserX,
 } from "lucide-react";
 import {
   Card,
@@ -84,7 +85,7 @@ export default function ParoissienDetailPage() {
     statut?: string;
     est_abonne?: boolean;
     abonnement?: { intitule?: string };
-    date_de_fin_abonnement?: string | number | null;
+    date_de_fin_abonnement?: number | null;
     paroisse?: { nom?: string };
     paroisse_id?: number | null;
     chapelle?: { nom?: string };
@@ -93,6 +94,14 @@ export default function ParoissienDetailPage() {
     ceb_id?: number | null;
     mouvementassociation?: { nom?: string };
     mouvementassociation_id?: number | null;
+    photo?: {
+      url?: string;
+    };
+    // Champs ajoutés pour la compatibilité avec ModifierParoissienForm
+    nationalite?: string;
+    abonnement_id?: number;
+    statut_social?: string;
+    mouvements?: string[];
     [key: string]: any;
   };
 
@@ -218,9 +227,34 @@ export default function ParoissienDetailPage() {
   };
 
   // Gérer le succès de la mise à jour
-  const handleUpdateSuccess = (updatedParoissien: Paroissien) => {
-    // Mettre à jour les données locales
-    setParoissien(updatedParoissien);
+  // const handleUpdateSuccess = (updatedParoissien: Paroissien) => {
+  //   // Mettre à jour les données locales
+  //   setParoissien(updatedParoissien);
+
+  //   if (
+  //     updatedParoissien &&
+  //     typeof updatedParoissien === "object" &&
+  //     "prenoms" in updatedParoissien &&
+  //     "nom" in updatedParoissien
+  //   ) {
+  //     toast.success("Paroissien mis à jour avec succès", {
+  //       description: `Les informations de "${updatedParoissien.prenoms} ${updatedParoissien.nom}" ont été mises à jour.`,
+  //     });
+  //   } else {
+  //     toast.success("Paroissien mis à jour avec succès");
+  //   }
+  // };
+
+  const handleUpdateSuccess = (updatedParoissien: any) => {
+    // Mettre à jour les données locales avec conversion de type
+    const convertedParoissien: Paroissien = {
+      ...paroissien,
+      ...updatedParoissien,
+      // S'assurer que les champs requis sont présents
+      id: updatedParoissien.paroissien_id || updatedParoissien.id,
+    };
+
+    setParoissien(convertedParoissien);
 
     if (
       updatedParoissien &&
@@ -318,58 +352,171 @@ export default function ParoissienDetailPage() {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          {/* Informations générales */}
+          {/* Photo de profil et informations principales */}
           <Card className="bg-slate-50 border-slate-100">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg font-semibold">
-                Informations personnelles
+                Profil du paroissien
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row gap-6">
+                {/* Photo de profil */}
+                <div className="flex-shrink-0">
+                  <div className="relative">
+                    {paroissien.photo?.url ? (
+                      <div className="h-32 w-32 rounded-lg overflow-hidden border-4 border-white shadow-lg">
+                        <img
+                          src={paroissien.photo.url}
+                          alt={`Photo de ${paroissien.prenoms} ${paroissien.nom}`}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            // En cas d'erreur, masquer l'image et afficher l'avatar
+                            const img = e.target as HTMLImageElement;
+                            img.style.display = "none";
+                            if (
+                              img.parentElement &&
+                              img.parentElement.nextElementSibling
+                            ) {
+                              (
+                                img.parentElement
+                                  .nextElementSibling as HTMLElement
+                              ).style.display = "flex";
+                            }
+                          }}
+                        />
+                      </div>
+                    ) : null}
+
+                    {/* Avatar par défaut */}
+                    <div
+                      className={`h-32 w-32 rounded-lg border-4 border-white shadow-lg flex items-center justify-center ${
+                        paroissien.photo?.url ? "hidden" : "flex"
+                      } ${
+                        paroissien.genre === "M"
+                          ? "bg-gradient-to-br from-blue-100 to-blue-200"
+                          : "bg-gradient-to-br from-pink-100 to-pink-200"
+                      }`}
+                    >
+                      <span
+                        className={`text-3xl font-bold ${
+                          paroissien.genre === "M"
+                            ? "text-blue-600"
+                            : "text-pink-600"
+                        }`}
+                      >
+                        {paroissien.prenoms.charAt(0)}
+                        {paroissien.nom.charAt(0)}
+                      </span>
+                    </div>
+
+                    {/* Badge de statut */}
+                    <div className="absolute -bottom-2 -right-2">
+                      {paroissien.est_abonne ? (
+                        <div className="h-8 w-8 rounded-full bg-green-500 border-4 border-white flex items-center justify-center">
+                          <UserCheck className="h-4 w-4 text-white" />
+                        </div>
+                      ) : (
+                        <div className="h-8 w-8 rounded-full bg-slate-400 border-4 border-white flex items-center justify-center">
+                          <UserX className="h-4 w-4 text-white" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Informations principales */}
+                <div className="flex-1 space-y-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900">
+                      {paroissien.prenoms} {paroissien.nom}
+                    </h2>
+                    <div className="flex items-center gap-2 mt-2">
+                      <div
+                        className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                          paroissien.genre === "M"
+                            ? "bg-blue-100"
+                            : "bg-pink-100"
+                        }`}
+                      >
+                        {paroissien.genre === "M" ? (
+                          <Mars className="h-3 w-3 text-blue-600" />
+                        ) : (
+                          <Venus className="h-3 w-3 text-pink-600" />
+                        )}
+                      </div>
+                      <Badge
+                        className={`px-2 py-1 font-normal text-xs ${
+                          paroissien.genre === "M"
+                            ? "bg-blue-50 text-blue-700 hover:bg-blue-50 border border-blue-100"
+                            : "bg-pink-50 text-pink-700 hover:bg-pink-50 border border-pink-100"
+                        }`}
+                      >
+                        {paroissien.genre === "M" ? "Homme" : "Femme"}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-slate-500">
+                        Date de naissance
+                      </p>
+                      <p className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-2 text-slate-400" />
+                        {formatDate(paroissien?.date_de_naissance)}
+                      </p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-slate-500">
+                        Téléphone
+                      </p>
+                      <p className="flex items-center">
+                        <Phone className="h-4 w-4 mr-2 text-slate-400" />
+                        {paroissien.num_de_telephone ? (
+                          <a
+                            href={`tel:${paroissien.num_de_telephone}`}
+                            className="text-blue-600 hover:underline"
+                          >
+                            {formatPhoneNumber(paroissien.num_de_telephone)}
+                          </a>
+                        ) : (
+                          <span className="text-slate-400">Non renseigné</span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="space-y-1 md:col-span-2">
+                      <p className="text-sm font-medium text-slate-500">
+                        Adresse
+                      </p>
+                      <p className="flex items-center">
+                        <MapPin className="h-4 w-4 mr-2 text-slate-400" />
+                        {[
+                          paroissien.quartier,
+                          paroissien.commune,
+                          paroissien.ville,
+                          paroissien.pays,
+                        ]
+                          .filter(Boolean)
+                          .join(", ") || "Adresse non renseignée"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Informations générales */}
+          {/* <Card className="bg-slate-50 border-slate-100">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-semibold">
+                Informations de contact
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-slate-500">
-                    Nom complet
-                  </p>
-                  <p className="font-medium">
-                    {paroissien.prenoms} {paroissien.nom}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-slate-500">
-                    Date de naissance
-                  </p>
-                  <p className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-2 text-slate-400" />
-                    {formatDate(paroissien?.date_de_naissance)}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-slate-500">Genre</p>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        paroissien.genre === "M" ? "bg-blue-100" : "bg-pink-100"
-                      }`}
-                    >
-                      {paroissien.genre === "M" ? (
-                        <Mars className="h-4 w-4 text-blue-600" />
-                      ) : (
-                        <Venus className="h-4 w-4 text-pink-600" />
-                      )}
-                    </div>
-
-                    <Badge
-                      className={`px-2 py-1 font-normal text-xs ${
-                        paroissien.genre === "M"
-                          ? "bg-blue-50 text-blue-700 hover:bg-blue-50 border border-blue-100"
-                          : "bg-pink-50 text-pink-700 hover:bg-pink-50 border border-pink-100"
-                      }`}
-                    >
-                      {paroissien.genre === "M" ? "Homme" : "Femme"}
-                    </Badge>
-                  </div>
-                </div>
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-slate-500">Email</p>
                   <p className="flex items-center">
@@ -386,41 +533,9 @@ export default function ParoissienDetailPage() {
                     )}
                   </p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-slate-500">
-                    Téléphone
-                  </p>
-                  <p className="flex items-center">
-                    <Phone className="h-4 w-4 mr-2 text-slate-400" />
-                    {paroissien.num_de_telephone ? (
-                      <a
-                        href={`tel:${paroissien.num_de_telephone}`}
-                        className="text-blue-600 hover:underline"
-                      >
-                        {formatPhoneNumber(paroissien.num_de_telephone)}
-                      </a>
-                    ) : (
-                      <span className="text-slate-400">Non renseigné</span>
-                    )}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-slate-500">Adresse</p>
-                  <p className="flex items-center">
-                    <MapPin className="h-4 w-4 mr-2 text-slate-400" />
-                    {[
-                      paroissien.quartier,
-                      paroissien.commune,
-                      paroissien.ville,
-                      paroissien.pays,
-                    ]
-                      .filter(Boolean)
-                      .join(", ") || "Adresse non renseignée"}
-                  </p>
-                </div>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
 
           {/* Sacrements - Section à préserver */}
           <Card className="bg-slate-50 border-slate-100">
@@ -663,8 +778,13 @@ export default function ParoissienDetailPage() {
           {paroissien && getStatusBadge(paroissien?.statut)}
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowEditDialog(true)}>
-            <Edit className="mr-2 h-4 w-4" /> Modifier
+          <Button
+            variant="outline"
+            onClick={() => setShowEditDialog(true)}
+            className="flex items-center cursor-pointer hover:bg-white"
+          >
+            <Edit className="mr-2 h-4 w-4" />
+            Modifier
           </Button>
         </div>
       </div>
@@ -682,13 +802,34 @@ export default function ParoissienDetailPage() {
             </DialogTitle>
           </DialogHeader>
 
-          {/* {paroissien && (
+          {paroissien && (
             <ModifierParoissienForm
               onClose={() => setShowEditDialog(false)}
-              paroissienData={paroissien}
+              paroissienData={{
+                ...paroissien,
+                paroissien_id: paroissien.id,
+                // Forcer les valeurs par défaut pour les champs requis
+                nom: paroissien.nom || "",
+                prenoms: paroissien.prenoms || "",
+                genre: paroissien.genre || "M",
+                num_de_telephone: paroissien.num_de_telephone || "",
+                email: paroissien.email || "",
+                date_de_naissance: paroissien.date_de_naissance || "",
+                pays: paroissien.pays || "",
+                nationalite: paroissien.nationalite || "",
+                ville: paroissien.ville || "",
+                commune: paroissien.commune || "",
+                quartier: paroissien.quartier || "",
+                statut: paroissien.statut || "Aucun",
+                statut_social: paroissien.statut_social || "Bébé",
+                abonnement_id: paroissien.abonnement_id || 0,
+                mouvements: paroissien.mouvements || [],
+                est_abonne: paroissien.est_abonne || false,
+                date_de_fin_abonnement: paroissien.date_de_fin_abonnement || 0,
+              }}
               onSuccess={handleUpdateSuccess}
             />
-          )} */}
+          )}
         </DialogContent>
       </Dialog>
     </div>

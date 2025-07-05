@@ -62,11 +62,11 @@ export default function DemandeMessePage() {
       <DemandeMesseHeader />
 
       {/* Statistiques */}
-      <StatistiquesCard
+      {/* <StatistiquesCard
         totalDemandes={totalDemandes}
         payees={payees}
         nonPayees={nonPayees}
-      />
+      /> */}
 
       {/* Filtres */}
       <FiltresSection

@@ -88,9 +88,9 @@ export const DemandesTableau: React.FC<DemandesTableauProps> = ({
             <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
               Concerne
             </TableHead>
-            <TableHead className="font-semibold text-slate-700 py-4 px-6 text-center">
+            {/* <TableHead className="font-semibold text-slate-700 py-4 px-6 text-center">
               Statut
-            </TableHead>
+            </TableHead> */}
             <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
               Messe
             </TableHead>
@@ -151,19 +151,17 @@ export const DemandesTableau: React.FC<DemandesTableauProps> = ({
                 </div>
               </TableCell>
 
-              <TableCell className="py-4 px-6 text-center">
+              {/* <TableCell className="py-4 px-6 text-center">
                 {demande?.est_payee ? (
                   <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border-green-200 text-xs py-1 px-3 font-medium">
-                    {/* <CheckCircle className="h-3 w-3 mr-1" /> */}
                     Payée
                   </Badge>
                 ) : (
                   <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-amber-200 text-xs py-1 px-3 font-medium">
-                    {/* <Clock className="h-3 w-3 mr-1" /> */}
                     Non payée
                   </Badge>
                 )}
-              </TableCell>
+              </TableCell> */}
 
               <TableCell className="py-4 px-6">
                 {demande.messe ? (

@@ -111,7 +111,7 @@ export const FiltresSection: React.FC<FiltresSectionProps> = ({
             className="pl-9 h-9 bg-white border-slate-200 rounded-xl transition-all duration-200"
           />
         </div>
-        <div className="flex gap-2">
+        {/* <div className="flex gap-2">
           <Button
             variant={filtrePayee === true ? "default" : "outline"}
             onClick={() => setFiltrePayee(filtrePayee === true ? null : true)}
@@ -128,7 +128,7 @@ export const FiltresSection: React.FC<FiltresSectionProps> = ({
             <Clock className="h-4 w-4 mr-2" />
             Non payées
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {/* Ligne 2: Filtres de messe */}

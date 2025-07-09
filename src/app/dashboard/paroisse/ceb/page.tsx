@@ -484,17 +484,21 @@ export default function CebsPage() {
   };
 
   // Formater les dates: 2023-05-15 -> 15/05/2023
-  const formatDate = (dateString: string | null | undefined): string => {
-    if (!dateString) return "Non renseignée";
-
-    try {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat("fr-FR").format(date);
-    } catch (err) {
-      console.error("Erreur lors du formatage de la date:", err);
-      return dateString;
-    }
-  };
+const formatDate = (dateString: string | null | undefined): string => {
+  if (!dateString) return "Non renseignée";
+  try {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("fr-FR", {
+      weekday: "long",
+      day: "2-digit", 
+      month: "long",
+      year: "numeric"
+    }).format(date);
+  } catch (err) {
+    console.error("Erreur lors du formatage de la date:", err);
+    return dateString;
+  }
+};
 
   // Gérer le succès de la création
   const handleCreateSuccess = (newCeb: Ceb) => {

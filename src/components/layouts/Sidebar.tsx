@@ -25,6 +25,7 @@ import {
   FileUser,
   HandHelping,
   HeadphonesIcon,
+  Castle,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -141,9 +142,7 @@ const NavItemWithSubMenu = ({
         <div
           className={cn(
             "mr-4 transition-colors duration-200",
-            isActive
-              ? "text-white"
-              : "text-white group-hover:text-slate-200"
+            isActive ? "text-white" : "text-white group-hover:text-slate-200"
           )}
         >
           {icon}
@@ -229,6 +228,8 @@ export default function Sidebar({ isOpen }: SidebarProps) {
     return "/dashboard";
   };
 
+  // Dans la section menuIcons, remplacez le code existant par celui-ci :
+
   if (!isOpen) {
     let menuIcons;
 
@@ -237,67 +238,133 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         <>
           <Link
             href={`${getBaseUrl()}`}
-            className="p-3 rounded-xl text-white hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname === getBaseUrl()
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <Home size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/ceb`}
-            className="p-3 rounded-xl text-white hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/ceb`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <Users size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/m&a`}
-            className="p-3 rounded-xl text-white hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/m&a`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <Users size={22} />
           </Link>
           <Link
+            href={`${getBaseUrl()}/denierdecultes`}
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/denierdecultes`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
+          >
+            <Castle size={22} />
+          </Link>
+          <Link
             href={`${getBaseUrl()}/demandemesse`}
-            className="p-3 rounded-xl text-white hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/demandemesse`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <HandHelping size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/communautes/paroissiens`}
-            className="p-3 rounded-xl text-white hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/communautes/paroissiens`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <Users size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/communautes/nonparoissiens`}
-            className="p-3 rounded-xl text-white hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/communautes/nonparoissiens`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <Users size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/sacrements/individuelle`}
-            className="p-3 rounded-xl text-white hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/sacrements/individuelle`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <Leaf size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/sacrements/unions`}
-            className="p-3 rounded-xl text-white hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/sacrements/unions`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <Handshake size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/sacrements/soumissions`}
-            className="p-3 rounded-xl text-white hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/sacrements/soumissions`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <FileUser size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/evenements`}
-            className="p-3 rounded-xl text-white hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/evenements`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <Calendar size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/finances`}
-            className="p-3 rounded-xl text-white hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/finances`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <PieChart size={22} />
           </Link>
@@ -308,25 +375,45 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         <>
           <Link
             href={`${getBaseUrl()}`}
-            className="p-3 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname === getBaseUrl()
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <Home size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/paroisses`}
-            className="p-3 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/paroisses`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <Church size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/evenements`}
-            className="p-3 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/evenements`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <Calendar size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/communications`}
-            className="p-3 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/communications`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <MessageSquare size={22} />
           </Link>
@@ -337,25 +424,45 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         <>
           <Link
             href={`${getBaseUrl()}`}
-            className="p-3 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname === getBaseUrl()
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <Home size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/doyennes`}
-            className="p-3 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/doyennes`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <Building size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/evenements`}
-            className="p-3 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/evenements`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <Calendar size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/communications`}
-            className="p-3 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/communications`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <MessageSquare size={22} />
           </Link>
@@ -366,60 +473,63 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         <>
           <Link
             href={`${getBaseUrl()}`}
-            className="p-3 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname === getBaseUrl()
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <Home size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/vicariats`}
-            className="p-3 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/vicariats`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <Building size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/doyennes`}
-            className="p-3 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/doyennes`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <Building size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/paroisses`}
-            className="p-3 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/paroisses`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <Church size={22} />
           </Link>
           <Link
-            href={`${getBaseUrl()}/serviteurs`}
-            className="p-3 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
-          >
-            <Users size={22} />
-          </Link>
-          <Link
             href={`${getBaseUrl()}/evenements`}
-            className="p-3 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/evenements`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
           >
             <Calendar size={22} />
-          </Link>
-          <Link
-            href={`${getBaseUrl()}/finances`}
-            className="p-3 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200"
-          >
-            <PieChart size={22} />
           </Link>
         </>
       );
     } else {
-      // Menu par défaut si entité non reconnue
-      menuIcons = (
-        <>
-          {/* <div className="p-3 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200">
-            <Home size={22} />
-          </div>
-          <div className="p-3 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all duration-200">
-            <Settings size={22} />
-          </div> */}
-        </>
-      );
+      menuIcons = <></>;
     }
 
     return (
@@ -480,6 +590,12 @@ export default function Sidebar({ isOpen }: SidebarProps) {
           icon={<Users size={22} />}
           title="M&A"
           isActive={pathname.startsWith(`${getBaseUrl()}/m&a`)}
+        />
+         <SidebarItem
+          href={`${getBaseUrl()}/denierdecultes`}
+          icon={<Castle size={22} />}
+          title="Denier de culte"
+          isActive={pathname.startsWith(`${getBaseUrl()}/denierdecultes`)}
         />
         <SidebarItem
           href={`${getBaseUrl()}/demandemesse`}
@@ -610,7 +726,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         <SidebarItem
           href={`${getBaseUrl()}/vicariats`}
           icon={<Building size={22} />}
-          title="Vicariats"
+          title="Vicariats / Secteurs"
           isActive={pathname.startsWith(`${getBaseUrl()}/vicariats`)}
         />
         <SidebarItem
@@ -626,22 +742,10 @@ export default function Sidebar({ isOpen }: SidebarProps) {
           isActive={pathname.startsWith(`${getBaseUrl()}/paroisses`)}
         />
         <SidebarItem
-          href={`${getBaseUrl()}/serviteurs`}
-          icon={<Users size={22} />}
-          title="Serviteurs"
-          isActive={pathname.startsWith(`${getBaseUrl()}/serviteurs`)}
-        />
-        <SidebarItem
           href={`${getBaseUrl()}/evenements`}
           icon={<Calendar size={22} />}
           title="Événements"
           isActive={pathname.startsWith(`${getBaseUrl()}/evenements`)}
-        />
-        <SidebarItem
-          href={`${getBaseUrl()}/finances`}
-          icon={<PieChart size={22} />}
-          title="Finances"
-          isActive={pathname.startsWith(`${getBaseUrl()}/finances`)}
         />
       </>
     );

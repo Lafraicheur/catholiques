@@ -6,7 +6,7 @@ import { ReactNode } from "react";
 
 interface StatsCardProps {
   title: string;
-  value: string | ReactNode; // Modifié pour accepter ReactNode
+  value: string | ReactNode;
   description?: string | ReactNode;
   icon?: ReactNode;
   trend?: "up" | "down" | "same";
@@ -46,36 +46,35 @@ export default function StatsCard({
   };
 
   return (
-    <Card className="p-3 transition-shadow h-full">
-      <div className="flex justify-between items-start mb-2">
+    <Card className="p-2 transition-shadow">
+      <div className="flex justify-between items-start mb-3">
         <h3 className="font-medium text-base text-slate-500 truncate max-w-[70%]">
           {title}
         </h3>
-        {icon && <div className="p-3.5 bg-slate-50 rounded-full">{icon}</div>}
+        {icon && <div className="p-2 bg-slate-50 rounded-lg flex-shrink-0">{icon}</div>}
       </div>
 
-      <div className="mb-1">
-        {" "}
+      <div className="mb-2">
         {typeof value === "string" ? (
-          <p className="text-2xl font-bold">{value}</p>
+          <p className="text-2xl font-bold text-slate-900">{value}</p>
         ) : (
-          value
+          <div className="text-xl font-bold text-slate-900">{value}</div>
         )}
       </div>
 
-      <div className="flex items-center text-sm">
-        {trend && (
-          <div className={`flex items-center ${getTrendColor()} mr-2`}>
-            {getTrendIcon()}
-            <span className="text-sm font-medium ml-1">{trendValue}</span>
-          </div>
-        )}
-        {description && (
-          <div className="text-xs text-slate-500 overflow-hidden">
-            {description}
-          </div>
-        )}
-      </div>
+      {(trend || description) && (
+        <div className="flex items-center justify-between text-xs">
+          {trend && (
+            <div className={`flex items-center ${getTrendColor()}`}>
+              {getTrendIcon()}
+              <span className="font-medium ml-1">{trendValue}</span>
+            </div>
+          )}
+          {description && (
+            <div className="text-slate-500 text-right">{description}</div>
+          )}
+        </div>
+      )}
     </Card>
   );
 }

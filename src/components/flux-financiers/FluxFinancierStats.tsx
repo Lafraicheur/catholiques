@@ -38,18 +38,18 @@ const StatsCard = ({
   iconColor,
 }: StatsCardProps) => {
   return (
-    <Card className="relative overflow-hidden border-0 shadow-sm bg-white transition-shadow duration-200">
-      <CardContent className="p-6">
-        <div className="flex items-center gap-3 mb-4">
+    <Card className="relative overflow-hidden border-0 bg-white transition-shadow duration-200">
+      <CardContent className="p-3">
+        <div className="flex items-center gap-2 mb-2">
           <div
-            className={`h-12 w-12 rounded-xl ${iconBgColor} flex items-center justify-center flex-shrink-0`}
+            className={`h-8 w-8 rounded-lg ${iconBgColor} flex items-center justify-center flex-shrink-0`}
           >
             <div className={iconColor}>{icon}</div>
           </div>
-          <h3 className="text-sm font-medium text-slate-600">{title}</h3>
+          <h3 className="text-xs font-medium text-slate-600 truncate">{title}</h3>
         </div>
-
-        <div className="text-xl font-bold text-slate-900">{value}</div>
+        
+        <div className="text-sm font-bold text-slate-900 truncate">{value}</div>
       </CardContent>
     </Card>
   );
@@ -82,11 +82,11 @@ export default function FluxFinancierStats({ stats }: FluxFinancierStatsProps) {
     stats.don;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-2 mb-4">
       <StatsCard
         title="Total"
         value={formatMontant(totalMontant)}
-        icon={<DollarSign className="h-6 w-6" />}
+        icon={<DollarSign />}
         iconBgColor="bg-blue-50"
         iconColor="text-blue-600"
       />
@@ -94,7 +94,7 @@ export default function FluxFinancierStats({ stats }: FluxFinancierStatsProps) {
       <StatsCard
         title="Abonnement"
         value={formatMontant(stats.abonnement)}
-        icon={<RefreshCcw className="h-6 w-6" />}
+        icon={<RefreshCcw />}
         iconBgColor="bg-green-50"
         iconColor="text-green-600"
       />
@@ -102,7 +102,7 @@ export default function FluxFinancierStats({ stats }: FluxFinancierStatsProps) {
       <StatsCard
         title="Demande Messe"
         value={formatMontant(stats.demande_de_messe)}
-        icon={<CalendarX2 className="h-6 w-6" />}
+        icon={<CalendarX2 />}
         iconBgColor="bg-purple-50"
         iconColor="text-purple-600"
       />
@@ -110,17 +110,33 @@ export default function FluxFinancierStats({ stats }: FluxFinancierStatsProps) {
       <StatsCard
         title="Denier Culte"
         value={formatMontant(stats.denier_de_culte)}
-        icon={<Wallet className="h-6 w-6" />}
+        icon={<Wallet />}
         iconBgColor="bg-amber-50"
         iconColor="text-amber-600"
       />
 
       <StatsCard
+        title="Dons"
+        value={formatMontant(stats.don)}
+        icon={<CreditCard />}
+        iconBgColor="bg-emerald-50"
+        iconColor="text-emerald-600"
+      />
+
+      <StatsCard
+        title="Fnc"
+        value="0 F CFA"
+        icon={<CreditCard />}
+        iconBgColor="bg-indigo-50"
+        iconColor="text-indigo-600"
+      />
+
+      <StatsCard
         title="Quête"
         value={formatMontant(stats.quete)}
-        icon={<CreditCard className="h-6 w-6" />}
-        iconBgColor="bg-red-50"
-        iconColor="text-red-600"
+        icon={<CreditCard />}
+        iconBgColor="bg-rose-50"
+        iconColor="text-rose-600"
       />
     </div>
   );

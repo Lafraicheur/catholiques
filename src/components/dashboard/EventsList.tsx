@@ -174,8 +174,8 @@ export default function EventsList() {
   return (
     <div
       className={`space-y-1 ${
-        events.length > 3
-          ? "max-h-[230px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100"
+        events.length > 4
+          ? "max-h-[260px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100"
           : ""
       }`}
     >

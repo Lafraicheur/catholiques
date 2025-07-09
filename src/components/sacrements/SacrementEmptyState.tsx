@@ -44,7 +44,7 @@ export default function SacrementEmptyState({
   onClearSearch,
 }: SacrementEmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center p-12 text-center bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-2xl border border-slate-200">
+    <div className="flex flex-col items-center justify-center p-12 text-center bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl border border-slate-200">
       <div className="h-16 w-16 rounded-full bg-blue-50 flex items-center justify-center mb-6">
         <Church className="h-8 w-8 text-blue-600" />
       </div>
@@ -68,8 +68,12 @@ export default function SacrementEmptyState({
           Effacer la recherche
         </Button>
       ) : (
-        <Button className="h-11 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm transition-all duration-200">
-          Enregistrer un sacrement
+        <Button
+          variant="outline"
+          onClick={() => window.location.reload()}
+          className="h-11 px-6 bg-blue-600 hover:bg-blue-700 text-white hover:text-white rounded-xl shadow-sm transition-all duration-200"
+        >
+          Actualiser la page
         </Button>
       )}
     </div>

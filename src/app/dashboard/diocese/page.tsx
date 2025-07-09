@@ -15,56 +15,6 @@ import Link from "next/link";
 // URL de l'API
 const API_URL = "https://api.cathoconnect.ci/api:35Re9Rls";
 
-// Composant d'animation de chargement
-const LoadingAnimation = () => (
-  <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 fixed inset-0 z-50">
-    <div className="animate-pulse text-lg font-medium text-indigo-600">
-      <div className="flex flex-col items-center">
-        <div className="w-20 h-20 mb-3 animate-pulse">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-            {/* Fond circulaire */}
-            <circle cx="100" cy="100" r="90" fill="#4F46E5" />
-            <circle cx="100" cy="100" r="80" fill="#ffffff" />
-            {/* Graphique et éléments de budget */}
-            <path
-              d="M50 120 L60 100 L80 110 L100 70 L120 90 L140 60 L150 80"
-              stroke="#4F46E5"
-              strokeWidth="6"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            {/* Symbole dollar */}
-            <g transform="translate(100, 130)">
-              <circle cx="0" cy="0" r="30" fill="#4F46E5" />
-              <path
-                d="M-7 -10 L7 -10 M-7 10 L7 10 M0 -20 L0 20"
-                stroke="#ffffff"
-                strokeWidth="5"
-                strokeLinecap="round"
-              />
-              <path
-                d="M0 -15 L0 15"
-                stroke="#ffffff"
-                strokeWidth="5"
-                strokeLinecap="round"
-              />
-            </g>
-            {/* Points pour le graphique */}
-            <circle cx="60" cy="100" r="4" fill="#4F46E5" />
-            <circle cx="80" cy="110" r="4" fill="#4F46E5" />
-            <circle cx="100" cy="70" r="4" fill="#4F46E5" />
-            <circle cx="120" cy="90" r="4" fill="#4F46E5" />
-            <circle cx="140" cy="60" r="4" fill="#4F46E5" />
-          </svg>
-        </div>
-        <p className="text-indigo-600 font-medium">
-          Chargement des données...
-        </p>
-      </div>
-    </div>
-  </div>
-);
 
 export default function DioceseDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -163,10 +113,6 @@ export default function DioceseDashboardPage() {
     loadDashboardData();
   }, [toast]);
 
-  // Afficher l'animation de chargement pendant que les données sont récupérées
-  if (isLoading) {
-    return <LoadingAnimation />;
-  }
 
   return (
     <div className="space-y-6">

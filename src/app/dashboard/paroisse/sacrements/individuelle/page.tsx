@@ -336,6 +336,23 @@ import {
   SacrementError,
 } from "@/components/sacrements/SacrementsPageSkeleton";
 
+interface SacrementStatsProps {
+  counts: {
+    baptemes: number;
+    firstcommunions: number;
+    professiondefoi: number;
+    sacrementdemalade: number;
+  };
+}
+
+interface StatsCardProps {
+  title: string;
+  value: number;
+  icon: string;
+  iconBgColor: string;
+  iconColor: string;
+}
+
 export default function SacrementsIndividuelsPage() {
   // États
   const [sacrements, setSacrements] = useState<SacrementIndividuel[]>([]);
@@ -549,7 +566,7 @@ export default function SacrementsIndividuelsPage() {
       </div>
 
       {/* Statistiques modernisées */}
-      <SacrementStats counts={counts} />
+      {/* <SacrementStats counts={counts} /> */}
 
       {/* Barre de recherche modernisée */}
       <SacrementSearchBar
@@ -570,35 +587,35 @@ export default function SacrementsIndividuelsPage() {
                 value="tous"
                 className="h-10 rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm font-medium transition-all duration-200 cursor-pointer"
               >
-                Tous
+                Tous ({totalSacrements})
               </TabsTrigger>
               <TabsTrigger
                 value="baptemes"
                 className="h-10 rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm font-medium transition-all duration-200 cursor-pointer"
               >
                 <span className="mr-1">🕊️</span>
-                Baptêmes
+                Baptêmes ({counts.baptemes})
               </TabsTrigger>
               <TabsTrigger
                 value="firstcommunions"
                 className="h-10 rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm font-medium transition-all duration-200 cursor-pointer"
               >
                 <span className="mr-1">🍞</span>
-                Communion
+                Première Communions ({counts.firstcommunions})
               </TabsTrigger>
               <TabsTrigger
                 value="professiondefoi"
                 className="h-10 rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm font-medium transition-all duration-200 cursor-pointer"
               >
                 <span className="mr-1">📿</span>
-                Profession
+                Profession de Foi ({counts.professiondefoi})
               </TabsTrigger>
               <TabsTrigger
                 value="sacrementdemalade"
                 className="h-10 rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm font-medium transition-all duration-200 cursor-pointer"
               >
                 <span className="mr-1">🙏</span>
-                Malade
+                Malade ({counts.sacrementdemalade})
               </TabsTrigger>
             </TabsList>
           </div>

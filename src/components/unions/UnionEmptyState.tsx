@@ -48,31 +48,33 @@ export default function UnionEmptyState({
       <div className="h-16 w-16 rounded-full bg-pink-100 flex items-center justify-center mb-6">
         <Heart className="h-8 w-8 text-pink-600" />
       </div>
-      
+
       <h3 className="text-xl font-semibold text-slate-900 mb-3">
         {searchQuery ? "Aucune union trouvée" : "Aucune union enregistrée"}
       </h3>
-      
+
       <p className="text-slate-500 max-w-md mb-6 leading-relaxed">
         {searchQuery
           ? "Votre recherche ne correspond à aucun sacrement d'union. Essayez avec d'autres noms."
           : "Commencez par enregistrer la première union bénie dans votre paroisse."}
       </p>
-      
+
       {searchQuery ? (
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={onClearSearch}
           className="h-11 px-6 bg-white border-slate-200 hover:bg-slate-50 rounded-xl shadow-sm transition-all duration-200"
         >
           Effacer la recherche
         </Button>
       ) : (
-        <Button 
-          className="h-11 px-6 bg-pink-600 hover:bg-pink-700 text-white rounded-xl shadow-sm transition-all duration-200"
+        <Button
+          variant="outline"
+          onClick={() => window.location.reload()}
+          className="h-11 px-6 bg-pink-600 hover:bg-pink-700 text-white hover:text-white rounded-xl shadow-sm transition-all duration-200"
         >
           <Heart className="h-4 w-4 mr-2" />
-          Enregistrer une union
+          Actualiser la page
         </Button>
       )}
     </div>

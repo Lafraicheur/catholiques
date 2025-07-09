@@ -13,14 +13,59 @@ export const formatTime = (timestamp: number): string => {
   }).format(new Date(timestamp));
 };
 
-export const formatDate = (dateString: string | null | undefined): string => {
+// export const formatDate = (dateString: string | null | undefined): string => {
+//   if (!dateString) return "Non renseignée";
+//   try {
+//     const date = new Date(dateString);
+//     return new Intl.DateTimeFormat("fr-FR").format(date);
+//   } catch (err) {
+//     console.error("Erreur lors du formatage de la date:", err);
+//     return dateString;
+//   }
+// };
+
+export const formatDate = (dateString: string | number | Date | null | undefined): string => {
   if (!dateString) return "Non renseignée";
+  
   try {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("fr-FR").format(date);
+    let date: Date;
+    
+    // Si c'est déjà un objet Date
+    if (dateString instanceof Date) {
+      date = dateString;
+    }
+    // Si c'est un timestamp (number)
+    else if (typeof dateString === 'number') {
+      date = new Date(dateString);
+    }
+    // Si c'est une string
+    else {
+      const dateStr = String(dateString);
+      
+      // Vérifier si c'est au format français DD/MM/YYYY
+      if (dateStr.includes('/') && dateStr.split('/').length === 3) {
+        const [day, month, year] = dateStr.split('/');
+        date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+      } else {
+        date = new Date(dateStr);
+      }
+    }
+    
+    // Vérifier si la date est valide
+    if (isNaN(date.getTime())) {
+      console.error("Date invalide:", dateString);
+      return "Date invalide";
+    }
+    
+    return new Intl.DateTimeFormat("fr-FR", {
+      weekday: "long",
+      day: "2-digit", 
+      month: "long",
+      year: "numeric"
+    }).format(date);
   } catch (err) {
     console.error("Erreur lors du formatage de la date:", err);
-    return dateString;
+    return String(dateString) || "Date invalide";
   }
 };
 

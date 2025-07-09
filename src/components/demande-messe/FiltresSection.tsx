@@ -32,7 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DemandeMesse, MesseFilters } from "../../types/demandeMesse";
-import { formatTimestamp, formatTime } from "@/utils/emandeMesseUtils";
+import { formatTimestamp, formatTime, formatDate } from "@/utils/emandeMesseUtils";
 
 interface FiltresSectionProps {
   searchQuery: string;
@@ -111,24 +111,6 @@ export const FiltresSection: React.FC<FiltresSectionProps> = ({
             className="pl-9 h-9 bg-white border-slate-200 rounded-xl transition-all duration-200"
           />
         </div>
-        {/* <div className="flex gap-2">
-          <Button
-            variant={filtrePayee === true ? "default" : "outline"}
-            onClick={() => setFiltrePayee(filtrePayee === true ? null : true)}
-            className="bg-white border-slate-200 hover:bg-slate-50 cursor-pointer rounded-xl"
-          >
-            <CheckCircle className="h-4 w-4 mr-2" />
-            Payées
-          </Button>
-          <Button
-            variant={filtrePayee === false ? "default" : "outline"}
-            onClick={() => setFiltrePayee(filtrePayee === false ? null : false)}
-            className="bg-white border-slate-200 hover:bg-slate-50 cursor-pointer rounded-xl"
-          >
-            <Clock className="h-4 w-4 mr-2" />
-            Non payées
-          </Button>
-        </div> */}
       </div>
 
       {/* Ligne 2: Filtres de messe */}
@@ -175,7 +157,7 @@ export const FiltresSection: React.FC<FiltresSectionProps> = ({
                 <SelectItem key={date} value={date}>
                   <div className="flex items-center gap-2">
                     <Calendar className="h-3 w-3" />
-                    {date}
+                    {formatDate(date)}
                   </div>
                 </SelectItem>
               ))}

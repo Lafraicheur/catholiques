@@ -90,12 +90,19 @@ interface SoumissionsResponse {
 }
 
 // Fonctions utilitaires
-const formatDate = (dateString: string) => {
+const formatDate = (dateString: string | null | undefined): string => {
+  if (!dateString) return "Non renseignée";
   try {
     const date = new Date(dateString);
-    return format(date, "d MMMM yyyy", { locale: fr });
-  } catch (error) {
-    return "Date inconnue";
+    return new Intl.DateTimeFormat("fr-FR", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    }).format(date);
+  } catch (err) {
+    console.error("Erreur lors du formatage de la date:", err);
+    return dateString;
   }
 };
 
@@ -309,7 +316,7 @@ export default function SacrementsSoumissionPage() {
 
   // Charger les données sauvegardées au montage du composant
   useEffect(() => {
-    const savedNumero = localStorage.getItem("search_numero_paroissien");
+    const savedNumero = localStorage.getItem("search_paroissien");
     const savedSacrements = localStorage.getItem("search_sacrements");
     const savedParoissien = localStorage.getItem("search_paroissien_trouve");
     const savedShowResults = localStorage.getItem("search_show_results");
@@ -355,7 +362,7 @@ export default function SacrementsSoumissionPage() {
   // Sauvegarder les données dans localStorage quand elles changent
   useEffect(() => {
     if (numeroParoissien) {
-      localStorage.setItem("search_numero_paroissien", numeroParoissien);
+      localStorage.setItem("search_paroissien", numeroParoissien);
     }
   }, [numeroParoissien]);
 
@@ -411,7 +418,7 @@ export default function SacrementsSoumissionPage() {
       const url = new URL(
         "https://api.cathoconnect.ci/api:HzF8fFua/sacrement-soumission/obtenir-tous"
       );
-      url.searchParams.append("numero_paroissien", cleanNumero);
+      url.searchParams.append("numero_livret", cleanNumero);
 
       console.log("URL de la requête:", url.toString());
 
@@ -447,7 +454,7 @@ export default function SacrementsSoumissionPage() {
             console.error("Erreur 400 - Détails:", errorText);
             // Peut-être que le numéro de paroissien n'existe pas ou est mal formaté
             throw new ApiError(
-              `Le numéro de paroissien "${cleanNumero}" semble invalide. Vérifiez le format.`,
+              `Le numéro de livret "${cleanNumero}" semble invalide. Vérifiez le format.`,
               400
             );
           case 401:
@@ -549,7 +556,7 @@ export default function SacrementsSoumissionPage() {
     setError(null);
 
     // Nettoyer le localStorage
-    localStorage.removeItem("search_numero_paroissien");
+    localStorage.removeItem("search_paroissien");
     localStorage.removeItem("search_sacrements");
     localStorage.removeItem("search_paroissien_trouve");
     localStorage.removeItem("search_show_results");
@@ -559,7 +566,9 @@ export default function SacrementsSoumissionPage() {
   // Naviguer vers la page de détails
   const handleViewDetails = (id: number, type: "individuel" | "union") => {
     if (type === "individuel") {
-      router.push(`/dashboard/paroisse/sacrements/soumissions/individuelle/${id}`);
+      router.push(
+        `/dashboard/paroisse/sacrements/soumissions/individuelle/${id}`
+      );
     } else {
       router.push(`/dashboard/paroisse/sacrements/soumissions/union/${id}`);
     }

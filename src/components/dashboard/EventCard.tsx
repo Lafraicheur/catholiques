@@ -185,7 +185,7 @@ export default function EventCard({
                   <AlarmClock className="h-3.5 w-3.5 mr-1" />
                   {formatHeure(event.extras.heure_de_debut)}
                 </div>
-              )}
+              )}-
               {event?.extras?.heure_de_fin && (
                 <div className="flex items-center text-xs">
                   {formatHeure(event.extras.heure_de_fin)}

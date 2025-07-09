@@ -33,7 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DemandeMesse } from "../../types/demandeMesse";
-import { formatDate, getIntentionLabel } from "@/utils/emandeMesseUtils";
+import { formatDate, getIntentionLabel,formatTime } from "@/utils/emandeMesseUtils";
 
 interface DemandesTableauProps {
   demandes: DemandeMesse[];
@@ -77,22 +77,19 @@ export const DemandesTableau: React.FC<DemandesTableauProps> = ({
               Date de demande
             </TableHead>
             <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
-              Initiateur
+              Intention
             </TableHead>
             <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
               Demandeur
             </TableHead>
             <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
-              Intention
-            </TableHead>
-            <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
               Concerne
             </TableHead>
-            {/* <TableHead className="font-semibold text-slate-700 py-4 px-6 text-center">
-              Statut
-            </TableHead> */}
-            <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
+             <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
               Messe
+            </TableHead>
+            <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
+              Initiateur
             </TableHead>
             <TableHead className="font-semibold text-slate-700 py-4 px-6 text-right">
               Actions
@@ -116,10 +113,45 @@ export const DemandesTableau: React.FC<DemandesTableauProps> = ({
               </TableCell>
 
               <TableCell className="py-4 px-6">
-                <div className="flex items-center">
-                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                    <User className="h-4 w-4 text-blue-600" />
+                <div className="text-sm text-slate-700 font-medium">
+                  {getIntentionLabel(demande?.intention)}
+                </div>
+              </TableCell>
+
+              <TableCell className="py-4 px-6">
+                <div className="font-semibold text-slate-900 text-base">
+                  {demande?.demandeur}
+                </div>
+              </TableCell>
+
+              <TableCell className="py-4 px-6">
+                <div className="font-medium text-slate-900">
+                  {demande?.concerne}
+                </div>
+              </TableCell>
+
+              <TableCell className="py-4 px-6">
+                {demande.messe ? (
+                  <div className="space-y-2">
+                    {demande.messe.extras?.type_messe && (
+                      <div className="font-medium text-slate-900 text-sm">
+                        {demande.messe.extras.type_messe}
+                      </div>
+                    )}
+                    <div className="inline-flex items-center gap-1 text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
+                      <Calendar className="h-4 w-3"/>
+                      {formatTime(demande.messe.extras.heure_de_debut)}
+                    </div>
                   </div>
+                ) : (
+                  <div className="text-sm text-slate-500 italic">
+                    Aucune messe assignée
+                  </div>
+                )}
+              </TableCell>
+
+               <TableCell className="py-4 px-6">
+                <div className="flex items-center">
                   <div>
                     <div className="font-medium text-slate-900 text-sm">
                       {demande?.initiateur?.prenoms} {demande?.initiateur?.nom}
@@ -131,56 +163,6 @@ export const DemandesTableau: React.FC<DemandesTableauProps> = ({
                     )}
                   </div>
                 </div>
-              </TableCell>
-
-              <TableCell className="py-4 px-6">
-                <div className="font-semibold text-slate-900 text-base">
-                  {demande?.demandeur}
-                </div>
-              </TableCell>
-
-              <TableCell className="py-4 px-6">
-                <div className="text-sm text-slate-700 font-medium">
-                  {getIntentionLabel(demande?.intention)}
-                </div>
-              </TableCell>
-
-              <TableCell className="py-4 px-6">
-                <div className="font-medium text-slate-900">
-                  {demande?.concerne}
-                </div>
-              </TableCell>
-
-              {/* <TableCell className="py-4 px-6 text-center">
-                {demande?.est_payee ? (
-                  <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border-green-200 text-xs py-1 px-3 font-medium">
-                    Payée
-                  </Badge>
-                ) : (
-                  <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-amber-200 text-xs py-1 px-3 font-medium">
-                    Non payée
-                  </Badge>
-                )}
-              </TableCell> */}
-
-              <TableCell className="py-4 px-6">
-                {demande.messe ? (
-                  <div className="space-y-2">
-                    <div className="font-medium text-slate-900 text-sm">
-                      {demande.messe.libelle}
-                    </div>
-                    {/* {demande.messe.extras?.type_messe && (
-                      <div className="inline-flex items-center gap-1 text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
-                        <MapPin className="h-3 w-3" />
-                        {demande.messe.extras.type_messe}
-                      </div>
-                    )} */}
-                  </div>
-                ) : (
-                  <div className="text-sm text-slate-500 italic">
-                    Aucune messe assignée
-                  </div>
-                )}
               </TableCell>
 
               <TableCell className="py-4 px-6 text-right">

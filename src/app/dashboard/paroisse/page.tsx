@@ -23,6 +23,8 @@ import {
   HandHelping,
   Flower2,
   PiggyBank,
+  UserRoundCheck,
+  Ribbon,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -389,7 +391,16 @@ export default function ParoisseDashboardPage() {
       </div>
 
       {/* ✅ Les cartes de statistiques avec données réelles */}
-      <div className="grid grid-cols-1 md:grid-cols-2 px-6 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 px-6 lg:grid-cols-5 gap-3">
+        <StatsCard
+          title="Chapelles"
+          value={
+            statsLoading ? "..." : statsData?.chapelles.total.toString() || "0"
+          }
+          trend="up"
+          trendValue={statsData?.chapelles.today.toString() || "0"}
+          icon={<Church className="h-5 w-5 text-green-600" />}
+        />
         <StatsCard
           title="Paroissiens"
           value={
@@ -408,7 +419,22 @@ export default function ParoisseDashboardPage() {
           }
           trend="up"
           trendValue={statsData?.abonnes.today.toString() || "0"}
-          icon={<Users className="h-5 w-5 text-blue-600" />}
+          icon={<UserRoundCheck className="h-5 w-5 text-blue-600" />}
+        />
+        <StatsCard
+          title="Paroissiens Baptisé"
+          value="0"
+          trend="up"
+          // trendValue={statsData?.abonnes.today.toString() || "0"}
+          trendValue= "0"
+          icon={<Ribbon className="h-5 w-5 text-blue-600" />}
+        />
+        <StatsCard
+          title="Paroissiens Marié"
+          value="0"
+          trend="up"
+          trendValue="0"
+          icon={<Users className="h-5 w-5 text-pink-600" />}
         />
         <StatsCard
           title="M&A"
@@ -425,7 +451,7 @@ export default function ParoisseDashboardPage() {
           icon={<Flower2 className="h-5 w-5 text-blue-600" />}
         />
         <StatsCard
-          title="Demande de Messes"
+          title="Demandes de Messe"
           value={
             statsLoading
               ? "..."
@@ -446,15 +472,7 @@ export default function ParoisseDashboardPage() {
           trendValue={formatCurrency(statsData?.solde.today) || "0 FCFA"}
           icon={<PiggyBank className="h-5 w-5 text-green-600" />}
         />
-        <StatsCard
-          title="Chapelles"
-          value={
-            statsLoading ? "..." : statsData?.chapelles.total.toString() || "0"
-          }
-          trend="up"
-          trendValue={statsData?.chapelles.today.toString() || "0"}
-          icon={<Church className="h-5 w-5 text-green-600" />}
-        />
+
         <StatsCard
           title="Evenements"
           value={
@@ -468,12 +486,12 @@ export default function ParoisseDashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-6">
         {/* Graphique plus grand (9/12 colonnes) */}
-        <div className="lg:col-span-9 p-1">
+        <div className="lg:col-span-8 p-1">
           <ChartAreaInteractive paroisse_id={userProfile?.paroisse?.id || 1} />
         </div>
 
         {/* Événements à venir plus petit (3/12 colonnes) */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-4">
           <Card className="p-3 h-full">
             <h2 className="text-x font-bold mb-4">Événements à venir</h2>
             <EventsList />

@@ -587,7 +587,7 @@ export default function VicariatDetailsPage() {
               <SafeValue>{vicariatDetails.vicariat.nom}</SafeValue>
             </h1>
             <p className="text-slate-500">
-              Détails du vicariat/secteur et de son organisation
+              Détails du vicariat / secteur
             </p>
           </div>
         </div>

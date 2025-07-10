@@ -484,7 +484,7 @@ export default function DoyenneDetailsPage() {
               <SafeValue>{doyenneDetails.doyenne.nom}</SafeValue>
             </h1>
             <p className="text-slate-500">
-              Détails de la doyenne et de son organisation
+              Détails de la doyenne
             </p>
           </div>
         </div>

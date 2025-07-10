@@ -167,6 +167,11 @@ export default function DioceseDashboardPage() {
           value={dioceseData?.stats.abonnees.toString() || "106"}
           icon={<CreditCard className="h-5 w-5 text-green-600" />}
         />
+         <StatsCard
+          title="Abonnés"
+          value={dioceseData?.stats.abonnees.toString() || "106"}
+          icon={<CreditCard className="h-5 w-5 text-green-600" />}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

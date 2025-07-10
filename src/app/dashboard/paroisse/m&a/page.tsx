@@ -910,7 +910,7 @@ const StatsCard = ({
         {/* Header avec icône et menu */}
         <div className="flex items-center gap-3 mb-4">
           <div
-            className={`h-12 w-12 rounded-xl ${iconBgColor} flex items-center justify-center`}
+            className={`h-3 w-12 rounded-xl ${iconBgColor} flex items-center justify-center`}
           >
             <div className={iconColor}>{icon}</div>
           </div>
@@ -921,7 +921,7 @@ const StatsCard = ({
 
         {/* Valeur et tendance */}
         <div className="flex items-end justify-between">
-          <div className="text-3xl font-bold text-slate-900">{value}</div>
+          <div className="text-xl font-bold text-slate-900">{value}</div>
         </div>
       </CardContent>
     </Card>

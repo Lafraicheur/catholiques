@@ -26,6 +26,7 @@ import {
   HandHelping,
   HeadphonesIcon,
   Castle,
+  Building2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -491,7 +492,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
                 : "text-white hover:bg-slate-700/50 hover:text-slate-200"
             )}
           >
-            <Building size={22} />
+            <Building2 size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/doyennes`}
@@ -725,7 +726,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         />
         <SidebarItem
           href={`${getBaseUrl()}/vicariats`}
-          icon={<Building size={22} />}
+          icon={<Building2 size={22} />}
           title="Vicariats / Secteurs"
           isActive={pathname.startsWith(`${getBaseUrl()}/vicariats`)}
         />

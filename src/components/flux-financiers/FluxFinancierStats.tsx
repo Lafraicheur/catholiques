@@ -38,18 +38,24 @@ const StatsCard = ({
   iconColor,
 }: StatsCardProps) => {
   return (
-    <Card className="relative overflow-hidden border-0 bg-white transition-shadow duration-200">
-      <CardContent className="p-3">
-        <div className="flex items-center gap-2 mb-2">
+    <Card className="relative overflow-hidden border-0 shadow-sm bg-white transition-shadow duration-200">
+      <CardContent className="p-y-1">
+        {/* Header avec icône et menu */}
+        <div className="flex items-center gap-3 mb-4">
           <div
-            className={`h-8 w-8 rounded-lg ${iconBgColor} flex items-center justify-center flex-shrink-0`}
+            className={`h-3 w-12 rounded-xl ${iconBgColor} flex items-center justify-center`}
           >
             <div className={iconColor}>{icon}</div>
           </div>
-          <h3 className="text-xs font-medium text-slate-600 truncate">{title}</h3>
+          <h3 className="text-sm font-medium text-slate-600 mb-2">{title}</h3>
         </div>
-        
-        <div className="text-sm font-bold text-slate-900 truncate">{value}</div>
+
+        {/* Titre */}
+
+        {/* Valeur et tendance */}
+        <div className="flex items-end justify-between">
+          <div className="text-xl font-bold text-slate-900">{value}</div>
+        </div>
       </CardContent>
     </Card>
   );
@@ -82,7 +88,7 @@ export default function FluxFinancierStats({ stats }: FluxFinancierStatsProps) {
     stats.don;
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-2 mb-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-6 mb-6">
       <StatsCard
         title="Total"
         value={formatMontant(totalMontant)}

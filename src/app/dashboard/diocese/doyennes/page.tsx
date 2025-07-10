@@ -1,122 +1,735 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @next/next/no-html-link-for-pages */
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { Card } from "@/components/ui/card";
-import StatsCard from "@/components/dashboard/StatsCard";
-import { Users, Building, Church, CreditCard, Calendar } from "lucide-react";
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { useToast } from "@/components/ui/use-toast";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  MapPin,
+  Users,
+  Search,
+  ChevronRight,
+  ChevronLeft,
+  Eye,
+  XCircle,
+  Building2,
+  Crown,
+  Download,
+  FileSpreadsheet,
+  FileDown,
+  Church,
+  Phone,
+  User,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import {
+  fetchDoyennes,
+  Doyenne,
+  ApiError,
+  AuthenticationError,
+  ForbiddenError,
+  NotFoundError,
+} from "@/services/Doyennes";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-// URL de l'API
-const API_URL = "https://api.cathoconnect.ci/api:35Re9Rls";
+// Composant pour les cartes de statistiques modernes
+interface StatsCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  iconBgColor: string;
+  iconColor: string;
+}
 
+const StatsCard = ({
+  title,
+  value,
+  icon,
+  iconBgColor,
+  iconColor,
+}: StatsCardProps) => {
+  return (
+    <Card className="relative overflow-hidden border-0 shadow-sm bg-white transition-shadow duration-200">
+      <CardContent className="p-y-1">
+        {/* Header avec icône et menu */}
+        <div className="flex items-center gap-3 mb-4">
+          <div
+            className={`h-3 w-12 rounded-xl ${iconBgColor} flex items-center justify-center`}
+          >
+            <div className={iconColor}>{icon}</div>
+          </div>
+          <h3 className="text-sm font-medium text-slate-600 mb-2">{title}</h3>
+        </div>
 
-export default function DioceseDashboardPage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [dioceseData, setDioceseData] = useState<any>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const { toast } = useToast();
+        {/* Valeur et tendance */}
+        <div className="flex items-end justify-between">
+          <div className="text-2xl font-bold text-slate-900">{value}</div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
-  useEffect(() => {
-    // Récupérer les données du profil utilisateur
-    const storedProfile = localStorage.getItem('user_profile');
-    let profile = null;
-    
-    if (storedProfile) {
-      try {
-        profile = JSON.parse(storedProfile);
-        setUserProfile(profile);
-      } catch (error) {
-        console.error("Erreur lors du parsing du profil utilisateur:", error);
+export default function DoyennesPage() {
+  const router = useRouter();
+  const [doyennes, setDoyennes] = useState<Doyenne[]>([]);
+  const [filteredDoyennes, setFilteredDoyennes] = useState<Doyenne[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+
+  // États pour l'exportation
+  const [exporting, setExporting] = useState(false);
+
+  // Récupérer l'ID du diocèse à partir du localStorage
+  const getUserDioceseId = (): number => {
+    try {
+      const userProfileStr = localStorage.getItem("user_profile");
+      if (userProfileStr) {
+        const userProfile = JSON.parse(userProfileStr);
+        return userProfile.diocese_id || 0;
       }
+    } catch (err) {
+      console.error("Erreur lors de la récupération du profil:", err);
     }
+    return 0;
+  };
 
-    // Charger les données du dashboard
-    const loadDashboardData = async () => {
+  // Charger les doyennes au montage du composant
+  useEffect(() => {
+    const loadDoyennes = async () => {
+      setLoading(true);
+      setError(null);
+
       try {
-        setIsLoading(true);
-        
-        // Récupération du token depuis le localStorage
-        const token = localStorage.getItem('auth_token');
-        
-        if (!token) {
-          throw new Error("Token d'authentification manquant");
+        const dioceseId = getUserDioceseId();
+        if (!dioceseId) {
+          throw new Error("ID de diocèse non disponible");
         }
-        
-        // Simuler un délai pour afficher l'animation de chargement (à supprimer en production)
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Ici, vous pouvez ajouter des appels API pour récupérer les statistiques réelles
-        // Exemple :
-        // const response = await axios.get(`${API_URL}/diocese/stats`, {
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
-        // setDioceseData(response.data);
-        
-        // Pour l'instant, nous utilisons des données fictives
-        setDioceseData({
-          nom: profile?.pseudo ? `Diocèse de ${profile.pseudo}` : "Diocèse",
-          stats: {
-            vicariats: 5,
-            doyennes: 23,
-            paroisses: 106,
-            pretres: 245,
-            budget: "8,5M €",
-            serviteurs: 120,
-            paroissiens: 5000,
-            abonnees: 3000,
-            nonAbonnes: 2000
-          },
-          sacrements: {
-            baptemes: 3245,
-            confirmations: 1876,
-            mariages: 986,
-            catechumenes: 423,
-            funerailles: 2156
-          },
-          evenements: [
-            {
-              titre: "Confirmation cathédrale",
-              date: "25 Mai 2025",
-              lieu: "Présidée par Mgr l'Évêque"
-            },
-            {
-              titre: "Synode diocésain",
-              date: "15-16 Juin 2025",
-              lieu: "Grand amphithéâtre diocésain"
-            },
-            {
-              titre: "Formation permanente du clergé",
-              date: "8-12 Juillet 2025",
-              lieu: "Maison diocésaine"
-            }
-          ]
-        });
-        
-      } catch (error) {
-        console.error("Erreur lors du chargement des données:", error);
-        toast({
-          title: "Erreur de chargement",
-          description: "Impossible de charger les données du diocèse.",
-          variant: "destructive",
-        });
+
+        const data = await fetchDoyennes(dioceseId);
+        setDoyennes(data);
+        setFilteredDoyennes(data);
+        setTotalPages(Math.ceil(data.length / itemsPerPage));
+      } catch (err) {
+        console.error("Erreur lors du chargement des doyennes:", err);
+        if (err instanceof AuthenticationError) {
+          toast.error("Session expirée", {
+            description: "Veuillez vous reconnecter pour continuer.",
+          });
+          router.push("/login");
+        } else if (err instanceof ForbiddenError) {
+          setError(
+            "Vous n'avez pas les droits nécessaires pour accéder à cette ressource."
+          );
+        } else if (err instanceof NotFoundError) {
+          setError("Aucune doyenne trouvée pour ce diocèse.");
+        } else {
+          setError("Une erreur est survenue lors du chargement des données.");
+        }
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
-    loadDashboardData();
-  }, [toast]);
+    loadDoyennes();
+  }, [router, itemsPerPage]);
 
+  // Filtrer les doyennes selon la recherche
+  useEffect(() => {
+    let results = doyennes;
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      results = results.filter(
+        (doyenne) =>
+          doyenne?.nom?.toLowerCase().includes(query) ||
+          doyenne?.siege?.nom?.toLowerCase().includes(query) ||
+          doyenne?.doyen?.nom?.toLowerCase().includes(query) ||
+          doyenne?.doyen?.prenoms?.toLowerCase().includes(query) ||
+          doyenne?.doyen?.num_de_telephone?.toLowerCase().includes(query)
+      );
+    }
+
+    setFilteredDoyennes(results);
+    setCurrentPage(1);
+    setTotalPages(Math.ceil(results.length / itemsPerPage));
+  }, [searchQuery, doyennes, itemsPerPage]);
+
+  // Calculer les doyennes à afficher pour la pagination
+  const getCurrentPageItems = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredDoyennes.slice(startIndex, endIndex);
+  };
+
+  // Navigation de pagination
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return "Non renseignée";
+    try {
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat("fr-FR", {
+        weekday: "long",
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      }).format(date);
+    } catch (err) {
+      console.error("Erreur lors du formatage de la date:", err);
+      return dateString;
+    }
+  };
+
+  const getDioceseName = (): string => {
+    try {
+      const userProfileStr = localStorage.getItem("user_profile");
+      if (userProfileStr) {
+        const userProfile = JSON.parse(userProfileStr);
+        return userProfile.diocese_nom || "Diocèse";
+      }
+    } catch (err) {
+      console.error("Erreur lors de la récupération du nom du diocèse:", err);
+    }
+    return "Diocèse";
+  };
+
+  const formatExportDate = (): string => {
+    return new Intl.DateTimeFormat("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date());
+  };
+
+  const exportToExcel = async () => {
+    try {
+      setExporting(true);
+
+      const exportDate = formatExportDate();
+      const dioceseName = getDioceseName();
+
+      const exportData = filteredDoyennes.map((doyenne, index) => ({
+        "N°": index + 1,
+        "Date de création": formatDate(
+          typeof doyenne?.created_at === "number"
+            ? new Date(doyenne.created_at).toISOString()
+            : doyenne?.created_at
+        ),
+        "Nom de la Doyenne": doyenne.nom,
+        Siège: doyenne?.siege?.nom,
+        Localisation: doyenne?.siege?.localisation || "N/A",
+        Ville: doyenne?.siege?.ville,
+        Quartier: doyenne?.siege?.quartier,
+        Doyen:
+          `${doyenne?.doyen?.nom || ""} ${doyenne?.doyen?.prenoms || ""}`.trim(),
+        Téléphone: doyenne?.doyen?.num_de_telephone || "N/A",
+      }));
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportData);
+
+      XLSX.utils.sheet_add_aoa(
+        ws,
+        [
+          [`Doyennes`],
+          [`${dioceseName}`],
+          [`Date d'exportation: ${exportDate}`],
+          [`Nombre total: ${filteredDoyennes.length}`],
+          [],
+        ],
+        { origin: "A1" }
+      );
+
+      const colWidths = [
+        { wch: 5 }, // N°
+        { wch: 15 }, // Date
+        { wch: 30 }, // Nom
+        { wch: 25 }, // Siège
+        { wch: 20 }, // Localisation
+        { wch: 15 }, // Ville
+        { wch: 20 }, // Quartier
+        { wch: 30 }, // Doyen
+        { wch: 15 }, // Téléphone
+      ];
+      ws["!cols"] = colWidths;
+
+      XLSX.utils.book_append_sheet(wb, ws, "Doyennes");
+
+      const fileName = `Doyennes_${dioceseName.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+
+      toast.success("Exportation Excel réussie", {
+        description: `Le fichier ${fileName} a été téléchargé.`,
+      });
+    } catch (error) {
+      console.error("Erreur lors de l'exportation Excel:", error);
+      toast.error("Erreur lors de l'exportation Excel");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const exportToPDF = async () => {
+    try {
+      setExporting(true);
+
+      const exportDate = formatExportDate();
+      const dioceseName = getDioceseName();
+
+      const doc = new jsPDF();
+
+      const primaryColor: [number, number, number] = [59, 130, 246];
+      const secondaryColor: [number, number, number] = [148, 163, 184];
+      const textColor: [number, number, number] = [15, 23, 42];
+
+      // En-tête
+      doc.setFillColor(...primaryColor);
+      doc.rect(0, 0, 210, 35, "F");
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.setFont("helvetica", "bold");
+      doc.text("DOYENNES", 105, 15, { align: "center" });
+
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      doc.text(dioceseName, 105, 25, { align: "center" });
+
+      // Informations
+      doc.setTextColor(...textColor);
+      doc.setFontSize(10);
+      doc.text(`Date d'exportation: ${exportDate}`, 20, 45);
+      doc.text(`Nombre total: ${filteredDoyennes.length}`, 20, 52);
+
+      doc.setDrawColor(...secondaryColor);
+      doc.setLineWidth(0.5);
+      doc.line(20, 58, 190, 58);
+
+      // Données du tableau
+      const tableData = filteredDoyennes.map((doyenne, index) => [
+        (index + 1).toString(),
+        doyenne.nom || "",
+        doyenne?.siege?.nom || "",
+        doyenne?.siege?.ville || "",
+        `${doyenne?.doyen?.nom || ""} ${doyenne?.doyen?.prenoms || ""}`.trim(),
+        doyenne?.doyen?.num_de_telephone || "",
+        formatDate(
+          typeof doyenne?.created_at === "number"
+            ? new Date(doyenne.created_at).toISOString()
+            : doyenne?.created_at
+        ) || "",
+      ]);
+
+      autoTable(doc, {
+        startY: 65,
+        head: [["N°", "Nom", "Siège", "Ville", "Doyen", "Téléphone", "Date"]],
+        body: tableData,
+        theme: "grid",
+        styles: {
+          fontSize: 8,
+          cellPadding: 3,
+          textColor: textColor,
+        },
+        headStyles: {
+          fillColor: primaryColor,
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+          fontSize: 9,
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252],
+        },
+        columnStyles: {
+          0: { cellWidth: 12, halign: "center" },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 28 },
+          3: { cellWidth: 20 },
+          4: { cellWidth: 30 },
+          5: { cellWidth: 20 },
+          6: { cellWidth: 25 },
+        },
+        margin: { left: 20, right: 20 },
+      });
+
+      // Pied de page
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        const pageHeight = doc.internal.pageSize.height;
+        doc.setDrawColor(...secondaryColor);
+        doc.line(20, pageHeight - 20, 190, pageHeight - 20);
+
+        doc.setFontSize(8);
+        doc.setTextColor(...secondaryColor);
+        doc.text(`Page ${i} sur ${pageCount}`, 105, pageHeight - 12, {
+          align: "center",
+        });
+        doc.text(`Généré le ${exportDate}`, 20, pageHeight - 12);
+        doc.text("Système de Gestion Diocésaine", 190, pageHeight - 12, {
+          align: "right",
+        });
+      }
+
+      const fileName = `Doyennes_${dioceseName.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.pdf`;
+      doc.save(fileName);
+
+      toast.success("Exportation PDF réussie", {
+        description: `Le fichier ${fileName} a été téléchargé.`,
+      });
+    } catch (error) {
+      console.error("Erreur lors de l'exportation PDF:", error);
+      toast.error("Erreur lors de l'exportation PDF");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
-<p>doyenne</p>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">Doyennes</h1>
+          <p className="text-slate-500">Gérez les doyennes de votre diocèse</p>
+        </div>
+      </div>
+
+      {/* Statistiques avec nouveau design moderne */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <StatsCard
+          title="Total Doyennes"
+          value={doyennes.length}
+          icon={<Building2 size={24} />}
+          iconBgColor="bg-blue-50"
+          iconColor="text-blue-600"
+        />
+
+        <StatsCard
+          title="Avec Doyen Assigné"
+          value={doyennes.filter((d) => d.doyen_id).length}
+          icon={<User size={24} />}
+          iconBgColor="bg-purple-50"
+          iconColor="text-purple-600"
+        />
+
+        <StatsCard
+          title="Sièges Actifs"
+          value={doyennes.filter((d) => d.siege_id).length}
+          icon={<Church size={24} />}
+          iconBgColor="bg-green-50"
+          iconColor="text-green-600"
+        />
+      </div>
+
+      {/* Section filtres et actions */}
+      <div className="mb-8">
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+          {/* Section recherche */}
+          <div className="relative flex-1 max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-slate-400" />
+            </div>
+            <Input
+              placeholder="Rechercher une doyenne..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-12 h-9 bg-white border-slate-200 rounded-xl transition-all duration-200"
+            />
+          </div>
+
+          {/* Bouton d'exportation */}
+          <div className="flex gap-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="h-9 px-6 bg-white border-slate-200 hover:bg-slate-50 rounded-xl shadow-sm transition-all duration-200 disabled:opacity-50"
+                  disabled={exporting || filteredDoyennes.length === 0}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  {exporting ? "Exportation..." : "Exporter"}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-48 bg-white border-slate-200 shadow-lg rounded-xl"
+              >
+                <DropdownMenuItem
+                  onClick={exportToExcel}
+                  className="cursor-pointer hover:bg-slate-50 rounded-lg m-1 p-3 transition-colors"
+                >
+                  <FileSpreadsheet className="h-4 w-4 mr-3 text-green-600" />
+                  <span className="font-medium">Exporter en Excel</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={exportToPDF}
+                  className="cursor-pointer hover:bg-slate-50 rounded-lg m-1 p-3 transition-colors"
+                >
+                  <FileDown className="h-4 w-4 mr-3 text-red-600" />
+                  <span className="font-medium">Exporter en PDF</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="space-y-4">
+          {Array(6)
+            .fill(0)
+            .map((_, index) => (
+              <div key={index} className="border-b pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <Skeleton className="h-6 w-48 mb-2" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-8 w-20" />
+                    <Skeleton className="h-8 w-10" />
+                  </div>
+                </div>
+              </div>
+            ))}
+        </div>
+      ) : error ? (
+        <div className="text-center py-12">
+          <XCircle className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">
+            Impossible de charger les données
+          </h3>
+          <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
+            {error}
+          </p>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Réessayer
+          </Button>
+        </div>
+      ) : filteredDoyennes.length === 0 ? (
+        <div className="text-center py-12">
+          <Building2 className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">
+            Aucune doyenne trouvée
+          </h3>
+          <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
+            {searchQuery
+              ? "Aucune doyenne ne correspond à vos critères de recherche."
+              : "Aucune doyenne n'est enregistrée pour ce diocèse."}
+          </p>
+          {searchQuery && (
+            <Button
+              onClick={() => setSearchQuery("")}
+              className="cursor-pointer"
+            >
+              Réinitialiser la recherche
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          {/* Header du tableau moderne */}
+          <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-200">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900">Doyennes</h3>
+              <div className="text-sm text-slate-500">
+                {filteredDoyennes.length} résultat
+                {filteredDoyennes.length > 1 ? "s" : ""}
+              </div>
+            </div>
+          </div>
+
+          <Table className="w-full">
+            <TableHeader>
+              <TableRow className="border-slate-200 hover:bg-transparent">
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
+                  Date de création
+                </TableHead>
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
+                  Nom de la Doyenne
+                </TableHead>
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
+                  Siège
+                </TableHead>
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
+                  Doyen
+                </TableHead>
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-left">
+                  Localisation
+                </TableHead>
+                <TableHead className="font-semibold text-slate-700 py-4 px-6 text-right">
+                  Actions
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              {getCurrentPageItems().map((doyenne) => (
+                <TableRow
+                  key={doyenne.id}
+                  className="border-slate-200 hover:bg-slate-50/50 transition-colors duration-150"
+                >
+                  <TableCell className="py-4 px-6">
+                    <div className="text-slate-600 font-medium">
+                      {formatDate(
+                        typeof doyenne?.created_at === "number"
+                          ? new Date(doyenne.created_at).toISOString()
+                          : doyenne?.created_at
+                      )}
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="py-4 px-6">
+                    <div className="flex items-center">
+                      <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                        <Building2 className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-slate-900 text-base">
+                          {doyenne?.nom}
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="py-4 px-6">
+                    <div className="flex items-center">
+                      <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                        <Church className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div>
+                        <div className="font-medium text-slate-900">
+                          {doyenne?.siege?.nom}
+                        </div>
+                        <div className="text-sm text-slate-500">
+                          {doyenne?.siege?.ville}, {doyenne?.siege?.quartier}
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="py-4 px-6">
+                    <div className="flex items-center">
+                      <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+                        <User className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <div>
+                        <div className="font-medium text-slate-900">
+                          {doyenne?.doyen?.nom} {doyenne?.doyen?.prenoms}
+                        </div>
+                        {doyenne?.doyen?.num_de_telephone && (
+                          <div className="text-sm text-slate-500 flex items-center">
+                            <Phone className="h-3 w-3 mr-1" />
+                            {doyenne?.doyen?.num_de_telephone}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="py-4 px-6">
+                    <div className="flex items-center">
+                      <MapPin className="h-4 w-4 text-slate-400 mr-2" />
+                      <span className="text-slate-600 text-sm">
+                        {doyenne?.siege?.localisation || "Non spécifiée"}
+                      </span>
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="py-4 px-6 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 w-9 p-0 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150 cursor-pointer"
+                        onClick={() =>
+                          router.push(
+                            `/dashboard/diocese/doyennes/${doyenne.id}`
+                          )
+                        }
+                        title="Voir les détails"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          {/* Footer du tableau moderne */}
+          <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-200 flex items-center justify-between">
+            <div className="text-sm text-slate-600">
+              Affichage de {(currentPage - 1) * itemsPerPage + 1} à{" "}
+              {Math.min(currentPage * itemsPerPage, filteredDoyennes.length)}{" "}
+              sur {filteredDoyennes.length} résultats
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
+                className="h-9 px-4 bg-white border-slate-200 hover:bg-slate-50 disabled:opacity-50 transition-all duration-150"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Précédent
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+                className="h-9 px-4 bg-white border-slate-200 hover:bg-slate-50 disabled:opacity-50 transition-all duration-150"
+              >
+                Suivant
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

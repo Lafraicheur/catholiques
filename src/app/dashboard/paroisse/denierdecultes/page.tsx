@@ -133,21 +133,23 @@ const StatsCard = ({
   trend,
 }: StatsCardProps) => {
   return (
-    <Card className="relative overflow-hidden border-0 shadow-sm bg-white hover:shadow-md transition-shadow duration-200">
-      <CardContent className="p-6">
-        {/* Header avec icône */}
+    <Card className="relative overflow-hidden border-0 shadow-sm bg-white transition-shadow duration-200">
+      <CardContent className="p-y-1">
+        {/* Header avec icône et menu */}
         <div className="flex items-center gap-3 mb-4">
           <div
-            className={`h-12 w-12 rounded-xl ${iconBgColor} flex items-center justify-center`}
+            className={`h-3 w-12 rounded-xl ${iconBgColor} flex items-center justify-center`}
           >
             <div className={iconColor}>{icon}</div>
           </div>
-          <h3 className="text-sm font-medium text-slate-600">{title}</h3>
+          <h3 className="text-sm font-medium text-slate-600 mb-2">{title}</h3>
         </div>
+
+        {/* Titre */}
 
         {/* Valeur et tendance */}
         <div className="flex items-end justify-between">
-          <div className="text-3xl font-bold text-slate-900">{value}</div>
+          <div className="text-xl font-bold text-slate-900">{value}</div>
         </div>
       </CardContent>
     </Card>

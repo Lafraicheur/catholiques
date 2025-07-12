@@ -201,7 +201,7 @@ const SafeStatsCard = ({
   const safeValue = sanitizeForRender(value);
 
   return (
-    <Card className="relative overflow-hidden border-0 shadow-sm bg-white transition-shadow duration-200">
+    <Card className="relative overflow-hidden border-0 shadow-sm bg-card transition-shadow duration-200">
       <CardContent className="p-y-1">
         {/* Header avec icône et menu */}
         <div className="flex items-center gap-3 mb-4">
@@ -210,14 +210,14 @@ const SafeStatsCard = ({
           >
             <div className={iconColor}>{icon}</div>
           </div>
-          <h3 className="text-sm font-medium text-slate-600 mb-2">{title}</h3>
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">{title}</h3>
         </div>
 
         {/* Titre */}
 
         {/* Valeur et tendance */}
         <div className="flex items-end justify-between">
-          <div className="text-xl font-bold text-slate-900">{safeValue}</div>
+          <div className="text-xl font-bold text-card-foreground">{safeValue}</div>
         </div>
       </CardContent>
     </Card>

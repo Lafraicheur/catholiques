@@ -309,104 +309,8 @@ export const fetchParoisseDetails = async (paroisseId: number): Promise<Paroisse
     }
 };
 
-// Fonction pour récupérer les paroisses d'une doyenne spécifique
-export const fetchParoissesByDoyenne = async (doyenneId: number): Promise<Paroisse[]> => {
-    const token = localStorage.getItem('auth_token');
-
-    if (!token) {
-        throw new AuthenticationError('Token d\'authentification non trouvé');
-    }
-
-    if (!doyenneId || doyenneId <= 0) {
-        throw new ValidationError('ID de la doyenne invalide');
-    }
-
-    try {
-        const response = await axios.get<ParoissesApiResponse>(
-            `${API_URL}/paroisse/obtenir-par-doyenne`,
-            {
-                params: { doyenne_id: doyenneId },
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
-
-        return response.data.items || [];
-    } catch (error) {
-        handleApiError(error);
-        return [];
-    }
-};
-
-// Fonction pour récupérer les paroisses d'un vicariat/secteur spécifique
-export const fetchParoissesByVicariat = async (vicariatSecteurId: number): Promise<Paroisse[]> => {
-    const token = localStorage.getItem('auth_token');
-
-    if (!token) {
-        throw new AuthenticationError('Token d\'authentification non trouvé');
-    }
-
-    if (!vicariatSecteurId || vicariatSecteurId <= 0) {
-        throw new ValidationError('ID du vicariat/secteur invalide');
-    }
-
-    try {
-        const response = await axios.get<ParoissesApiResponse>(
-            `${API_URL}/paroisse/obtenir-par-vicariat`,
-            {
-                params: { vicariatsecteur_id: vicariatSecteurId },
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
-
-        return response.data.items || [];
-    } catch (error) {
-        handleApiError(error);
-        return [];
-    }
-};
-
-// Fonction pour créer une nouvelle paroisse
-export const createParoisse = async (paroisseData: Partial<Paroisse>): Promise<Paroisse> => {
-    const token = localStorage.getItem('auth_token');
-
-    if (!token) {
-        throw new AuthenticationError('Token d\'authentification non trouvé');
-    }
-
-    if (!paroisseData.nom || !paroisseData.ville || !paroisseData.doyenne_id) {
-        throw new ValidationError('Données de la paroisse incomplètes');
-    }
-
-    try {
-        const response = await axios.post<Paroisse>(
-            `${API_URL}/paroisse/creer`,
-            paroisseData,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
-
-        return response.data;
-    } catch (error) {
-        handleApiError(error);
-        throw error;
-    }
-};
-
-// Fonction pour mettre à jour une paroisse
-export const updateParoisse = async (paroisseId: number, paroisseData: Partial<Paroisse>): Promise<Paroisse> => {
+// Fonction pour nommer un curé pour une paroisse
+export const nommerCure = async (paroisseId: number, serviteurId: number): Promise<Paroisse> => {
     const token = localStorage.getItem('auth_token');
 
     if (!token) {
@@ -417,10 +321,17 @@ export const updateParoisse = async (paroisseId: number, paroisseData: Partial<P
         throw new ValidationError('ID de la paroisse invalide');
     }
 
+    if (!serviteurId || serviteurId <= 0) {
+        throw new ValidationError('ID du serviteur invalide');
+    }
+
     try {
-        const response = await axios.put<Paroisse>(
-            `${API_URL}/paroisse/modifier`,
-            { ...paroisseData, id: paroisseId },
+        const response = await axios.post<{ item: Paroisse }>(
+            `${API_URL}/nomination/cure`,
+            {
+                paroisse_id: paroisseId,
+                serviteur_id: serviteurId
+            },
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -430,44 +341,172 @@ export const updateParoisse = async (paroisseId: number, paroisseData: Partial<P
             }
         );
 
-        return response.data;
+        return response.data.item;
     } catch (error) {
         handleApiError(error);
         throw error;
     }
 };
 
-// Fonction pour supprimer une paroisse
-export const deleteParoisse = async (paroisseId: number): Promise<boolean> => {
-    const token = localStorage.getItem('auth_token');
+// // Fonction pour récupérer les paroisses d'une doyenne spécifique
+// export const fetchParoissesByDoyenne = async (doyenneId: number): Promise<Paroisse[]> => {
+//     const token = localStorage.getItem('auth_token');
 
-    if (!token) {
-        throw new AuthenticationError('Token d\'authentification non trouvé');
-    }
+//     if (!token) {
+//         throw new AuthenticationError('Token d\'authentification non trouvé');
+//     }
 
-    if (!paroisseId || paroisseId <= 0) {
-        throw new ValidationError('ID de la paroisse invalide');
-    }
+//     if (!doyenneId || doyenneId <= 0) {
+//         throw new ValidationError('ID de la doyenne invalide');
+//     }
 
-    try {
-        await axios.delete(
-            `${API_URL}/paroisse/supprimer`,
-            {
-                params: { paroisse_id: paroisseId },
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
+//     try {
+//         const response = await axios.get<ParoissesApiResponse>(
+//             `${API_URL}/paroisse/obtenir-par-doyenne`,
+//             {
+//                 params: { doyenne_id: doyenneId },
+//                 headers: {
+//                     Authorization: `Bearer ${token}`,
+//                     'Accept': 'application/json',
+//                     'Content-Type': 'application/json'
+//                 }
+//             }
+//         );
 
-        return true;
-    } catch (error) {
-        handleApiError(error);
-        return false;
-    }
-};
+//         return response.data.items || [];
+//     } catch (error) {
+//         handleApiError(error);
+//         return [];
+//     }
+// };
+
+// // Fonction pour récupérer les paroisses d'un vicariat/secteur spécifique
+// export const fetchParoissesByVicariat = async (vicariatSecteurId: number): Promise<Paroisse[]> => {
+//     const token = localStorage.getItem('auth_token');
+
+//     if (!token) {
+//         throw new AuthenticationError('Token d\'authentification non trouvé');
+//     }
+
+//     if (!vicariatSecteurId || vicariatSecteurId <= 0) {
+//         throw new ValidationError('ID du vicariat/secteur invalide');
+//     }
+
+//     try {
+//         const response = await axios.get<ParoissesApiResponse>(
+//             `${API_URL}/paroisse/obtenir-par-vicariat`,
+//             {
+//                 params: { vicariatsecteur_id: vicariatSecteurId },
+//                 headers: {
+//                     Authorization: `Bearer ${token}`,
+//                     'Accept': 'application/json',
+//                     'Content-Type': 'application/json'
+//                 }
+//             }
+//         );
+
+//         return response.data.items || [];
+//     } catch (error) {
+//         handleApiError(error);
+//         return [];
+//     }
+// };
+
+// // Fonction pour créer une nouvelle paroisse
+// export const createParoisse = async (paroisseData: Partial<Paroisse>): Promise<Paroisse> => {
+//     const token = localStorage.getItem('auth_token');
+
+//     if (!token) {
+//         throw new AuthenticationError('Token d\'authentification non trouvé');
+//     }
+
+//     if (!paroisseData.nom || !paroisseData.ville || !paroisseData.doyenne_id) {
+//         throw new ValidationError('Données de la paroisse incomplètes');
+//     }
+
+//     try {
+//         const response = await axios.post<Paroisse>(
+//             `${API_URL}/paroisse/creer`,
+//             paroisseData,
+//             {
+//                 headers: {
+//                     Authorization: `Bearer ${token}`,
+//                     'Accept': 'application/json',
+//                     'Content-Type': 'application/json'
+//                 }
+//             }
+//         );
+
+//         return response.data;
+//     } catch (error) {
+//         handleApiError(error);
+//         throw error;
+//     }
+// };
+
+// // Fonction pour mettre à jour une paroisse
+// export const updateParoisse = async (paroisseId: number, paroisseData: Partial<Paroisse>): Promise<Paroisse> => {
+//     const token = localStorage.getItem('auth_token');
+
+//     if (!token) {
+//         throw new AuthenticationError('Token d\'authentification non trouvé');
+//     }
+
+//     if (!paroisseId || paroisseId <= 0) {
+//         throw new ValidationError('ID de la paroisse invalide');
+//     }
+
+//     try {
+//         const response = await axios.put<Paroisse>(
+//             `${API_URL}/paroisse/modifier`,
+//             { ...paroisseData, id: paroisseId },
+//             {
+//                 headers: {
+//                     Authorization: `Bearer ${token}`,
+//                     'Accept': 'application/json',
+//                     'Content-Type': 'application/json'
+//                 }
+//             }
+//         );
+
+//         return response.data;
+//     } catch (error) {
+//         handleApiError(error);
+//         throw error;
+//     }
+// };
+
+// // Fonction pour supprimer une paroisse
+// export const deleteParoisse = async (paroisseId: number): Promise<boolean> => {
+//     const token = localStorage.getItem('auth_token');
+
+//     if (!token) {
+//         throw new AuthenticationError('Token d\'authentification non trouvé');
+//     }
+
+//     if (!paroisseId || paroisseId <= 0) {
+//         throw new ValidationError('ID de la paroisse invalide');
+//     }
+
+//     try {
+//         await axios.delete(
+//             `${API_URL}/paroisse/supprimer`,
+//             {
+//                 params: { paroisse_id: paroisseId },
+//                 headers: {
+//                     Authorization: `Bearer ${token}`,
+//                     'Accept': 'application/json',
+//                     'Content-Type': 'application/json'
+//                 }
+//             }
+//         );
+
+//         return true;
+//     } catch (error) {
+//         handleApiError(error);
+//         return false;
+//     }
+// };
 
 // Fonction de gestion des erreurs
 function handleApiError(error: unknown): never {

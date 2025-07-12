@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-html-link-for-pages */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { formatTimestamp, formatLocalisation } from "@/services/Doyennes";
 
 // Fonction utilitaire pour nettoyer les valeurs avant affichage

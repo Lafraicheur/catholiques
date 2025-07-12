@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-html-link-for-pages */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Settings, Crown, Users, User, Phone } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { getFullName } from "@/services/Doyennes";

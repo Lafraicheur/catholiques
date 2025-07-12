@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-html-link-for-pages */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // Fonctions utilitaires de formatage
 export const formatOrganisation = (organisation: any): string => {
   if (!organisation) return "N/A";

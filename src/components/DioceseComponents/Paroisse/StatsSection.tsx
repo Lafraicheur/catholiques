@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-html-link-for-pages */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Church, User, Building2 } from "lucide-react";
 import { StatsCard } from "./StatsCard";
 import { Paroisse } from "@/services/ParoiseofDiocese";

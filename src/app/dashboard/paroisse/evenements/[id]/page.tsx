@@ -939,11 +939,6 @@ export default function EvenementDetailsPage() {
                     </Badge>
                   )}
                 </div>
-                {evenement.description && (
-                  <CardDescription className="text-sm text-slate-600">
-                    {evenement.description}
-                  </CardDescription>
-                )}
               </div>
               {/* <Button
                 variant="outline"
@@ -1205,18 +1200,36 @@ export default function EvenementDetailsPage() {
                       </div>
                     )}
 
-                    {/* Image de l'événement */}
-                    {evenement?.image?.url && (
-                      <div className="space-y-3 pt-4 border-t">
-                        <h4 className="text-lg font-medium text-slate-900">
-                          Image de l'événement
-                        </h4>
-                        <div className="flex justify-center">
-                          <img
-                            src={evenement.image.url}
-                            alt={evenement.libelle}
-                            className="max-w-full max-h-96 object-cover rounded-lg border border-slate-200 shadow-sm"
-                          />
+                    {(evenement.description || evenement?.image?.url) && (
+                      <div className="space-y-6 pt-4 border-t">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                          {/* Description à gauche */}
+                          {evenement.description && (
+                            <div className="space-y-3">
+                              <h4 className="text-lg font-medium text-slate-900">
+                                Description
+                              </h4>
+                              <CardDescription className="text-sm text-slate-600 whitespace-pre-line leading-relaxed">
+                                {evenement.description}
+                              </CardDescription>
+                            </div>
+                          )}
+
+                          {/* Image à droite */}
+                          {evenement?.image?.url && (
+                            <div className="space-y-3">
+                              <h4 className="text-lg font-medium text-slate-900">
+                                Image de l'événement
+                              </h4>
+                              <div className="flex justify-center">
+                                <img
+                                  src={evenement.image.url}
+                                  alt={evenement.libelle}
+                                  className="max-w-full max-h-96 object-cover rounded-lg border border-slate-200 shadow-sm"
+                                />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}

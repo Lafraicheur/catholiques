@@ -23,7 +23,7 @@ interface ParoissiensTabProps {
   itemsPerPage: number;
   onPreviousPage: () => void;
   onNextPage: () => void;
-  onViewDetails: (id: number) => void;
+  // onViewDetails: (id: number) => void;
   searchQuery: string;
   onClearSearch: () => void;
 }
@@ -75,7 +75,7 @@ export const ParoissiensTab = ({
   itemsPerPage,
   onPreviousPage,
   onNextPage,
-  onViewDetails,
+  // onViewDetails,
   searchQuery,
   onClearSearch,
 }: ParoissiensTabProps) => {
@@ -116,9 +116,9 @@ export const ParoissiensTab = ({
             <TableHead className="font-semibold text-slate-700 py-3 px-4">
               Abonnement
             </TableHead>
-            <TableHead className="font-semibold text-slate-700 py-3 px-4 text-right">
+            {/* <TableHead className="font-semibold text-slate-700 py-3 px-4 text-right">
               Actions
-            </TableHead>
+            </TableHead> */}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -209,7 +209,7 @@ export const ParoissiensTab = ({
                 </div>
               </TableCell>
 
-              <TableCell className="py-3 px-4 text-right">
+              {/* <TableCell className="py-3 px-4 text-right">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -219,7 +219,7 @@ export const ParoissiensTab = ({
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
-              </TableCell>
+              </TableCell> */}
             </TableRow>
           ))}
         </TableBody>

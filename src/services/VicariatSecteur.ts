@@ -109,6 +109,21 @@ interface VicariatDetailsResponse {
     paroisses: VicariatDetails['paroisses'];
 }
 
+interface NominationVicariatRequest {
+    vicariatsecteur_id: number;
+    serviteur_id: number;
+}
+
+interface NominationVicariatResponse {
+    item: {
+        id: number;
+        created_at: string;
+        nom: string;
+        siege_id: number;
+        vicaire_episcopal_id: number;
+        diocese_id: number;
+    };
+}
 // Classes d'erreurs (réutilisées)
 export class ApiError extends Error {
     statusCode: number;
@@ -217,6 +232,51 @@ export const fetchVicariatDetails = async (vicariatId: number): Promise<Vicariat
     }
 };
 
+// Fonction pour nominer un vicaire épiscopal
+export const nominerVicariatEpiscopal = async (
+    vicariatSecteurId: number,
+    serviteurId: number
+): Promise<NominationVicariatResponse['item']> => {
+    const token = localStorage.getItem('auth_token');
+
+    if (!token) {
+        throw new AuthenticationError('Token d\'authentification non trouvé');
+    }
+
+    // Validation des paramètres
+    if (!vicariatSecteurId || vicariatSecteurId <= 0) {
+        throw new ValidationError('ID du vicariat/secteur invalide');
+    }
+
+    if (!serviteurId || serviteurId <= 0) {
+        throw new ValidationError('ID du serviteur invalide');
+    }
+
+    const requestBody: NominationVicariatRequest = {
+        vicariatsecteur_id: vicariatSecteurId,
+        serviteur_id: serviteurId
+    };
+
+    try {
+        const response = await axios.post<NominationVicariatResponse>(
+            `${API_URL}/nomination/vicaire-episcopal`,
+            requestBody,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        return response.data.item;
+    } catch (error) {
+        handleApiError(error);
+        throw error;
+    }
+};
+
 // Fonction de gestion des erreurs
 function handleApiError(error: unknown): never {
     if (axios.isAxiosError(error)) {
@@ -251,4 +311,4 @@ function handleApiError(error: unknown): never {
 }
 
 // Export des types pour les utiliser dans d'autres fichiers
-export type { VicariatSecteur, VicariatDetails };
+export type { VicariatSecteur, VicariatDetails, NominationVicariatRequest, NominationVicariatResponse };

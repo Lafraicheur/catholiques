@@ -25,7 +25,7 @@ export const StatsCard = ({
         {/* Header avec icône et menu */}
         <div className="flex items-center gap-3 mb-4">
           <div
-            className={`h-3 w-12 rounded-xl ${iconBgColor} flex items-center justify-center`}
+            className={`h-3 w-12 rounded-xl flex items-center justify-center`}
           >
             <div className={iconColor}>{icon}</div>
           </div>

@@ -163,9 +163,9 @@ export const ParoissesTab = ({
             <TableHead className="font-semibold text-slate-700 py-3 px-4">
               Statut
             </TableHead>
-            <TableHead className="font-semibold text-slate-700 py-3 px-4">
+            {/* <TableHead className="font-semibold text-slate-700 py-3 px-4">
               Date de création
-            </TableHead>
+            </TableHead> */}
             <TableHead className="font-semibold text-slate-700 py-3 px-4 text-right">
               Actions
             </TableHead>
@@ -220,9 +220,9 @@ export const ParoissesTab = ({
                   <SafeValue>{paroisse.statut}</SafeValue>
                 </Badge>
               </TableCell>
-              <TableCell className="py-3 px-4 text-slate-600">
+              {/* <TableCell className="py-3 px-4 text-slate-600">
                 {formatDate(paroisse.created_at)}
-              </TableCell>
+              </TableCell> */}
               <TableCell className="py-3 px-4 text-right">
                 <Button
                   variant="ghost"

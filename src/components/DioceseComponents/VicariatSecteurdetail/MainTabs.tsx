@@ -27,6 +27,9 @@ interface MainTabsProps {
   onViewParoisseDetails: (id: number) => void;
   searchQuery: string;
   onClearSearch: () => void;
+  // Nouvelles props pour la nomination
+  vicariatId?: number;
+  onNominationSuccess?: () => void;
 }
 
 export const MainTabs = ({
@@ -48,6 +51,8 @@ export const MainTabs = ({
   onViewParoisseDetails,
   searchQuery,
   onClearSearch,
+  vicariatId,
+  onNominationSuccess,
 }: MainTabsProps) => {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
@@ -82,7 +87,11 @@ export const MainTabs = ({
         {/* Contenu des onglets */}
         <div className="p-6">
           <TabsContent value="organisation" className="mt-0">
-            <OrganisationTab organisation={organisation} />
+            <OrganisationTab 
+              organisation={organisation}
+              vicariatId={vicariatId ?? 0}
+              onNominationSuccess={onNominationSuccess}
+            />
           </TabsContent>
 
           <TabsContent value="doyennes" className="mt-0">

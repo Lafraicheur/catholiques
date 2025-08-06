@@ -1080,9 +1080,7 @@ function EvenementsPage() {
 
               {/* Informations sur la sélection */}
               <div className="flex justify-between items-center">
-                <span className="text-sm text-slate-500">
-                  
-                </span>
+                <span className="text-sm text-slate-500"></span>
                 <div className="flex gap-2">
                   {dateSelection.hasSelection && (
                     <Button

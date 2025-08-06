@@ -93,7 +93,7 @@ export const MainTabs = ({
               itemsPerPage={itemsPerPage}
               onPreviousPage={onPreviousPageParoissiens}
               onNextPage={onNextPageParoissiens}
-              onViewDetails={onViewParoissienDetails}
+              // onViewDetails={onViewParoissienDetails}
               searchQuery={searchQuery}
               onClearSearch={onClearSearch}
             />

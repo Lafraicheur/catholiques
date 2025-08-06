@@ -63,9 +63,9 @@ export function useFluxFiltering(fluxFinanciers: FluxFinancier[]) {
         (flux) =>
           flux.reference.toLowerCase().includes(query) ||
           flux.type.toLowerCase().includes(query) ||
-          flux.description.toLowerCase().includes(query) ||
-          flux.initiateur.nom.toLowerCase().includes(query) ||
-          flux.initiateur.prenoms.toLowerCase().includes(query)
+          flux.description?.toLowerCase().includes(query) ||
+          flux.initiateur?.nom?.toLowerCase().includes(query) ||
+          flux.initiateur?.prenoms?.toLowerCase().includes(query)
       );
     }
 

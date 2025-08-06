@@ -7,7 +7,7 @@ import { AlarmClock, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 // Types
-type EventType = "ACTIVITÉ" | "COTISATION" | "MESSE" | "INSCRIPTION" | "DON";
+type EventType = "ACTIVITÉ" | "MESSE";
 type EventStatus = "programmé" | "confirmé" | "terminé" | "annulé";
 
 interface APIEventExtras {
@@ -76,47 +76,8 @@ const getEventTypeDetails = (type: EventType) => {
       return { label: "Messe", variant: "default" as const };
     case "ACTIVITÉ":
       return { label: "Activité", variant: "secondary" as const };
-    case "COTISATION":
-      return { label: "Cotisation", variant: "outline" as const };
-    case "INSCRIPTION":
-      return { label: "Inscription", variant: "destructive" as const };
-    case "DON":
-      return { label: "Don", variant: "success" as const };
     default:
       return { label: type, variant: "default" as const };
-  }
-};
-
-const getEventStatus = (dateDebut: number): EventStatus => {
-  try {
-    const timestamp = normalizeTimestamp(dateDebut);
-    const now = Date.now();
-
-    if (timestamp < now) {
-      return "terminé";
-    } else if (timestamp - now < 7 * 24 * 60 * 60 * 1000) {
-      return "confirmé";
-    } else {
-      return "programmé";
-    }
-  } catch (error) {
-    console.error("Erreur lors de la détermination du statut:", error);
-    return "programmé";
-  }
-};
-
-const getEventStatusDetails = (statut: EventStatus) => {
-  switch (statut) {
-    case "programmé":
-      return { label: "Programmé", variant: "outline" as const };
-    case "confirmé":
-      return { label: "Confirmé", variant: "success" as const };
-    case "terminé":
-      return { label: "Terminé", variant: "secondary" as const };
-    case "annulé":
-      return { label: "Annulé", variant: "destructive" as const };
-    default:
-      return { label: statut, variant: "outline" as const };
   }
 };
 
@@ -129,9 +90,6 @@ export default function EventCard({
   const { label: typeLabel, variant: typeVariant } = getEventTypeDetails(
     event.type
   );
-  const statut = getEventStatus(event.date_de_debut);
-  const { label: statusLabel, variant: statusVariant } =
-    getEventStatusDetails(statut);
 
   const handleClick = () => {
     if (onClick) {
@@ -143,7 +101,7 @@ export default function EventCard({
   if (view === "list") {
     return (
       <div
-        className={`border border-slate-200 rounded-md hover:bg-slate-50 p-4 cursor-pointer transition-colors ${className}`}
+        className={`border border-slate-200 rounded-md hover:bg-slate-50 p-3 cursor-pointer transition-colors ${className}`}
         onClick={handleClick}
       >
         <div className="flex items-start gap-3 mb-3">
@@ -178,30 +136,33 @@ export default function EventCard({
               )}
             </div>
 
-            {/* Heures à droite */}
-            <div className="flex items-center gap-3 text-sm text-slate-500">
-              {event?.extras?.heure_de_debut && (
-                <div className="flex text-xs items-center">
-                  <AlarmClock className="h-3.5 w-3.5 mr-1" />
-                  {formatHeure(event.extras.heure_de_debut)}
-                </div>
-              )}-
-              {event?.extras?.heure_de_fin && (
-                <div className="flex items-center text-xs">
-                  {formatHeure(event.extras.heure_de_fin)}
-                </div>
-              )}
-            </div>
+            {/* Heures à droite - seulement si au moins une heure existe */}
+            {(event?.extras?.heure_de_debut || event?.extras?.heure_de_fin) && (
+              <div className="flex items-center gap-3 text-sm text-slate-500">
+                {event?.extras?.heure_de_debut && (
+                  <div className="flex text-xs items-center">
+                    <AlarmClock className="h-3.5 w-3.5 mr-1" />
+                    {formatHeure(event.extras.heure_de_debut)}
+                  </div>
+                )}{" "}
+                -
+                {event?.extras?.heure_de_fin && (
+                  <div className="flex items-center text-xs">
+                    {formatHeure(event.extras.heure_de_fin)}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
-        <a
+        {/* <a
           href={`/dashboard/paroisse/evenements/${event.id}`}
           className="block w-full text-center rounded-md text-sm font-medium bg-slate-900 text-slate-50 hover:bg-slate-900/90 px-4 py-2 mt-3"
           onClick={(e) => e.stopPropagation()}
         >
           Détails
-        </a>
+        </a> */}
       </div>
     );
   }

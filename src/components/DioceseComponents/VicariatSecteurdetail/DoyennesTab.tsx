@@ -154,9 +154,9 @@ export const DoyennesTab = ({
             <TableHead className="font-semibold text-slate-700 py-3 px-4">
               Nom du Doyenné
             </TableHead>
-            <TableHead className="font-semibold text-slate-700 py-3 px-4">
+            {/* <TableHead className="font-semibold text-slate-700 py-3 px-4">
               Date de création
-            </TableHead>
+            </TableHead> */}
             <TableHead className="font-semibold text-slate-700 py-3 px-4 text-right">
               Actions
             </TableHead>
@@ -178,9 +178,9 @@ export const DoyennesTab = ({
                   </span>
                 </div>
               </TableCell>
-              <TableCell className="py-3 px-4 text-slate-600">
+              {/* <TableCell className="py-3 px-4 text-slate-600">
                 {formatDate(doyenne.created_at)}
-              </TableCell>
+              </TableCell> */}
               <TableCell className="py-3 px-4 text-right">
                 <Button
                   variant="ghost"

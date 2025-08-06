@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-html-link-for-pages */
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Settings, Crown, Users, User, Phone } from "lucide-react";
+import { Settings, Crown, Users, User, Phone, UserCog } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { getFullName } from "@/services/Doyennes";
 
@@ -86,7 +86,7 @@ export const OrganisationTab = ({ organisation }: OrganisationTabProps) => {
           <CardContent className="p-6">
             <div className="flex items-center mb-4">
               <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center mr-4">
-                <Users className="h-6 w-6 text-green-700" />
+                <UserCog className="h-6 w-6 text-green-700" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-slate-900">

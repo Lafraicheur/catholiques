@@ -104,11 +104,7 @@ export default function ParoissesPage() {
           paroisse?.nom?.toLowerCase().includes(query) ||
           paroisse?.ville?.toLowerCase().includes(query) ||
           paroisse?.quartier?.toLowerCase().includes(query) ||
-          paroisse?.statut?.toLowerCase().includes(query) ||
-          paroisse?.cure?.nom?.toLowerCase().includes(query) ||
-          paroisse?.cure?.prenoms?.toLowerCase().includes(query) ||
-          paroisse?.administrateur?.nom?.toLowerCase().includes(query) ||
-          paroisse?.administrateur?.prenoms?.toLowerCase().includes(query)
+          paroisse?.statut?.toLowerCase().includes(query)
       );
     }
 

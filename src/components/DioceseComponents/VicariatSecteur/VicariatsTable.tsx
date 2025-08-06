@@ -10,6 +10,7 @@ import {
   MapPin,
   ChevronLeft,
   ChevronRight,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -81,9 +82,9 @@ export const VicariatsTable = ({
       <Table className="w-full">
         <TableHeader>
           <TableRow className="border-border hover:bg-transparent">
-            <TableHead className="font-semibold text-muted-foreground py-4 px-6 text-left">
+            {/* <TableHead className="font-semibold text-muted-foreground py-4 px-6 text-left">
               Date de création
-            </TableHead>
+            </TableHead> */}
             <TableHead className="font-semibold text-muted-foreground py-4 px-6 text-left">
               Nom du Vicariat/Secteur
             </TableHead>
@@ -108,15 +109,15 @@ export const VicariatsTable = ({
               key={vicariat.id}
               className="border-border hover:bg-muted/50 transition-colors duration-150"
             >
-              <TableCell className="py-4 px-6">
+              {/* <TableCell className="py-4 px-6">
                 <div className="text-muted-foreground font-medium">
                   {formatDate(vicariat?.created_at)}
                 </div>
-              </TableCell>
+              </TableCell> */}
 
               <TableCell className="py-4 px-6">
                 <div className="flex items-center">
-                  <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
                     <Building2 className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
@@ -146,7 +147,7 @@ export const VicariatsTable = ({
               <TableCell className="py-4 px-6">
                 <div className="flex items-center">
                   <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center mr-3">
-                    <Crown className="h-4 w-4 text-purple-600" />
+                    <ShieldCheck className="h-4 w-4 text-purple-600" />
                   </div>
                   <div>
                     <div className="font-medium text-slate-900">

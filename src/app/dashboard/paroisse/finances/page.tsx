@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useFluxFinanciers } from "@/hooks/useFluxFinanciers";
 import { useFluxFiltering } from "@/hooks/useFluxFiltering";
 import FluxFinancierStats from "@/components/flux-financiers/FluxFinancierStats";
@@ -13,11 +14,15 @@ import {
   EmptyState,
 } from "@/components/flux-financiers/FluxFinancierEmptyStates";
 import RetraitButton from "@/components/retrait/RetraitButton";
+import { Button } from "@/components/ui/button";
+import { CreditCard } from "lucide-react";
 
 // Configuration de la pagination
 const ITEMS_PER_PAGE = 10;
 
 export default function FluxFinanciersPage() {
+  const router = useRouter();
+
   // État pour la pagination
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -63,6 +68,11 @@ export default function FluxFinanciersPage() {
   // Réinitialiser la page quand les filtres changent
   const handleFilterChange = () => {
     setCurrentPage(1);
+  };
+
+  // Navigation vers la page des moyens de paiement
+  const handleNavigateToMoyensPaiement = () => {
+    router.push("/dashboard/paroisse/moyens-paiement");
   };
 
   // Gestionnaires d'événements
@@ -121,6 +131,14 @@ export default function FluxFinanciersPage() {
           </p>
         </div>
         <div className="flex gap-3">
+          <Button
+            variant="outline"
+            onClick={handleNavigateToMoyensPaiement}
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            <CreditCard className="h-4 w-4" />
+            Moyens de paiement
+          </Button>
           <RetraitButton
             onSuccess={handleRetraitSuccess}
             variant="default"

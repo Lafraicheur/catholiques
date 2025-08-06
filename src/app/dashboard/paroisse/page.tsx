@@ -25,6 +25,9 @@ import {
   PiggyBank,
   UserRoundCheck,
   Ribbon,
+  Droplet,
+  Gem,
+  Flame
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -422,19 +425,26 @@ export default function ParoisseDashboardPage() {
           icon={<UserRoundCheck className="h-5 w-5 text-blue-600" />}
         />
         <StatsCard
-          title="Paroissiens Baptisé"
+          title="Paroissiens Baptisés"
           value="0"
           trend="up"
           // trendValue={statsData?.abonnes.today.toString() || "0"}
           trendValue= "0"
-          icon={<Ribbon className="h-5 w-5 text-blue-600" />}
+          icon={<Droplet className="h-5 w-5 text-blue-600" />}
         />
         <StatsCard
-          title="Paroissiens Marié"
+          title="Paroissiens Mariés"
           value="0"
           trend="up"
           trendValue="0"
-          icon={<Users className="h-5 w-5 text-pink-600" />}
+          icon={<Heart className="h-5 w-5 text-pink-600" />}
+        />
+         <StatsCard
+          title="Paroissiens Confirmés"
+          value="0"
+          trend="up"
+          trendValue="0"
+          icon={<Flame className="h-5 w-5 text-pink-600" />}
         />
         <StatsCard
           title="M&A"
@@ -461,18 +471,6 @@ export default function ParoisseDashboardPage() {
           trendValue={statsData?.demande_de_messes.today.toString() || "0"}
           icon={<HandHelping className="h-5 w-5 text-green-600" />}
         />
-        <StatsCard
-          title="Solde"
-          value={
-            statsLoading
-              ? "..."
-              : formatCurrency(statsData?.solde.total) || "0 FCFA"
-          }
-          trend="up"
-          trendValue={formatCurrency(statsData?.solde.today) || "0 FCFA"}
-          icon={<PiggyBank className="h-5 w-5 text-green-600" />}
-        />
-
         <StatsCard
           title="Evenements"
           value={

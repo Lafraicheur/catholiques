@@ -1,4 +1,8 @@
 // components/flux-financiers/FluxFinancierStats.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-html-link-for-pages */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -43,7 +47,7 @@ const StatsCard = ({
         {/* Header avec icône et menu */}
         <div className="flex items-center gap-3 mb-4">
           <div
-            className={`h-3 w-12 rounded-xl ${iconBgColor} flex items-center justify-center`}
+            className={`h-3 w-12 rounded-xl flex items-center justify-center`}
           >
             <div className={iconColor}>{icon}</div>
           </div>
@@ -135,14 +139,6 @@ export default function FluxFinancierStats({ stats }: FluxFinancierStatsProps) {
         icon={<CreditCard />}
         iconBgColor="bg-indigo-50"
         iconColor="text-indigo-600"
-      />
-
-      <StatsCard
-        title="Quête"
-        value={formatMontant(stats.quete)}
-        icon={<CreditCard />}
-        iconBgColor="bg-rose-50"
-        iconColor="text-rose-600"
       />
     </div>
   );

@@ -32,10 +32,7 @@ const getTypesEvenements = () => {
   return [
     { value: "tous", label: "Tous les types" },
     { value: "MESSE", label: "Messe" },
-    { value: "ACTIVITE", label: "Activité" },
-    { value: "COTISATION", label: "Cotisation" },
-    { value: "INSCRIPTION", label: "Inscription" },
-    { value: "DON", label: "Don" },
+    { value: "ACTIVITÉ", label: "Activité" },
   ];
 };
 

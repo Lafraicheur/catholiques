@@ -248,7 +248,7 @@ export default function DatePicker({
 
           // Déterminer les classes CSS selon l'état de la date
           const dayClasses = `h-24 p-1 border border-slate-200 overflow-y-auto relative transition-colors
-            ${day.isToday ? "bg-blue-50" : "bg-white"}
+            ${day.isToday ? "bg-blue-200" : "bg-white"}
             ${day.isSelected ? "ring-2 ring-blue-500" : ""}
             ${!day.isSelectable ? "bg-slate-100 opacity-60" : ""}
             ${day.isSelectable ? "cursor-pointer hover:bg-slate-50" : "cursor-not-allowed"}
@@ -306,11 +306,11 @@ export default function DatePicker({
               </div>
 
               {/* Indicateur si plus d'événements */}
-              {day.events.length > 3 && (
+              {/* {day.events.length > 3 && (
                 <div className="text-xs text-slate-400 text-center mt-1">
                   +{day.events.length - 3} autres
                 </div>
-              )}
+              )} */}
             </div>
           );
         })}

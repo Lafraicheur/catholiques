@@ -116,8 +116,16 @@ export default function MoyensPaiementPage() {
 
   // Récupérer l'ID de la paroisse (à adapter selon votre logique)
   const getParoisseId = () => {
-    // Récupérer depuis le contexte, localStorage, ou params
-    return 1; // Remplacez par la logique appropriée
+    try {
+      const userProfileStr = localStorage.getItem("user_profile");
+      if (userProfileStr) {
+        const userProfile = JSON.parse(userProfileStr);
+        return userProfile.paroisse_id || 1;
+      }
+    } catch (err) {
+      console.error("Erreur lors de la récupération du profil:", err);
+    }
+    return 1;
   };
 
   const paroisseId = getParoisseId();
@@ -217,7 +225,7 @@ export default function MoyensPaiementPage() {
 
   // Formater le numéro de téléphone
   const formatPhoneNumber = (numero: string) => {
-    return numero.replace(/(\d{4})(\d{2})(\d{2})(\d{2})/, "$1 $2 $3 $4");
+    return numero.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, "$1 $2 $3 $4 $5");
   };
 
   // Affichage du skeleton pendant le chargement

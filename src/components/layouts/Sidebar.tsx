@@ -270,17 +270,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
           >
             <Users size={22} />
           </Link>
-          <Link
-            href={`${getBaseUrl()}/denierdecultes`}
-            className={cn(
-              "p-3 rounded-xl transition-all duration-200",
-              pathname.startsWith(`${getBaseUrl()}/denierdecultes`)
-                ? "bg-[#C70000] text-white shadow-lg"
-                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
-            )}
-          >
-            <Castle size={22} />
-          </Link>
+          
           <Link
             href={`${getBaseUrl()}/demandemesse`}
             className={cn(
@@ -291,6 +281,17 @@ export default function Sidebar({ isOpen }: SidebarProps) {
             )}
           >
             <HandHelping size={22} />
+          </Link>
+          <Link
+            href={`${getBaseUrl()}/denierdecultes`}
+            className={cn(
+              "p-3 rounded-xl transition-all duration-200",
+              pathname.startsWith(`${getBaseUrl()}/denierdecultes`)
+                ? "bg-[#C70000] text-white shadow-lg"
+                : "text-white hover:bg-slate-700/50 hover:text-slate-200"
+            )}
+          >
+            <Castle size={22} />
           </Link>
           <Link
             href={`${getBaseUrl()}/communautes/paroissiens`}
@@ -592,17 +593,18 @@ export default function Sidebar({ isOpen }: SidebarProps) {
           title="M&A"
           isActive={pathname.startsWith(`${getBaseUrl()}/m&a`)}
         />
-         <SidebarItem
-          href={`${getBaseUrl()}/denierdecultes`}
-          icon={<Castle size={22} />}
-          title="Denier de culte"
-          isActive={pathname.startsWith(`${getBaseUrl()}/denierdecultes`)}
-        />
+        
         <SidebarItem
           href={`${getBaseUrl()}/demandemesse`}
           icon={<HandHelping size={22} />}
           title="Demandes de Messe"
           isActive={pathname.startsWith(`${getBaseUrl()}/demandemesse`)}
+        /> 
+        <SidebarItem
+          href={`${getBaseUrl()}/denierdecultes`}
+          icon={<Castle size={22} />}
+          title="Denier de culte"
+          isActive={pathname.startsWith(`${getBaseUrl()}/denierdecultes`)}
         />
         <NavItemWithSubMenu
           icon={<Users size={22} />}

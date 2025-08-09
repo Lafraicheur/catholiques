@@ -808,7 +808,7 @@ export default function RetraitForm({
                                         key={moyen.id}
                                         value={moyen.id.toString()}
                                       >
-                                        <div className="flex items-center gap-3 w-full">
+                                        <div className="flex items-center gap-4 w-full">
                                           <img
                                             src={moyen.provider.photo.url}
                                             alt={moyen.provider.label}
@@ -825,8 +825,8 @@ export default function RetraitForm({
                                             </div>
                                             <div className="text-sm text-gray-500">
                                               {moyen.numero.replace(
-                                                /(\d{4})(\d{2})(\d{2})(\d{2})/,
-                                                "$1 $2 $3 $4"
+                                                /(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/,
+                                                "$1 $2 $3 $4 $5"
                                               )}
                                             </div>
                                           </div>
@@ -882,7 +882,7 @@ export default function RetraitForm({
                           >
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex-1">
-                                <h4 className="font-medium text-slate-900">
+                                <h4 className="font-medium text-sm text-slate-900">
                                   {option.label}
                                 </h4>
                               </div>
@@ -989,8 +989,8 @@ export default function RetraitForm({
                         <span>Numéro:</span>
                         <span className="font-medium font-mono">
                           {getMoyenPaiementSelectionne()?.numero.replace(
-                            /(\d{4})(\d{2})(\d{2})(\d{2})/,
-                            "$1 $2 $3 $4"
+                            /(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/,
+                            "$1 $2 $3 $4 $5"
                           )}
                         </span>
                       </div>
@@ -1040,9 +1040,9 @@ export default function RetraitForm({
                       Traitement...
                     </>
                   ) : fraisCalculation ? (
-                    `Recevoir ${formatMontant(fraisCalculation.montantARecevoir)}`
+                    `Confirmer`
                   ) : (
-                    `Retirer ${formatMontant(totalMontant)}`
+                    `Confirmer`
                   )}
                 </Button>
               </div>

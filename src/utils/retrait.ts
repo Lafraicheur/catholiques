@@ -15,7 +15,7 @@ export const FRAIS_CONFIG: FraisConfig = {
 // Labels des sous-comptes
 export const SOUSCOMPTE_LABELS: { [key: string]: string } = {
     "abonnement": "Abonnement",
-    "demande_de_messe": "Demande de messe",
+    "demande_de_messe": "Dmd de messe",
     "denier_de_culte": "Denier de culte",
     "quete": "Quête",
     "don": "Don",

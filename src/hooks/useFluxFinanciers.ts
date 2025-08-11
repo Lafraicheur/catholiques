@@ -41,7 +41,7 @@ interface CompteStatistiques {
   abonnement: number;
   demande_de_messe: number;
   denier_de_culte: number;
-  quete: number;
+  fnc: number;
   don: number;
 }
 
@@ -53,7 +53,7 @@ export function useFluxFinanciers() {
     abonnement: 0,
     demande_de_messe: 0,
     denier_de_culte: 0,
-    quete: 0,
+    fnc: 0,
     don: 0,
   });
   const [loading, setLoading] = useState(true);

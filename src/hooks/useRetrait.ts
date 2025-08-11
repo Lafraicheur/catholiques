@@ -263,7 +263,7 @@ interface CompteStatistiques {
     abonnement: number;
     demande_de_messe: number;
     denier_de_culte: number;
-    quete: number;
+    fnc: number;
     don: number;
 }
 
@@ -373,7 +373,7 @@ export function useRetrait() {
             case "abonnement": return soldes.abonnement;
             case "demande_de_messe": return soldes.demande_de_messe;
             case "denier_de_culte": return soldes.denier_de_culte;
-            case "quete": return soldes.quete;
+            case "fnc": return soldes.fnc;
             case "don": return soldes.don;
             default: return 0;
         }
@@ -564,7 +564,7 @@ export function useRetrait() {
     const getTotalSolde = (): number => {
         if (!soldes) return 0;
         return soldes.abonnement + soldes.demande_de_messe + 
-               soldes.denier_de_culte + soldes.quete + soldes.don;
+               soldes.denier_de_culte + soldes.fnc + soldes.don;
     };
 
     // Obtenir les informations d'un sous-compte
@@ -573,7 +573,7 @@ export function useRetrait() {
             "abonnement": "Abonnement",
             "demande_de_messe": "Demande de messe",
             "denier_de_culte": "Denier de culte",
-            "quete": "Quête",
+            "fnc": "Fnc",
             "don": "Don",
         };
 

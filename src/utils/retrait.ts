@@ -17,7 +17,7 @@ export const SOUSCOMPTE_LABELS: { [key: string]: string } = {
     "abonnement": "Abonnement",
     "demande_de_messe": "Dmd de messe",
     "denier_de_culte": "Denier de culte",
-    "quete": "Quête",
+    "fnc": "Fnc",
     "don": "Don",
 };
 

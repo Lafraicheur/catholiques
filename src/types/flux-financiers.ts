@@ -31,7 +31,7 @@ export interface CompteStatistiques {
   abonnement: number;
   demande_de_messe: number;
   denier_de_culte: number;
-  quete: number;
+  fnc: number;
   don: number;
 }
 

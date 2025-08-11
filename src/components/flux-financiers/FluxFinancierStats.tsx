@@ -18,8 +18,8 @@ interface CompteStatistiques {
   abonnement: number;
   demande_de_messe: number;
   denier_de_culte: number;
-  quete: number;
   don: number;
+  fnc: number;
 }
 
 interface FluxFinancierStatsProps {
@@ -88,7 +88,7 @@ export default function FluxFinancierStats({ stats }: FluxFinancierStatsProps) {
     stats.abonnement +
     stats.demande_de_messe +
     stats.denier_de_culte +
-    stats.quete +
+    stats.fnc +
     stats.don;
 
   return (
@@ -135,7 +135,7 @@ export default function FluxFinancierStats({ stats }: FluxFinancierStatsProps) {
 
       <StatsCard
         title="Fnc"
-        value="0 F CFA"
+        value={formatMontant(stats.fnc)}
         icon={<CreditCard />}
         iconBgColor="bg-indigo-50"
         iconColor="text-indigo-600"

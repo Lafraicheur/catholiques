@@ -200,14 +200,14 @@ export default function Header({
         </button>
 
         {/* Logo et Titre */}
-        <div className="flex items-center">
+        {/* <div className="flex items-center">
           <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-3 text-white font-bold">
             C
           </div>
           <h1 className="text-lg font-semibold text-slate-800 hidden sm:block">
             CathoConnect
           </h1>
-        </div>
+        </div> */}
 
         {/* Navigation Desktop */}
         <div className="hidden md:flex items-center ml-auto space-x-1">
@@ -276,14 +276,14 @@ export default function Header({
                 <span>Paramètres</span>
               </DropdownMenuItem>
               
-              {userData?.statut && (
+              {/* {userData?.statut && (
                 <div className="px-2 py-2 flex items-center">
                   <span className="text-sm text-slate-500 mr-2">Statut:</span>
                   <Badge variant="outline" className="text-xs">
                     {userData.statut}
                   </Badge>
                 </div>
-              )}
+              )} */}
               
               {userData?.role && (
                 <div className="px-2 py-2 flex items-center">
@@ -301,7 +301,7 @@ export default function Header({
                 onSelect={handleLogout}
                 disabled={isLoading}
               >
-                <LogOut size={16} />
+                <LogOut size={16} className="text-red-500" />
                 <span>{isLoading ? "Déconnexion en cours..." : "Déconnexion"}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>

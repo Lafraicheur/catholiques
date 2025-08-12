@@ -261,9 +261,9 @@ export default function MoyensPaiementPage() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-slate-900">
-              Moyens de Paiement
+              Moyens de Retrait
             </h1>
-            <p className="text-slate-500">Gérez vos moyens de paiement</p>
+            <p className="text-slate-500">Gérez vos moyens de retrait</p>
           </div>
         </div>
 
@@ -364,7 +364,7 @@ export default function MoyensPaiementPage() {
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Ajouter un moyen de paiement</DialogTitle>
+            <DialogTitle>Ajouter un moyen de retrait</DialogTitle>
             <DialogDescription>
               Configurez un nouveau compte pour les retraits
             </DialogDescription>

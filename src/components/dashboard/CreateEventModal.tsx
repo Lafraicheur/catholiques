@@ -1486,20 +1486,42 @@ export default function CreateEventModal({
 
         <div className="space-y-6 py-4">
           {/* Type d'événement */}
-          <div className="space-y-2">
-            <Label htmlFor="type">Type d'événement *</Label>
-            <Select value={formData.type} onValueChange={handleTypeChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un type" />
-              </SelectTrigger>
-              <SelectContent>
-                {EVENT_TYPES.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="type">Type d'événement *</Label>
+              <Select value={formData.type} onValueChange={handleTypeChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {EVENT_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {formData.type === "ACTIVITÉ" && (
+              <div className="space-y-2">
+                <Label htmlFor="categorie">Catégorie *</Label>
+                <Select
+                  value={formData.categorie}
+                  onValueChange={(value) => updateFormField("categorie", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner une catégorie" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES_ACTIVITE.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           {/* Formulaire spécifique pour les messes */}
@@ -1681,29 +1703,6 @@ export default function CreateEventModal({
                   placeholder="Description de l'activité..."
                   rows={3}
                 />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="categorie">Catégorie *</Label>
-                  <Select
-                    value={formData.categorie}
-                    onValueChange={(value) =>
-                      updateFormField("categorie", value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner une catégorie" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES_ACTIVITE.map((cat) => (
-                        <SelectItem key={cat.value} value={cat.value}>
-                          {cat.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
 
               {/* Gratuit/Payant */}

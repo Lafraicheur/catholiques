@@ -448,7 +448,7 @@ const ModifierParoissienForm = ({
                 id="statut"
                 className={formErrors.statut ? "border-red-500" : ""}
               >
-                <SelectValue placeholder="Sélectionner le statut" />
+                <SelectValue placeholder="Sélectionner statut" />
               </SelectTrigger>
               <SelectContent>
                 {STATUTS_RELIGIEUX.map((statut) => (

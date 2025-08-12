@@ -656,10 +656,10 @@ export default function RetraitForm({
       : null;
 
   const onSubmit = async (data: RetraitFormData) => {
-    console.log("=== DÉBOGAGE FORMULAIRE ===");
-    console.log("Données du formulaire:", data);
-    console.log("Montants par compte:", comptesMontants);
-    console.log("Total calculé:", totalMontant);
+    // console.log("=== DÉBOGAGE FORMULAIRE ===");
+    // console.log("Données du formulaire:", data);
+    // console.log("Montants par compte:", comptesMontants);
+    // console.log("Total calculé:", totalMontant);
 
     const moyenSelectionne = getMoyenPaiementSelectionne();
     if (!moyenSelectionne) {
@@ -676,10 +676,10 @@ export default function RetraitForm({
     );
     const montantARecevoir = totalMontant - frais;
 
-    console.log("=== CALCUL DES FRAIS ===");
-    console.log("Montant total débité:", totalMontant);
-    console.log("Frais calculés:", frais);
-    console.log("Montant à recevoir:", montantARecevoir);
+    // console.log("=== CALCUL DES FRAIS ===");
+    // console.log("Montant total débité:", totalMontant);
+    // console.log("Frais calculés:", frais);
+    // console.log("Montant à recevoir:", montantARecevoir);
 
     // Préparer les données pour l'API
     const retraitData = {
@@ -689,7 +689,7 @@ export default function RetraitForm({
       moyen: moyenSelectionne.provider.valeur_stricte as MoyenPaiement,
     };
 
-    console.log("Données envoyées à l'API:", retraitData);
+    // console.log("Données envoyées à l'API:", retraitData);
 
     const result = await faireRetrait(retraitData);
 
@@ -701,11 +701,11 @@ export default function RetraitForm({
         numeroTelephone: moyenSelectionne.numero,
       });
 
-      console.log("=== DONNÉES POUR L'ANIMATION ===");
-      console.log(
-        "Montant qui sera affiché dans l'animation:",
-        montantARecevoir
-      );
+      // console.log("=== DONNÉES POUR L'ANIMATION ===");
+      // console.log(
+      //   "Montant qui sera affiché dans l'animation:",
+      //   montantARecevoir
+      // );
 
       // Réinitialiser le formulaire
       form.reset();
@@ -863,7 +863,7 @@ export default function RetraitForm({
                 <CardContent>
                   {loadingSoldes ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {[1, 2, 3, 4, 5, 6,7].map((i) => (
+                      {[1, 2, 3, 4, 5, 6].map((i) => (
                         <div
                           key={i}
                           className="h-32 bg-gray-100 rounded animate-pulse"
@@ -1024,7 +1024,7 @@ export default function RetraitForm({
                     resetForm();
                     onOpenChange(false);
                   }}
-                  className="flex-1"
+                  className="flex-1 cursor-pointer"
                   disabled={loading}
                 >
                   Annuler
@@ -1032,7 +1032,7 @@ export default function RetraitForm({
                 <Button
                   type="submit"
                   disabled={loading || totalMontant === 0 || !watchedMoyenId}
-                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  className="flex-1 bg-green-600 hover:bg-green-700 cursor-pointer"
                 >
                   {loading ? (
                     <>

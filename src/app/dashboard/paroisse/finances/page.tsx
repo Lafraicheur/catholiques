@@ -137,7 +137,7 @@ export default function FluxFinanciersPage() {
             className="flex items-center gap-2 cursor-pointer"
           >
             <CreditCard className="h-4 w-4" />
-            Moyens de paiement
+            Moyens de retrait
           </Button>
           <RetraitButton
             onSuccess={handleRetraitSuccess}

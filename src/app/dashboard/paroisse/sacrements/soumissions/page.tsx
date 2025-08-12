@@ -601,7 +601,7 @@ export default function SacrementsSoumissionPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
               <Input
-                placeholder="Entrez le numéro du paroissien..."
+                placeholder="Entrez le numéro du livret..."
                 className="pl-10"
                 value={numeroParoissien}
                 onChange={(e) => setNumeroParoissien(e.target.value)}

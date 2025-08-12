@@ -77,8 +77,9 @@ interface Personne {
   nom: string;
   prenoms: string;
   genre?: string;
-  num_de_telephone?: string;
+  num_de_telephone: string;
   email?: string;
+  statut_social?: string;
   date_de_naissance?: string;
   nationalite?: string;
   pays?: string;
@@ -844,67 +845,73 @@ export default function MouvementDetailsPage() {
 
               {/* Contenu de l'onglet Membres */}
               <TabsContent value="membres" className="pt-4">
-                {mouvement.membres && mouvement.membres.length > 0 ? (
-                  <div className="space-y-4">
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse">
-                        <thead>
-                          <tr className="border-b border-slate-200">
-                            <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                              Nom Complet
-                            </th>
-                            <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                              Téléphone
-                            </th>
-                            <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                              Email
-                            </th>
-                            <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
-                              Statut
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {mouvement.membres.map((membre) => (
-                            <tr
-                              key={membre.id}
-                              className="border-b border-slate-100 hover:bg-slate-50"
-                            >
-                              <td className="py-3 px-4 text-sm text-slate-600">
-                                {membre.email || "Non renseigné"}
-                              </td>
-                              <td className="py-3 px-4">
-                                <Badge variant="outline">
-                                  {membre.statut || "Non défini"}
-                                </Badge>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    <div className="flex justify-end">
-                      <Button variant="outline" size="sm">
+                <div className="space-y-6">
+                  {mouvement.membres && mouvement.membres.length > 0 ? (
+                    <>
+                      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full border-collapse">
+                            <thead>
+                              <tr className="border-b border-slate-200">
+                                <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                                  Nom Complet
+                                </th>
+                                <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                                  Téléphone
+                                </th>
+                                <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                                  Statut Social
+                                </th>
+                                <th className="py-3 px-4 text-left text-sm font-medium text-slate-500">
+                                  Statut
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {mouvement.membres.map((membre) => (
+                                <tr
+                                  key={membre.id}
+                                  className="border-b border-slate-100 hover:bg-slate-50"
+                                >
+                                  <td className="py-3 px-4">
+                                    <div className="font-medium text-sm">
+                                      {membre.prenoms} {membre.nom}
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4 text-sm text-slate-600">
+                                    {formatPhoneNumber(membre.num_de_telephone)}
+                                  </td>
+                                  <td className="py-3 px-4 text-sm text-slate-600">
+                                    {membre?.statut_social || "Non renseigné"}
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <Badge variant="outline">
+                                      {membre.statut || "Non défini"}
+                                    </Badge>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="p-8 text-center">
+                      <Users className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                      <h3 className="text-lg font-medium text-slate-900 mb-2">
+                        Aucun membre
+                      </h3>
+                      <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
+                        Ce mouvement n'a pas encore de membres enregistrés.
+                      </p>
+                      <Button>
                         <UserPlus className="h-4 w-4 mr-2" />
-                        Ajouter un membre
+                        Ajouter des membres
                       </Button>
                     </div>
-                  </div>
-                ) : (
-                  <div className="p-8 text-center">
-                    <Users className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                    <h3 className="text-lg font-medium text-slate-900 mb-2">
-                      Aucun membre
-                    </h3>
-                    <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
-                      Ce mouvement n'a pas encore de membres enregistrés.
-                    </p>
-                    <Button>
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Ajouter des membres
-                    </Button>
-                  </div>
-                )}
+                  )}
+                </div>
               </TabsContent>
 
               {/* Contenu de l'onglet Événements */}
